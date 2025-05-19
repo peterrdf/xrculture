@@ -1,0 +1,35 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <label for="txtGHFolder">GitHub folder</label><br />
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <input id="txtGHFolder" type="text" style="width: 400px;" />
+        <button type="button" onclick="downloadGitHubRepo()">Process</button>
+    </div>
+    <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Download Folder</button>
+    <p>Learn about <a href="https://pro.europeana.eu/project/xrculture">XRCulture</a></p>
+</div>
+
+<script>
+function downloadGitHubRepo() {
+    const input = document.getElementById('txtGHFolder').value.trim();
+    // Example input: https://github.com/owner/repo
+    const match = input.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/.*)?$/);
+    if (!match) {
+        alert('Please enter a valid GitHub repository URL (e.g., https://github.com/owner/repo)');
+        return;
+    }
+    const owner = match[1];
+    const repo = match[2];
+    const folder = match[3] ? match[3].substring(1) : '';
+    downloadGitHubFolder(owner, repo, folder);
+}
+
+function downloadGitHubFolder(owner, repo, folder, branch = "main") {
+    const url = `/DownloadFolder?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
+    window.location = url; // or window.open(url, '_blank');
+}
+</script>

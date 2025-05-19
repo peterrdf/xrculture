@@ -3,3 +3,6 @@
 ################################################################################
 
 /.vs
+/XRCultureWebApp/.vs
+/XRCultureWebApp/XRCultureWebApp/obj
+/XRCultureWebApp/XRCultureWebApp/bin
