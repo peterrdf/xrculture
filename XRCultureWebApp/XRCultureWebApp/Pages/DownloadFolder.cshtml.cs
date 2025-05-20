@@ -171,6 +171,12 @@ public class DownloadFolderModel : PageModel
 
         AppendLog(workflowId, $"openMVG - openMVS Workflow completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
 
+        // After all processing steps, before returning
+        string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
+        string dataDir = Path.Combine(projectRoot, "data");
+        string archiveName = $"{workflowId}.binz";
+        CreateBinzArchive(inputDir, dataDir, archiveName, workflowId);
+
         return StatusCode(200, "OK");
     }
 
@@ -295,11 +301,85 @@ public class DownloadFolderModel : PageModel
         AppendLog(workflowId, "openMVS: Create Multi View Stereo reconstruction started...");
         var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 
-        //var result = openMVG_Create_SfM(inputDir, workflowId);
-        //if (result.StatusCode != 200)
-        //{
-        //    return result;
-        //}
+        {
+            AppendLog(workflowId, "*** Creating Density Point Cloud started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVS"] + @"\DensifyPointCloud.exe";
+            var args = $"--working-folder {inputDir} --input-file {inputDir}\\model.mvs";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Creating Density Point Cloud completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Reconstructing Mesh started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVS"] + @"\ReconstructMesh.exe";
+            var args = $"--working-folder {inputDir} --archive-type 2 --input-file {inputDir}\\model_dense.mvs";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Reconstructing Mesh completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Refining Mesh started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVS"] + @"\RefineMesh.exe";
+            var args = $"--working-folder {inputDir} --resolution-level 1 --input-file {inputDir}\\model_dense_mesh.mvs";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Refining Mesh completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Texturing Mesh started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVS"] + @"\TextureMesh.exe";
+            var args = $"--working-folder {inputDir} --export-type=obj --output-file {inputDir}\\obj\\model.obj --input-file {inputDir}\\model_dense_mesh.mvs";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Texturing Mesh completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** OBJ2BIN started...");
+
+            var exePath = _configuration["ToolPaths:OBJ2BIN"] + @"\obj2bin.exe";
+            var args = $"-convert {inputDir}\\obj {inputDir}\\obj";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** OBJ2BIN completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
 
         AppendLog(workflowId, $"openMVS: Create Multi View Stereo reconstruction completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
 
@@ -441,6 +521,31 @@ public class DownloadFolderModel : PageModel
                 AppendLog(workflowId, $"Cleanup error: {cleanupEx.Message}");
             }
         }
+    }
+
+    private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
+    {
+        // Ensure destination directory exists
+        Directory.CreateDirectory(destDir);
+
+        string archivePath = Path.Combine(destDir, archiveName);
+
+        AppendLog(workflowId, $"Creating archive {archivePath}...");
+
+        using (var zipStream = new FileStream(archivePath, FileMode.Create))
+        using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+        {
+            var files = Directory.EnumerateFiles(sourceDir + "\\obj", "*.*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase));
+
+            foreach (var file in files)
+            {
+                string entryName = Path.GetRelativePath(sourceDir + "\\obj", file);
+                archive.CreateEntryFromFile(file, entryName);
+            }
+        }
+
+        AppendLog(workflowId, $"Archive {archivePath} created successfully.");
     }
 
     public class GitHubFile
