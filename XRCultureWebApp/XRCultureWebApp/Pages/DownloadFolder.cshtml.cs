@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
 using System.Net.Http.Headers;
-using System.Collections.Concurrent; // Add this at the top if not present
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class DownloadFolderModel : PageModel
 {
@@ -81,7 +82,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
 
             AppendLog(workflowId, "Running workflow...");
-            var result = openMVG_opeMVSWorkflow(extractPath, workflowId);
+            var result = openMVG_openMVSWorkflow(extractPath, workflowId);
             AppendLog(workflowId, "Workflow finished.");
 
             return Content(workflowId); // Return workflowId to client
@@ -135,13 +136,140 @@ public class DownloadFolderModel : PageModel
         return Content(workflowId);
     }
 
-    private ObjectResult openMVG_opeMVSWorkflow(string inputDir, string workflowId)
+    private ObjectResult openMVG_openMVSWorkflow(string inputDir, string workflowId)
     {
-        AppendLog(workflowId, "Starting external process...");
-        // Execute external process
-        var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_SfMInit_ImageListing.exe";
-        var args = $"--imageDirectory {inputDir}\\images --outputDirectory {inputDir}\\matches";
+        AppendLog(workflowId, "openMVG - openMVS Workflow started...");
+        var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 
+        var result = openMVG_CreateSfM(inputDir, workflowId);
+        if (result.StatusCode != 200)
+        {
+            return result;
+        }
+
+        AppendLog(workflowId, $"openMVG - openMVS Workflow completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+
+        return StatusCode(200, "OK");
+    }
+
+    private ObjectResult openMVG_CreateSfM(string inputDir, string workflowId)
+    {
+        AppendLog(workflowId, "openMVG: Create structure from Motion started...");
+        var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+        
+        {
+            AppendLog(workflowId, "*** Intrinsics analysis started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_SfMInit_ImageListing.exe";
+            var args = $"--imageDirectory {inputDir}\\images --outputDirectory {inputDir}\\matches -f 1920";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Intrinsics analysis completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+        
+        {
+            AppendLog(workflowId, "*** Compute features started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_ComputeFeatures.exe";
+            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --outdir {inputDir}\\matches --describerMethod \"SIFT\" --describerPreset \"HIGH\"";
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Compute features completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Compute matching pairs started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_PairGenerator.exe";
+            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --output_file {inputDir}\\matches\\pairs.bin";
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Compute matching pairs completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Compute matches started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_ComputeMatches.exe";
+            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --pair_list {inputDir}\\matches\\pairs.bin --output_file {inputDir}\\matches\\matches.putative.bin";
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Compute matches completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Filter matches (INCREMENTAL) started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_GeometricFilter.exe";
+            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --matches {inputDir}\\matches\\matches.putative.bin -g f --output_file {inputDir}\\matches\\matches.f.bin";
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Filter matches completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Reconstruction (INCREMENTAL) started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_SfM.exe";
+            var args = $"--sfm_engine \"INCREMENTAL\" --input_file {inputDir}\\matches\\sfm_data.json --match_dir {inputDir}\\matches --output_dir {inputDir}\\reconstruction";
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Reconstruction completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
+            AppendLog(workflowId, "*** Colorize structure started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_ComputeSfM_DataColor.exe";
+            var args = $"--input_file {inputDir}\\reconstruction\\sfm_data.bin --output_file {inputDir}\\reconstruction\\colorized.ply";
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Colorize structure completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        AppendLog(workflowId, $"openMVG: - Create structure from Motion completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+
+        return StatusCode(200, "OK");
+    }
+
+    private int ExecuteProcess(string exePath, string args, string workflowId)
+    {
         var process = new System.Diagnostics.Process
         {
             StartInfo = new System.Diagnostics.ProcessStartInfo
@@ -180,10 +308,9 @@ public class DownloadFolderModel : PageModel
         if (exitCode != 0)
         {
             _logger.LogError("Process exited with code {ExitCode}", exitCode);
-            return StatusCode(500, $"Process failed with exit code {exitCode}.\nError: {error}");
         }
 
-        return StatusCode(200, $"Process completed successfully.\nOutput: {output}");
+        return exitCode;
     }
 
     private void AppendLog(string workflowId, string message)
@@ -253,7 +380,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
 
             AppendLog(workflowId, "Running workflow...");
-            openMVG_opeMVSWorkflow(extractPath, workflowId);
+            openMVG_openMVSWorkflow(extractPath, workflowId);
             AppendLog(workflowId, "Workflow finished.");
         }
         catch (Exception ex)
