@@ -82,7 +82,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
 
             AppendLog(workflowId, "Running workflow...");
-            var result = openMVG_openMVSWorkflow(extractPath, workflowId);
+            var result = openMVG_openMVS_Workflow(extractPath, workflowId);
             AppendLog(workflowId, "Workflow finished.");
 
             return Content(workflowId); // Return workflowId to client
@@ -136,12 +136,34 @@ public class DownloadFolderModel : PageModel
         return Content(workflowId);
     }
 
-    private ObjectResult openMVG_openMVSWorkflow(string inputDir, string workflowId)
+    private ObjectResult openMVG_openMVS_Workflow(string inputDir, string workflowId)
     {
         AppendLog(workflowId, "openMVG - openMVS Workflow started...");
         var stopWatch = System.Diagnostics.Stopwatch.StartNew();
 
-        var result = openMVG_CreateSfM(inputDir, workflowId);
+        var result = openMVG_Create_SfM(inputDir, workflowId);
+        if (result.StatusCode != 200)
+        {
+            return result;
+        }
+
+        {
+            AppendLog(workflowId, "*** Importing 3D reconstruction from openMVG started...");
+
+            var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_openMVG2openMVS.exe";
+            var args = $"--sfmdata {inputDir}\\reconstruction\\sfm_data.bin --outfile {inputDir}\\model.mvs --outdir {inputDir}\\undistored";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** Importing 3D reconstruction from openMVG completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        result = openMVS_Create_MVS(inputDir, workflowId);
         if (result.StatusCode != 200)
         {
             return result;
@@ -152,7 +174,7 @@ public class DownloadFolderModel : PageModel
         return StatusCode(200, "OK");
     }
 
-    private ObjectResult openMVG_CreateSfM(string inputDir, string workflowId)
+    private ObjectResult openMVG_Create_SfM(string inputDir, string workflowId)
     {
         AppendLog(workflowId, "openMVG: Create structure from Motion started...");
         var stopWatch = System.Diagnostics.Stopwatch.StartNew();
@@ -264,6 +286,22 @@ public class DownloadFolderModel : PageModel
         }
 
         AppendLog(workflowId, $"openMVG: - Create structure from Motion completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+
+        return StatusCode(200, "OK");
+    }
+
+    private ObjectResult openMVS_Create_MVS(string inputDir, string workflowId)
+    {
+        AppendLog(workflowId, "openMVS: Create Multi View Stereo reconstruction started...");
+        var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+
+        //var result = openMVG_Create_SfM(inputDir, workflowId);
+        //if (result.StatusCode != 200)
+        //{
+        //    return result;
+        //}
+
+        AppendLog(workflowId, $"openMVS: Create Multi View Stereo reconstruction completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
 
         return StatusCode(200, "OK");
     }
@@ -380,7 +418,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
 
             AppendLog(workflowId, "Running workflow...");
-            openMVG_openMVSWorkflow(extractPath, workflowId);
+            openMVG_openMVS_Workflow(extractPath, workflowId);
             AppendLog(workflowId, "Workflow finished.");
         }
         catch (Exception ex)
