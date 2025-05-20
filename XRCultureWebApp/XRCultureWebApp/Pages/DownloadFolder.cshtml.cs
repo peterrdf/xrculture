@@ -526,7 +526,11 @@ public class DownloadFolderModel : PageModel
     private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
     {
         // Ensure destination directory exists
-        Directory.CreateDirectory(destDir);
+        if (!Directory.Exists(destDir))
+        {
+            Directory.CreateDirectory(destDir);
+            AppendLog(workflowId, $"Created directory: {destDir}");
+        }
 
         string archivePath = Path.Combine(destDir, archiveName);
 
@@ -535,6 +539,7 @@ public class DownloadFolderModel : PageModel
         using (var zipStream = new FileStream(archivePath, FileMode.Create))
         using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
         {
+            // Add .bin and .jpg files
             var files = Directory.EnumerateFiles(sourceDir + "\\obj", "*.*", SearchOption.AllDirectories)
                 .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase));
 
@@ -542,6 +547,15 @@ public class DownloadFolderModel : PageModel
             {
                 string entryName = Path.GetRelativePath(sourceDir + "\\obj", file);
                 archive.CreateEntryFromFile(file, entryName);
+            }
+
+            // Add an HTML file with your link
+            string htmlContent = @"<h4><a href=""viewer.html?model=rabbit"" target=""_blank"">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</a></h4>";
+            var htmlEntry = archive.CreateEntry("index.html");
+            using (var entryStream = htmlEntry.Open())
+            using (var writer = new StreamWriter(entryStream))
+            {
+                writer.Write(htmlContent);
             }
         }
 

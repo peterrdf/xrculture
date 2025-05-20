@@ -13,6 +13,8 @@
     <p>Learn about <a href="https://pro.europeana.eu/project/xrculture">Europeana XRCulture</a></p>
 </div>
 
+<div id="resultLinks"></div>
+
 <textarea id="logArea" rows="10" style="width:100%"></textarea>
 
 <script>
@@ -38,9 +40,29 @@
                 const logArea = document.getElementById('logArea');
                 logArea.value = logs;
                 logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
+
+                // Check if workflow is finished and show the link
+                if (logs.includes("Archive") && logs.includes("created successfully")) {
+                    showResultLinks(workflowId);
+                    polling = false; // Stop polling if you want
+                }
             }
             await new Promise(r => setTimeout(r, 1000));
         }
+    }
+
+    function showResultLinks(workflowId) {
+        const resultDiv = document.getElementById('resultLinks');
+        const binzUrl = `/data/${workflowId}.binz`;
+        const viewerUrl = `/viewer.html?model=${workflowId}`;
+        resultDiv.innerHTML = `
+            <h4>
+                <a href="${viewerUrl}" target="_blank">View 3D Model in WebGL Viewer</a>
+            </h4>
+            <h4>
+                <a href="${binzUrl}" target="_blank">Download .binz Archive</a>
+            </h4>
+        `;
     }
 
     function downloadGitHubRepo() {
