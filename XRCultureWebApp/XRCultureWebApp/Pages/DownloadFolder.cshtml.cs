@@ -526,13 +526,10 @@ public class DownloadFolderModel : PageModel
     private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
     {
         // Ensure destination directory exists
-        if (!Directory.Exists(destDir))
-        {
-            Directory.CreateDirectory(destDir);
-            AppendLog(workflowId, $"Created directory: {destDir}");
-        }
-
-        string archivePath = Path.Combine(destDir, archiveName);
+        string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
+        string dataDir = Path.Combine(webRoot, "data");
+        Directory.CreateDirectory(dataDir);
+        string archivePath = Path.Combine(dataDir, archiveName);
 
         AppendLog(workflowId, $"Creating archive {archivePath}...");
 

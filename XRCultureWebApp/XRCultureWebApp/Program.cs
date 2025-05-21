@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 
 namespace XRCultureWebApp
 {
@@ -28,7 +30,30 @@ namespace XRCultureWebApp
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
             app.UseStaticFiles();
+
+            var extensionProvider = new FileExtensionContentTypeProvider();
+            extensionProvider.Mappings.Add(".data", "application/octet-stream");
+            extensionProvider.Mappings.Add(".binz", "application/octet-stream");
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(builder.Environment.ContentRootPath, "wwwroot/viewer")),
+                RequestPath = "/viewer",
+                ContentTypeProvider = extensionProvider,
+                ServeUnknownFileTypes = true
+            });
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(builder.Environment.ContentRootPath, "wwwroot/data")),
+                RequestPath = "/data",
+                ContentTypeProvider = extensionProvider,
+                ServeUnknownFileTypes = true
+            });
 
             app.UseRouting();
 

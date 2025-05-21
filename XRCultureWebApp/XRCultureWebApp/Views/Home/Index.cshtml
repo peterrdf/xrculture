@@ -54,7 +54,8 @@
     function showResultLinks(workflowId) {
         const resultDiv = document.getElementById('resultLinks');
         const binzUrl = `/data/${workflowId}.binz`;
-        const viewerUrl = `/viewer.html?model=${workflowId}`;
+        // Note: viewer is now in /viewer subfolder
+        const viewerUrl = `/viewer/viewer.html?model=${workflowId}`;
         resultDiv.innerHTML = `
             <h4>
                 <a href="${viewerUrl}" target="_blank">View 3D Model in WebGL Viewer</a>
