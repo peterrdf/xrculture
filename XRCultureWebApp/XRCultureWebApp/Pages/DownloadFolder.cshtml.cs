@@ -144,7 +144,11 @@ public class DownloadFolderModel : PageModel
         if (!fileInfo.Exists)
             return NotFound();
 
-        return PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
+        var result = PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+        return result;
     }
 
     private ObjectResult openMVG_openMVS_Workflow(string inputDir, string workflowId)
