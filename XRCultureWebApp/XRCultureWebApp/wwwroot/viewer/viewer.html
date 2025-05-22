@@ -161,7 +161,7 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const model = urlParams.get('model');
                     if (model) {
-                        loadFileByUri('../data/' + model + '.binz');
+                        loadFileByUri(model + '.binz');
                     }
                 }, 500)
             } catch (ex) {

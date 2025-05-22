@@ -63,7 +63,7 @@
     function showResultLinks(workflowId) {
         const resultDiv = document.getElementById('resultLinks');
         const cacheBuster = Date.now();
-        const binzUrl = `/data/${workflowId}.binz?v=${cacheBuster}`;
+        const binzUrl = `/DownloadFolder?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
         const viewerUrl = `/viewer/viewer.html?model=${workflowId}&v=${cacheBuster}`;
         resultDiv.innerHTML = `
             <h5>

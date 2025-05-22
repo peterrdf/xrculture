@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
@@ -134,6 +135,16 @@ public class DownloadFolderModel : PageModel
         // Start the workflow in the background
         Task.Run(() => RunWorkflowAsync(owner, repo, folder, branch, workflowId));
         return Content(workflowId);
+    }
+
+    public IActionResult OnGetFile(string file)
+    {
+        var provider = new PhysicalFileProvider(_configuration["ToolPaths:OpenMVG-OpenMVS-Output"]);
+        var fileInfo = provider.GetFileInfo(file);
+        if (!fileInfo.Exists)
+            return NotFound();
+
+        return PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
     }
 
     private ObjectResult openMVG_openMVS_Workflow(string inputDir, string workflowId)
