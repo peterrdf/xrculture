@@ -546,14 +546,14 @@ public class DownloadFolderModel : PageModel
                 archive.CreateEntryFromFile(file, entryName);
             }
 
-            // Add an HTML file with your link
-            string htmlContent = @"<h4><a href=""viewer.html?model=rabbit"" target=""_blank"">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</a></h4>";
-            var htmlEntry = archive.CreateEntry("index.html");
-            using (var entryStream = htmlEntry.Open())
-            using (var writer = new StreamWriter(entryStream))
-            {
-                writer.Write(htmlContent);
-            }
+            //// Add an HTML file with your link
+            //string htmlContent = @"<h4><a href=""viewer.html?model=rabbit"" target=""_blank"">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</a></h4>";
+            //var htmlEntry = archive.CreateEntry("index.html");
+            //using (var entryStream = htmlEntry.Open())
+            //using (var writer = new StreamWriter(entryStream))
+            //{
+            //    writer.Write(htmlContent);
+            //}
         }
 
         AppendLog(workflowId, $"Archive {archivePath} created successfully.");
@@ -564,5 +564,20 @@ public class DownloadFolderModel : PageModel
         public string Name { get; set; }
         public string Download_Url { get; set; }
         public string Type { get; set; }
+    }
+
+    private void TestWriteAccess()
+    {
+        try
+        {
+            var testFile = Path.Combine(@"D:\Temp\XRCultureData\data", "test.txt");
+            System.IO.File.WriteAllText(testFile, "test");
+            System.IO.File.Delete(testFile);
+            Console.WriteLine("Write access OK");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Write access failed: " + ex.Message);
+        }
     }
 }
