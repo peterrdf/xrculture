@@ -41,6 +41,21 @@ namespace XRCultureWebApp
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(
+                    Path.Combine(builder.Environment.WebRootPath, "viewer")),
+                RequestPath = "/viewer",
+                ContentTypeProvider = extensionProvider,
+                ServeUnknownFileTypes = true,
+                OnPrepareResponse = ctx =>
+                {
+                    ctx.Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                    ctx.Context.Response.Headers["Pragma"] = "no-cache";
+                    ctx.Context.Response.Headers["Expires"] = "0";
+                }
+            });
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
                     Path.Combine(builder.Environment.WebRootPath, "data")),
                 RequestPath = "/data",
                 ContentTypeProvider = extensionProvider,
@@ -52,13 +67,6 @@ namespace XRCultureWebApp
                     ctx.Context.Response.Headers["Expires"] = "0";
                 }
             });
-
-            //app.UseDirectoryBrowser(new DirectoryBrowserOptions
-            //{
-            //    FileProvider = new PhysicalFileProvider(
-            //        Path.Combine(builder.Environment.WebRootPath, "data")),
-            //    RequestPath = "/data",
-            //});
 
             app.UseFileServer(new FileServerOptions
             {
