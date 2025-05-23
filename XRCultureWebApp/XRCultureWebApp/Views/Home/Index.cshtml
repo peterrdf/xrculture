@@ -5,21 +5,24 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://pro.europeana.eu/project/xrculture">Europeana XRCulture</a></p>
-    <label for="txtGHFolder">GitHub folder</label><br />
-    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <input id="txtGHFolder" type="text" style="width: 400px;" />
-        <button type="button" onclick="downloadGitHubRepo()">Process</button>
-    </div>
-    <hr />
-    <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'bag', 'main')">Test: Bag (RDF LTD, 34 images, iPhone 13)</button>
-    <hr />
-    <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'rabbit', 'main')">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</button>
-    <hr />
-    <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Test: Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
-    <hr />
+    <div id="divExecute">
+        <label for="txtGHFolder">GitHub folder</label><br />
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <input id="txtGHFolder" type="text" style="width: 400px;" />
+            <button type="button" onclick="downloadGitHubRepo()">Process</button>
+        </div>
+        <hr />
+        <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'bag', 'main')">Test: Bag (RDF LTD, 34 images, iPhone 13)</button>
+        <hr />
+        <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'rabbit', 'main')">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</button>
+        <hr />
+        <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Test: Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
+        <hr />
+    </div>    
 </div>
 
 <br />
+<label for="logArea">Output</label><br />
 <textarea id="logArea" rows="10" style="width:100%"></textarea>
 
 <hr />
@@ -31,6 +34,7 @@
     let polling = false;
 
     async function startWorkflow(owner, repo, folder, branch = "main") {
+        document.getElementById('divExecute').style.display = 'none';
         const url = `/DownloadFolder?handler=StartWorkflow&owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
         const response = await fetch(url, { method: 'GET' });
         if (response.ok) {
@@ -61,6 +65,7 @@
     }
 
     function showResultLinks(workflowId) {
+        document.getElementById('divExecute').style.display = 'block';
         const resultDiv = document.getElementById('resultLinks');
         const cacheBuster = Date.now();
         const binzUrl = `/DownloadFolder?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;

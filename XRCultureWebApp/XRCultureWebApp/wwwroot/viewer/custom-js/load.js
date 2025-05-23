@@ -229,6 +229,9 @@ function loadInstances(updateViewer) {
                 }
 
                 if (textureIndex >= 0) {
+                    if (textureIndex >= texturesCount) {
+                        textureIndex = texturesCount - 1; // bug in WASM
+                    }
                     conceptualFace.material.texture = {}
                     conceptualFace.material.texture.name = Module.getTextureInfo(textureIndex + 1)
                 }
@@ -471,7 +474,7 @@ function loadFileByUri(file) {
                 })
                 .then(data => {
                     loadBINZ(file, new Uint8Array(data));
-                })
+            })
                 .catch(e => {
                     console.error(e);
                 });

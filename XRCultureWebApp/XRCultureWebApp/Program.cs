@@ -68,13 +68,13 @@ namespace XRCultureWebApp
                 }
             });
 
-            app.UseFileServer(new FileServerOptions
-            {
-                FileProvider = new PhysicalFileProvider(
-                    Path.Combine(builder.Environment.WebRootPath, "data")),
-                RequestPath = "/data",
-                EnableDirectoryBrowsing = true,
-            });
+            //app.UseFileServer(new FileServerOptions
+            //{
+            //    FileProvider = new PhysicalFileProvider(
+            //        Path.Combine(builder.Environment.WebRootPath, "data")),
+            //    RequestPath = "/data",
+            //    EnableDirectoryBrowsing = true,
+            //});
 
             app.UseRouting();
 
