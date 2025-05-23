@@ -220,7 +220,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, "*** Compute features started...");
 
             var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_ComputeFeatures.exe";
-            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --outdir {inputDir}\\matches --describerMethod \"SIFT\" --describerPreset \"HIGH\"";
+            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --outdir {inputDir}\\matches --describerMethod \"SIFT\" --describerPreset \"ULTRA\"";
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
             {
