@@ -1,0 +1,947 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- https://go.microsoft.com/fwlink/?LinkID=208121. -->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\inetpub\xrculture</_PublishTargetUrl>
+    <History>True|2025-05-25T07:36:08.3613113Z||;True|2025-05-25T10:24:22.9029962+03:00||;True|2025-05-25T10:19:44.9040059+03:00||;True|2025-05-25T10:18:00.8751410+03:00||;True|2025-05-25T10:15:49.4554338+03:00||;False|2025-05-25T10:15:31.1425813+03:00||;True|2025-05-25T09:59:58.9103296+03:00||;False|2025-05-25T09:59:12.4262374+03:00||;True|2025-05-24T10:27:54.6965751+03:00||;True|2025-05-24T10:09:30.3325565+03:00||;True|2025-05-24T09:42:43.6642169+03:00||;True|2025-05-24T09:32:26.8786779+03:00||;False|2025-05-24T09:32:06.8635305+03:00||;False|2025-05-24T09:31:07.0489857+03:00||;True|2025-05-24T07:46:45.9171328+03:00||;True|2025-05-23T17:54:34.8475469+03:00||;False|2025-05-23T17:54:21.2612312+03:00||;True|2025-05-23T17:39:43.6884323+03:00||;True|2025-05-23T17:34:36.6654003+03:00||;True|2025-05-23T17:32:25.3881899+03:00||;True|2025-05-23T17:31:24.0370056+03:00||;True|2025-05-23T17:22:45.2318593+03:00||;False|2025-05-23T17:21:43.5531534+03:00||;False|2025-05-23T17:21:29.0529468+03:00||;False|2025-05-23T17:21:15.7549488+03:00||;True|2025-05-23T17:15:17.5876628+03:00||;False|2025-05-23T17:15:03.5197762+03:00||;True|2025-05-23T17:10:11.6647147+03:00||;True|2025-05-23T16:57:09.4197982+03:00||;True|2025-05-23T15:48:02.4376056+03:00||;True|2025-05-23T15:31:20.5839509+03:00||;False|2025-05-23T15:31:01.2613336+03:00||;True|2025-05-23T14:47:29.6647026+03:00||;False|2025-05-23T14:47:03.7432079+03:00||;True|2025-05-23T14:17:16.6714029+03:00||;True|2025-05-23T14:15:53.1709998+03:00||;True|2025-05-23T14:11:50.6536335+03:00||;True|2025-05-23T14:07:10.8143383+03:00||;True|2025-05-23T14:06:12.4667516+03:00||;True|2025-05-23T13:55:29.7058333+03:00||;True|2025-05-23T13:28:49.7058356+03:00||;False|2025-05-23T13:27:55.7954562+03:00||;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="wwwroot/css/site.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/data/angel.binz">
+      <publishTime>05/22/2025 06:20:15</publishTime>
+    </File>
+    <File Include="wwwroot/favicon.ico">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/js/site.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.min.css">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.min.css.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.min.js.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.esm.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.esm.js.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.js.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/dist/js/bootstrap.min.js.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/bootstrap/LICENSE">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation-unobtrusive/LICENSE.txt">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation/dist/additional-methods.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation/dist/additional-methods.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation/dist/jquery.validate.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation/dist/jquery.validate.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery-validation/LICENSE.md">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery/dist/jquery.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery/dist/jquery.min.js">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery/dist/jquery.min.map">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/lib/jquery/LICENSE.txt">
+      <publishTime>05/19/2025 10:58:22</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/favicon.ico">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/arrow-collapse.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/arrow-expand.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/burger-x.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/burger.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/button-addon.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/button-checker.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/button-model.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/col-resize.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/element-in-3d-view-reductor.jpg">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/element-in-3d-view-reductor.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/element-in-3d-view.jpg">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/eye-blue.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/eye-gray.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/eye-red.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/eye-white.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/eye.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/pop-checker.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/pop-details.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/pop-rule-selection.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/qubs-export.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/row-resize.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/rule-selection.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/assets/img/tree-selection.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/AjaxLoader.gif">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/bootstrap-select.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/bootstrap-select.css.map">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/bootstrap-theme.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/bootstrap-theme.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/bootstrap.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/bootstrap.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/custom.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/grabbing.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/icon-styles.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/owl.carousel.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/owl.theme.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/owl.transitions.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/rdf.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/style.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/css/styles.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/gml2ifc.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/handlers.js">
+      <publishTime>05/15/2025 15:22:22</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/integrator.js">
+      <publishTime>02/07/2025 15:01:15</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/interaction.js">
+      <publishTime>04/16/2025 10:39:29</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/list-tree.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/load.js">
+      <publishTime>05/23/2025 08:11:14</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/properties.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/custom-js/rules.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/emifcengine.data">
+      <publishTime>04/16/2025 16:55:18</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/emifcengine.js">
+      <publishTime>04/16/2025 16:55:27</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/emifcengine.wasm">
+      <publishTime>04/16/2025 16:55:27</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/emifcengine.wasm.map">
+      <publishTime>04/16/2025 16:55:27</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/android-icon-144x144.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/android-icon-192x192.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/android-icon-36x36.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/android-icon-48x48.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/android-icon-72x72.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/android-icon-96x96.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-114x114.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-120x120.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-144x144.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-152x152.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-180x180.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-57x57.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-60x60.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-72x72.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-76x76.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon-precomposed.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/apple-icon.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/browserconfig.xml">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/favicon-16x16.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/favicon-32x32.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/favicon-96x96.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/favicon.ico">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/manifest.json">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/ms-icon-144x144.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/ms-icon-150x150.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/ms-icon-310x310.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/ms-icon-70x70.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/favicon/rdf-logo.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/fonts/glyphicons-halflings-regular.eot">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/fonts/glyphicons-halflings-regular.svg">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/fonts/glyphicons-halflings-regular.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/fonts/glyphicons-halflings-regular.woff">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/geom.js">
+      <publishTime>05/15/2025 15:55:12</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/iscroll/iscroll.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/external/jquery/jquery.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_diagonals-thick_18_b81900_40x40.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_diagonals-thick_20_666666_40x40.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_flat_10_000000_40x100.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_glass_100_f6f6f6_1x400.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_glass_100_fdf5ce_1x400.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_glass_65_ffffff_1x400.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_gloss-wave_35_f6a828_500x100.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_highlight-soft_100_eeeeee_1x100.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-bg_highlight-soft_75_ffe45c_1x100.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-icons_222222_256x240.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-icons_228ef1_256x240.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-icons_ef8c08_256x240.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-icons_ffd27a_256x240.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/images/ui-icons_ffffff_256x240.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/index.html">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.structure.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.structure.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.theme.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jquery-ui-1.11.4.custom/jquery-ui.theme.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/bootstrap-select.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/bootstrap-select.js.map">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/bootstrap.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/bootstrap.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/gl-matrix-min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/gunzip.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/gunzip.min.js.map">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/js.cookie.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/jszip-utils.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/jszip.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/jszip.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/owl.carousel.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/owl.carousel.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/scripts.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/spin.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/DeviceOrientationControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/DragControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/EditorControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/FirstPersonControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/FlyControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/MapControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/OrbitControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/OrthographicTrackballControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/PointerLockControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/TrackballControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/controls/TransformControls.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/Detector.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/ArrowHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/AxesHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/Box3Helper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/BoxHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/CameraHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/DirectionalLightHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/FaceNormalsHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/GridHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/HemisphereLightHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/PlaneHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/PointLightHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/PolarGridHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/RectAreaLightHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/SkeletonHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/SpotLightHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/helpers/VertexNormalsHelper.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/libs/dat.gui.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/libs/stats.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/BasicShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/BleachBypassShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/BlendShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/BokehShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/BokehShader2.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/BrightnessContrastShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/ColorCorrectionShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/ColorifyShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/ConvolutionShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/CopyShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/DepthLimitedBlurShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/DigitalGlitch.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/DOFMipMapShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/DotScreenShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/FilmShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/FocusShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/FreiChenShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/FresnelShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/FXAAShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/GammaCorrectionShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/HalftoneShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/HorizontalBlurShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/HorizontalTiltShiftShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/HueSaturationShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/KaleidoShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/LuminosityHighPassShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/LuminosityShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/MirrorShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/NormalMapShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/OceanShaders.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/ParallaxShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/PixelShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/RGBShiftShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/SAOShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/SepiaShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/SMAAShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/SobelOperatorShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/SSAOShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/TechnicolorShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/ToneMapShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/TriangleBlurShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/UnpackDepthRGBAShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/VerticalBlurShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/VerticalTiltShiftShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/VignetteShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/shaders/WaterRefractionShader.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/three.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/utils/GeometryUtils.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/utils/MathUtils.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/utils/SceneUtils.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/utils/ShadowMapViewer.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/threejs/utils/UVsDebug.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/utils.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/js/viewer.js">
+      <publishTime>05/16/2025 11:44:52</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/jstree.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/jstree.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default-dark/32px.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default-dark/40px.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default-dark/style.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default-dark/style.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default-dark/throbber.gif">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default/32px.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default/40px.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default/style.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default/style.min.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/jstree-3.2.1/themes/default/throbber.gif">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/less/custom-float.less">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/less/style.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/less/style.less">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/README.md">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/BS-color-alone.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/BS-dark-alone.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/BS-white-alone.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Colors-bsc.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/logo-bsc-color.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/logo-bsc-dark-mono.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/logo-bsc-light-mono.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/logo-bsc-light.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/2. Typography-bsc.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-Bold.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-BoldItalic.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-ExtraBold.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-ExtraBoldItalic.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-Italic.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-Light.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-LightItalic.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-Regular.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-SemiBold.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/resources/Open Sans Font/OpenSans-SemiBoldItalic.ttf">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/settings.js">
+      <publishTime>05/15/2025 14:53:10</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/shader/shader-fragment.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/shader/shader-vertex.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/snap/snap.css">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/snap/snap.min.js">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/texture.png">
+      <publishTime>12/23/2024 09:52:25</publishTime>
+    </File>
+    <File Include="wwwroot/viewer/viewer.html">
+      <publishTime>05/22/2025 10:05:41</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

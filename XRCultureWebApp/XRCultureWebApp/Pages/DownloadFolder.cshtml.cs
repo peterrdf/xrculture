@@ -541,12 +541,14 @@ public class DownloadFolderModel : PageModel
     private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
     {
         // Ensure destination directory exists
-        string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
-        string dataDir = Path.Combine(webRoot, "data");
+        //string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
+        //string dataDir = Path.Combine(webRoot, "data");
+        string dataDir = Path.Combine(_configuration["ToolPaths:OpenMVG-OpenMVS-Output"], "data");
         Directory.CreateDirectory(dataDir);
         string archivePath = Path.Combine(dataDir, archiveName);
 
-        AppendLog(workflowId, $"Creating archive {archivePath}...");
+        //AppendLog(workflowId, $"Creating archive {archivePath}...");
+        AppendLog(workflowId, $"Creating archive {archiveName}...");
 
         using (var zipStream = new FileStream(archivePath, FileMode.Create))
         using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
@@ -571,7 +573,8 @@ public class DownloadFolderModel : PageModel
             //}
         }
 
-        AppendLog(workflowId, $"Archive {archivePath} created successfully.");
+        //AppendLog(workflowId, $"Archive {archivePath} created successfully.");
+        AppendLog(workflowId, $"Archive {archiveName} created successfully.");
     }
 
     public class GitHubFile

@@ -1,0 +1,18 @@
+﻿@page  
+@model XRCultureWebApp.Pages.LoginModel  
+
+@{  
+    ViewData["Title"] = "Sign in";  
+}  
+
+<form method="post">  
+    <input name="Username" asp-for="Username" class="form-control" />
+    <input name="Password" asp-for="Password" type="password" class="form-control" />
+    <button type="submit">Login</button>  
+    @Html.AntiForgeryToken()
+</form>  
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))  
+{  
+    <div>@Model.ErrorMessage</div>  
+}

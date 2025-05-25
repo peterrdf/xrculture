@@ -13,14 +13,29 @@ namespace XRCultureWebApp
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-            .AddNegotiate();
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "MyCookieAuth";
+                options.DefaultChallengeScheme = "MyCookieAuth";
+            })
+            .AddCookie("MyCookieAuth", options =>
+            {
+                options.LoginPath = "/Login";
+                options.AccessDeniedPath = "/AccessDenied";
+                options.LogoutPath = "/Logout";
+                options.ReturnUrlParameter = "returnUrl";
+                options.ExpireTimeSpan = TimeSpan.FromDays(14);
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            }).AddNegotiate();
+            builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddAuthorization(options =>
             {
                 // By default, all incoming requests will be authorized according to the default policy.
                 options.FallbackPolicy = options.DefaultPolicy;
             });
+
             builder.Services.AddRazorPages();
             builder.Services.AddDirectoryBrowser();
 
@@ -31,7 +46,12 @@ namespace XRCultureWebApp
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+            else
+            {
+                app.UseHsts();
+            }
 
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             var extensionProvider = new FileExtensionContentTypeProvider();
@@ -77,14 +97,13 @@ namespace XRCultureWebApp
             //});
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
+            app.MapRazorPages();
 
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            app.MapRazorPages();
 
             app.Run();
         }
