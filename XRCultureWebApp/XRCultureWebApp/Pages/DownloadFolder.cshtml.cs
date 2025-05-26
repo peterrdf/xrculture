@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
 using System.Net.Http.Headers;
+using XRCultureWebApp;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class DownloadFolderModel : PageModel
@@ -15,11 +16,13 @@ public class DownloadFolderModel : PageModel
 
     private readonly ILogger<DownloadFolderModel> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IOperationSingleton _singletonOperation;
 
-    public DownloadFolderModel(ILogger<DownloadFolderModel> logger, IConfiguration configuration)
+    public DownloadFolderModel(ILogger<DownloadFolderModel> logger, IConfiguration configuration, IOperationSingleton singletonOperation)
     {
         _logger = logger;
         _configuration = configuration;
+        _singletonOperation = singletonOperation;
     }
 
     public async Task<IActionResult> OnGetAsync(string owner, string repo, string folder, string branch = "main", string workflowId = null)
@@ -455,6 +458,8 @@ public class DownloadFolderModel : PageModel
 
     private async Task RunWorkflowAsync(string owner, string repo, string folder, string branch, string workflowId)
     {
+        _singletonOperation.Started = true;
+
         string zipFilePath = null;
         string extractPath = null;
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -463,7 +468,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, "Workflow started.");
             AppendLog(workflowId, "Downloading file list from GitHub...");
             var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AppName", "1.0"));
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));
 
             var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
             var response = await client.GetAsync(apiUrl);
@@ -535,6 +540,8 @@ public class DownloadFolderModel : PageModel
             {
                 AppendLog(workflowId, $"Cleanup error: {cleanupEx.Message}");
             }
+
+            _singletonOperation.Started = false;
         }
     }
 

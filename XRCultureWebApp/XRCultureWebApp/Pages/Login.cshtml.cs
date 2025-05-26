@@ -58,19 +58,19 @@ namespace XRCultureWebApp.Pages
             _logger.LogInformation(" OnPostAsync()");
             if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
             {
-                ErrorMessage = "Username and password are required";
+                ErrorMessage = "User and Password are required.";
                 return Page();
             }
-            if (Username == "q" && Password == "q")
+            if (Username == "xrculture" && Password == "Q7!vRz2#pLw8@tXb")
             {
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, Username)
                 };
-                var identity = new ClaimsIdentity(claims, "MyCookieAuth");
+                var identity = new ClaimsIdentity(claims, "XRCultureCookieAuth");
                 var principal = new ClaimsPrincipal(identity);
 
-                await HttpContext.SignInAsync("MyCookieAuth", principal);
+                await HttpContext.SignInAsync("XRCultureCookieAuth", principal);
 
                 if (string.IsNullOrEmpty(ReturnUrl) || !Url.IsLocalUrl(ReturnUrl))
                 {
@@ -82,7 +82,8 @@ namespace XRCultureWebApp.Pages
                 }
             }
 
-            ErrorMessage = "Invalid username or password";
+            ErrorMessage = "Invalid User or Password";
+
             return Page();
         }
     }

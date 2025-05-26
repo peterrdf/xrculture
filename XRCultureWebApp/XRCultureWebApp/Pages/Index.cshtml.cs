@@ -8,15 +8,18 @@ namespace XRCultureWebApp.Pages
     {
         private readonly ILogger<LoginModel> _logger;
 
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        public IndexModel(ILogger<LoginModel> logger, IHttpContextAccessor httpContextAccessor)
+        private readonly IOperationSingleton _singletonOperation;
+        public IndexModel(ILogger<LoginModel> logger, IOperationSingleton singletonOperation)
         {
             _logger = logger;
-            _httpContextAccessor = httpContextAccessor;
+            _singletonOperation = singletonOperation;
         }
 
         public void OnGet()
         {
         }
+
+        public string OperationId => _singletonOperation.OperationId.ToString("N");
+        public bool Started => _singletonOperation.Started;
     }
 }

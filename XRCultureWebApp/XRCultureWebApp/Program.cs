@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using System.Collections.Concurrent;
 
 namespace XRCultureWebApp
 {
     public class Program
     {
+        private static readonly ConcurrentDictionary<string, System.Text.StringBuilder> WorkflowLogs = new();
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -15,10 +18,10 @@ namespace XRCultureWebApp
 
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = "MyCookieAuth";
-                options.DefaultChallengeScheme = "MyCookieAuth";
+                options.DefaultScheme = "XRCultureCookieAuth";
+                options.DefaultChallengeScheme = "XRCultureCookieAuth";
             })
-            .AddCookie("MyCookieAuth", options =>
+            .AddCookie("XRCultureCookieAuth", options =>
             {
                 options.LoginPath = "/Login";
                 options.AccessDeniedPath = "/AccessDenied";
@@ -35,6 +38,12 @@ namespace XRCultureWebApp
                 // By default, all incoming requests will be authorized according to the default policy.
                 options.FallbackPolicy = options.DefaultPolicy;
             });
+
+            builder.Services.AddTransient<IOperationTransient, Operation>();
+            builder.Services.AddScoped<IOperationScoped, Operation>();
+            builder.Services.AddSingleton<IOperationSingleton, Operation>();
+            builder.Services.AddSingleton<IOperationSingletonInstance>(new Operation(Guid.Empty));
+            builder.Services.AddTransient<OperationService, OperationService>();
 
             builder.Services.AddRazorPages();
             builder.Services.AddDirectoryBrowser();

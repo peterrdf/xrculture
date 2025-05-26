@@ -19,7 +19,6 @@
                 @Html.AntiForgeryToken()
             </div>
         </form>
-        <partial name="_ValidationScriptsPartial" />
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))  
         {  
             <div class="alert alert-danger mt-3">@Model.ErrorMessage</div>  
