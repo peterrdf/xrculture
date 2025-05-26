@@ -26,7 +26,7 @@ namespace XRCultureWebApp
                 options.ReturnUrlParameter = "returnUrl";
                 options.ExpireTimeSpan = TimeSpan.FromDays(14);
                 options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.None;
             }).AddNegotiate();
             builder.Services.AddHttpContextAccessor();
 

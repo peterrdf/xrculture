@@ -8,6 +8,7 @@
 <form method="post">  
     <input name="Username" asp-for="Username" class="form-control" />
     <input name="Password" asp-for="Password" type="password" class="form-control" />
+    <input name="ReturnUrl" type="hidden" asp-for="ReturnUrl" />
     <button type="submit">Login</button>  
     @Html.AntiForgeryToken()
 </form>  
