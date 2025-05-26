@@ -550,7 +550,7 @@ public class DownloadFolderModel : PageModel
         // Ensure destination directory exists
         //string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
         //string dataDir = Path.Combine(webRoot, "data");
-        string dataDir = Path.Combine(_configuration["ToolPaths:OpenMVG-OpenMVS-Output"], "data");
+        string dataDir = _configuration["ToolPaths:OpenMVG-OpenMVS-Output"];
         Directory.CreateDirectory(dataDir);
         string archivePath = Path.Combine(dataDir, archiveName);
 
