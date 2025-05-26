@@ -154,6 +154,15 @@ public class DownloadFolderModel : PageModel
         return result;
     }
 
+    public IActionResult OnGetStatus(string workflowId)
+    {
+        // Example: get status from your global dictionary or other storage
+        var status = _singletonOperation.Started
+            ? "finished"
+            : "running";
+        return new JsonResult(new { status });
+    }
+
     private ObjectResult openMVG_openMVS_Workflow(string inputDir, string workflowId)
     {
         AppendLog(workflowId, "openMVG - openMVS Workflow started...");
@@ -458,6 +467,12 @@ public class DownloadFolderModel : PageModel
 
     private async Task RunWorkflowAsync(string owner, string repo, string folder, string branch, string workflowId)
     {
+        if (_singletonOperation.Started)
+        {
+            return;
+        }
+        
+        // Set the singleton operation to started
         _singletonOperation.Started = true;
 
         string zipFilePath = null;
@@ -465,7 +480,7 @@ public class DownloadFolderModel : PageModel
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            AppendLog(workflowId, "Workflow started.");
+            AppendLog(workflowId, "Starting workflow...");
             AppendLog(workflowId, "Downloading file list from GitHub...");
             var client = new HttpClient();
             client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));

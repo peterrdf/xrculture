@@ -7,8 +7,6 @@ namespace XRCultureWebApp
 {
     public class Program
     {
-        private static readonly ConcurrentDictionary<string, System.Text.StringBuilder> WorkflowLogs = new();
-
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);

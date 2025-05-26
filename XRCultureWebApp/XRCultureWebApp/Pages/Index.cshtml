@@ -11,7 +11,7 @@
 @if (!Model.Started)
 {
     <div class="text-center">
-        
+
         <div id="divExecute">
             <label for="txtGHFolder">GitHub folder</label><br />
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -24,6 +24,8 @@
             <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'rabbit', 'main')">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</button>
             <hr />
             <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Test: Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
+            <hr />
+            <button onclick="downloadGitHubFolder('openMVG', 'ImageDataset_SceauxCastle', 'images', 'master')">Test: Sceaux Castle (https://github.com/openMVG/ImageDataset_SceauxCastle/images)</button>
             <hr />
         </div>
     </div>
@@ -91,7 +93,7 @@ else
                 <a href="${binzUrl}" target="_blank">Download .binz Archive</a>
             </h5>
         `;
-    }
+            }
 
     function downloadGitHubRepo() {
         const input = document.getElementById('txtGHFolder').value.trim();
