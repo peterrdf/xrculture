@@ -49,18 +49,12 @@ namespace XRCultureWebApp.Pages
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
             }
-
-            // Clear the existing external cookie
-            //#region snippet2
-            //await HttpContext.SignOutAsync(
-            //    CookieAuthenticationDefaults.AuthenticationScheme);
-            //#endregion
-
-            ReturnUrl = "/Index";
+            //returnUrl = "/Index";
+            returnUrl = returnUrl ?? Url.Content("/Index");
         }
 
-        
-       
+
+
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             _logger.LogInformation(" OnPostAsync()");
@@ -70,7 +64,7 @@ namespace XRCultureWebApp.Pages
                 return Page();
             }
             // Hardcoded credentials
-            if (Username == "xrculture" && Password == "YourStrongPassword")
+            if (Username == "q" && Password == "q")
             {
                 var claims = new List<Claim>
                 {
@@ -81,9 +75,9 @@ namespace XRCultureWebApp.Pages
 
                 await HttpContext.SignInAsync("MyCookieAuth", principal);
 
-                returnUrl = returnUrl ?? Url.Content("~/");
+                returnUrl = returnUrl ?? Url.Content("/Index");
 
-                return RedirectToPage(returnUrl);
+                return LocalRedirect("/Index");// RedirectToPage("/Index");
             }
 
             ErrorMessage = "Invalid username or password";
