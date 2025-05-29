@@ -13,25 +13,28 @@
     <div class="text-center">
 
         <div id="divExecute">
-            <label for="txtGHFolder">GitHub folder</label><br />
+            <h1>GitHub folder</h1>            
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <input id="txtGHFolder" type="text" style="width: 400px;" />
                 <button type="button" onclick="downloadGitHubRepo()">Process</button>
             </div>
-            <hr />
-            <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'bag', 'main')">Test: Bag (RDF LTD, 34 images, iPhone 13)</button>
+            <label for="txtGHFolder"><i>Example: https://github.com/svilenvarbanov2019/xrculture_testdata/tree/main/bag</i></label><br />
+            <br />
+            <br />
+            <h1>Examples</h1>
+            <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'bag', 'main')">Bag (RDF LTD, 34 images, iPhone 13)</button>
             <hr />
             <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'rabbit', 'main')">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</button>
             <hr />
-            <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Test: Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
+            <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
             <hr />
-            <button onclick="downloadGitHubFolder('openMVG', 'ImageDataset_SceauxCastle', 'images', 'master')">Test: Sceaux Castle (https://github.com/openMVG/ImageDataset_SceauxCastle/images)</button>
+            <button onclick="downloadGitHubFolder('openMVG', 'ImageDataset_SceauxCastle', 'images', 'master')">Sceaux Castle (Photographer: Copyright 2012 Pierre MOULON http://imagine.enpc.fr/~moulonp/)</button>
             <hr />
         </div>
     </div>
 
     <br />
-    <label for="logArea">Output</label>
+    <label for="logArea"><b>Output</b></label>
     <br />
     <textarea id="logArea" rows="10" style="width:100%"></textarea>
 
@@ -97,15 +100,14 @@ else
 
     function downloadGitHubRepo() {
         const input = document.getElementById('txtGHFolder').value.trim();
-        const match = input.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/.*)?$/);
+        const match = input.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/tree\/main\/([^\/]+)$/);
         if (!match) {
-            alert('Please enter a valid GitHub repository URL (e.g., https://github.com/owner/repo)');
+            alert('Please enter a valid GitHub repository URL (e.g., https://github.com/svilenvarbanov2019/xrculture_testdata/tree/main/bag)');
             return;
         }
         const owner = match[1];
         const repo = match[2];
-        const folder = match[3] ? match[3].substring(1) : '';
-        //OnGetAsync(owner, repo, folder);
+        const folder = match[3];
         startWorkflow(owner, repo, folder);
     }
 
