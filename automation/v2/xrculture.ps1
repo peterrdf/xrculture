@@ -197,27 +197,6 @@ function openMVG-Create-SfM {
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		<#
-		INFO: [main_ComputeFeatures.cpp:93] Usage: D:\Programs\openMVG\x64\openMVG_main_ComputeFeatures.exe
-		[-i|--input_file] a SfM_Data file
-		[-o|--outdir path]
-
-		[Optional]
-		[-f|--force] Force to recompute data
-		[-m|--describerMethod]
-		  (method to use to describe an image):
-		   SIFT (default),
-		   SIFT_ANATOMY,
-		   AKAZE_FLOAT: AKAZE with floating point descriptors,
-		   AKAZE_MLDB:  AKAZE with binary descriptors
-		[-u|--upright] Use Upright feature 0 or 1
-		[-p|--describerPreset]
-		  (used to control the Image_describer configuration):
-		   NORMAL (default),
-		   HIGH,
-		   ULTRA: !!Can take long time!!
-		[-n|--numThreads] number of parallel computations
-		#>
 		Log-Info -_message "*** Compute features..."
 		$startDateTime = Get-Date
 			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_inputPath\matches\sfm_data.json --outdir $_inputPath\matches --describerMethod "SIFT" --describerPreset "ULTRA"
@@ -317,7 +296,7 @@ function openMVG-openMVS-Run-Workflow {
 			return $false
 		}		
 		
-		#Copy-Item -Path ".\*.ply" -Destination $_inputPath -Force		
+		Copy-Item -Path ".\*.ply" -Destination $_inputPath -Force		
 		
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime

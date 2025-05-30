@@ -216,7 +216,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, "*** Intrinsics analysis started...");
 
             var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_SfMInit_ImageListing.exe";
-            var args = $"--imageDirectory {inputDir}\\images --outputDirectory {inputDir}\\matches -f 4000";
+            var args = $"--imageDirectory {inputDir}\\images --outputDirectory {inputDir}\\matches -f 1920";
 
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
@@ -232,7 +232,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, "*** Compute features started...");
 
             var exePath = _configuration["ToolPaths:OpenMVG"] + @"\openMVG_main_ComputeFeatures.exe";
-            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --outdir {inputDir}\\matches --describerMethod \"AKAZE_FLOAT\" --describerPreset \"ULTRA\"";
+            var args = $"--input_file {inputDir}\\matches\\sfm_data.json --outdir {inputDir}\\matches --describerMethod \"SIFT\" --describerPreset \"HIGH\"";
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
             {
