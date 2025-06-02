@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Xml;
 
 namespace XRCultureMiddleware.Pages
 {
@@ -25,13 +26,25 @@ namespace XRCultureMiddleware.Pages
             _singletonOperation = singletonOperation;
         }
 
+
         public async Task<IActionResult> OnPostRegisterAsync()
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
-            var myObject = JsonSerializer.Deserialize<dynamic>(body);
+            var myObject = JsonSerializer.Deserialize<string>(body);
 
-            return Content("hello");
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(myObject);
+
+            var registrationResponse = 
+                @"<RegistrationResponse>
+                  <Status>202</Status>
+                  <ServiceToken>eyJhbGciOi...</ServiceToken>
+                  <ExpiresIn>3600</ExpiresIn> <!-- in seconds -->
+                  <Message>Service successfully registered.</Message>
+                </RegistrationResponse>";
+
+            return Content(registrationResponse);
         }
 
         public async Task<IActionResult> OnGetAsync(string owner, string repo, string folder, string branch = "main", string workflowId = null)

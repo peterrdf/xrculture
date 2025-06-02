@@ -22,7 +22,8 @@
 
     async function log(message) {
         const logArea = document.getElementById('logArea');
-        logArea.value = message;
+        logArea.value += '*******************************************************************\n';
+        logArea.value += message;
         logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
     }
 
@@ -38,7 +39,7 @@
 
         const fetchResponse = await fetch('/Registry?handler=Register', settings);
         const data = await fetchResponse.text();
-        console.log(data);
+        log('<***** Registration Response *****>\n' + data);
     }
 
     function loadViewerRequestXML(file) {
@@ -51,7 +52,7 @@
 
         var fileReader = new FileReader()
         fileReader.onload = function () {
-            log('***** REGISTER REQUEST =>\n' + fileReader.result);
+            log('<***** Registration Request *****>\n' + fileReader.result);
             postRegisterVeiwerRequest(fileReader.result);
         }
 
