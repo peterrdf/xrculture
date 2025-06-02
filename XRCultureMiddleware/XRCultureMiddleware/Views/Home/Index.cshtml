@@ -1,0 +1,121 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h1 class="display-4">Welcome</h1>
+<p>Learn about <a href="https://pro.europeana.eu/project/xrculture">Europeana XRCulture</a></p>
+
+<div class="text-center">
+
+    <div id="divExecute">
+        <h1>GitHub folder</h1>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <input id="txtGHFolder" type="text" style="width: 400px;" />
+            <button type="button" onclick="downloadGitHubRepo()">Process</button>
+        </div>
+        <label for="txtGHFolder"><i>Example: https://github.com/svilenvarbanov2019/xrculture_testdata/tree/main/bag</i></label><br />
+        <br />
+        <br />
+        <h1>Examples</h1>
+        <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'bag', 'main')">Bag (RDF LTD, 34 images, iPhone 13)</button>
+        <hr />
+        <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'rabbit', 'main')">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</button>
+        <hr />
+        <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
+        <hr />
+        <button onclick="downloadGitHubFolder('openMVG', 'ImageDataset_SceauxCastle', 'images', 'master')">Sceaux Castle (Photographer: Copyright 2012 Pierre MOULON http://imagine.enpc.fr/~moulonp/)</button>
+        <hr />
+    </div>
+</div>
+
+<br />
+<label for="logArea"><b>Output</b></label>
+<br />
+<textarea id="logArea" rows="10" style="width:100%"></textarea>
+
+<hr />
+
+<div id="resultLinks"></div>
+
+<script>
+    let workflowId = null;
+    let polling = false;
+
+    async function startWorkflow(owner, repo, folder, branch = "main") {
+        document.getElementById('divExecute').style.display = 'none';
+        const url = `/DownloadFolder?handler=StartWorkflow&owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
+        const response = await fetch(url, { method: 'GET' });
+        if (response.ok) {
+            workflowId = await response.text();
+            polling = true;
+            pollLogs();
+        }
+    }
+
+    async function pollLogs() {
+        if (!workflowId) return;
+        while (polling) {
+            const logResponse = await fetch(`/DownloadFolder?handler=Logs&workflowId=${workflowId}`);
+            if (logResponse.ok) {
+                const logs = await logResponse.text();
+                const logArea = document.getElementById('logArea');
+                logArea.value = logs;
+                logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
+
+                // Check if workflow is finished and show the link
+                if (logs.includes("Archive") && logs.includes("created successfully")) {
+                    showResultLinks(workflowId);
+                    polling = false; // Stop polling if you want
+                }
+            }
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    function showResultLinks(workflowId) {
+        document.getElementById('divExecute').style.display = 'block';
+        const resultDiv = document.getElementById('resultLinks');
+        const cacheBuster = Date.now();
+        const binzUrl = `/DownloadFolder?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
+        const viewerUrl = `/viewer/viewer.html?model=${workflowId}&v=${cacheBuster}`;
+        resultDiv.innerHTML = `
+            <h5>
+                <a href="${viewerUrl}" target="_blank">View 3D Model in WebGL Viewer</a>
+            </h5>
+            <h5>
+                <a href="${binzUrl}" target="_blank">Download .binz Archive</a>
+            </h5>
+        `;
+            }
+
+    function downloadGitHubRepo() {
+        const input = document.getElementById('txtGHFolder').value.trim();
+        const match = input.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/tree\/main\/([^\/]+)$/);
+        if (!match) {
+            alert('Please enter a valid GitHub repository URL (e.g., https://github.com/svilenvarbanov2019/xrculture_testdata/tree/main/bag)');
+            return;
+        }
+        const owner = match[1];
+        const repo = match[2];
+        const folder = match[3];
+        startWorkflow(owner, repo, folder);
+    }
+
+    function downloadGitHubFolder(owner, repo, folder, branch = "main") {
+        startWorkflow(owner, repo, folder);
+    }
+
+    async function callDownloadFolder(owner, repo, folder, branch = "main") {
+        const url = `/DownloadFolder?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
+        const response = await fetch(url, {
+            method: 'GET'
+        });
+
+        if (response.ok) {
+            const result = await response.text();
+            console.log(result);
+        } else {
+            console.error('Error:', response.statusText);
+        }
+    }
+</script>
