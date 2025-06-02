@@ -4,9 +4,11 @@ using Microsoft.Extensions.FileProviders;
 using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace XRCultureMiddleware.Pages
 {
+    [IgnoreAntiforgeryToken]
     public class RegistryModel : PageModel
     {
         // Add this static dictionary for workflow logs
@@ -21,6 +23,15 @@ namespace XRCultureMiddleware.Pages
             _logger = logger;
             _configuration = configuration;
             _singletonOperation = singletonOperation;
+        }
+
+        public async Task<IActionResult> OnPostRegisterAsync()
+        {
+            using var reader = new StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+            var myObject = JsonSerializer.Deserialize<dynamic>(body);
+
+            return Content("hello");
         }
 
         public async Task<IActionResult> OnGetAsync(string owner, string repo, string folder, string branch = "main", string workflowId = null)

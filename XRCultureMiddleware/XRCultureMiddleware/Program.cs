@@ -15,6 +15,15 @@ namespace XRCultureMiddleware
             builder.Services.AddSingleton<IOperationSingletonInstance>(new Operation(Guid.Empty));
             builder.Services.AddTransient<OperationService, OperationService>();
 
+            // CORS
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowSpecificOrigin",
+            //        builder => builder.WithOrigins("https://yourfrontend.com")
+            //                          .AllowAnyHeader()
+            //                          .AllowAnyMethod());
+            //});
+
             builder.Services.AddRazorPages();
             builder.Services.AddDirectoryBrowser();
 

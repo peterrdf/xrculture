@@ -41,21 +41,37 @@
     let workflowId = null;
     let polling = false;
 
+    async function testPost() {
+        const settings = {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ request: "some request" })
+        };
+
+    const fetchResponse = await fetch('/Registry?handler=Register', settings);
+    const data = await fetchResponse.text();
+    console.log(data);
+    }
+
     async function startWorkflow(owner, repo, folder, branch = "main") {
-        document.getElementById('divExecute').style.display = 'none';
-        const url = `/DownloadFolder?handler=StartWorkflow&owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
-        const response = await fetch(url, { method: 'GET' });
-        if (response.ok) {
-            workflowId = await response.text();
-            polling = true;
-            pollLogs();
-        }
+        testPost();
+        // document.getElementById('divExecute').style.display = 'none';
+        // const url = `/Registry?handler=StartWorkflow&owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
+        // const response = await fetch(url, { method: 'GET' });
+        // if (response.ok) {
+        //     workflowId = await response.text();
+        //     polling = true;
+        //     pollLogs();
+        // }
     }
 
     async function pollLogs() {
         if (!workflowId) return;
         while (polling) {
-            const logResponse = await fetch(`/DownloadFolder?handler=Logs&workflowId=${workflowId}`);
+            const logResponse = await fetch(`/Registry?handler=Logs&workflowId=${workflowId}`);
             if (logResponse.ok) {
                 const logs = await logResponse.text();
                 const logArea = document.getElementById('logArea');
@@ -76,7 +92,7 @@
         document.getElementById('divExecute').style.display = 'block';
         const resultDiv = document.getElementById('resultLinks');
         const cacheBuster = Date.now();
-        const binzUrl = `/DownloadFolder?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
+        const binzUrl = `/Registry?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
         const viewerUrl = `/viewer/viewer.html?model=${workflowId}&v=${cacheBuster}`;
         resultDiv.innerHTML = `
             <h5>
@@ -106,7 +122,7 @@
     }
 
     async function callDownloadFolder(owner, repo, folder, branch = "main") {
-        const url = `/DownloadFolder?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
+        const url = `/Registry?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&folder=${encodeURIComponent(folder)}&branch=${encodeURIComponent(branch)}`;
         const response = await fetch(url, {
             method: 'GET'
         });
