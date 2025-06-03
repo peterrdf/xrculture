@@ -42,14 +42,6 @@ namespace XRCultureMiddleware.Pages
       <Message>%MESSAGE%</Message>
 </RegistrationResponse>";
 
-        const string authorizationResponse =
-@"<AuthorizationResponse>
-      <Status>200</Status>
-      <SessionToken>eyJ0eXAiOi...</SessionToken>
-      <SessionExpires>2025-05-29T15:05:00Z</SessionExpires>
-      <Message>Authorization successful.</Message>
-  </AuthorizationResponse>";
-
         public async Task<IActionResult> OnPostRegisterAsync()
         {
             using var reader = new StreamReader(Request.Body);
@@ -62,17 +54,17 @@ namespace XRCultureMiddleware.Pages
             var endpoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
             if (string.IsNullOrEmpty(endpoint))
             {
-                _logger.LogWarning("Bad request: Endpoint.");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: Endpoint."));
+                _logger.LogWarning("Bad request: 'Endpoint'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'Endpoint'."));
             }
 
             if (RegisterViewerRequests.Keys.Contains(endpoint))
             {
-                _logger.LogWarning("Viewer registration is in progress for endpoint: {Endpoint}", endpoint);
+                _logger.LogWarning($"Viewer registration is in progress for 'Endpoint': {endpoint}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
-            var serviceToken = xmlDoc.SelectSingleNode("//ServiceToken")?.InnerText;
+            var serviceToken = Guid.NewGuid().ToString();
 
             RegisterViewerRequests.AddOrUpdate(endpoint, new RegisterViewerRequest
             {
@@ -85,6 +77,51 @@ namespace XRCultureMiddleware.Pages
             });
 
             return Content(registrationResponse.Replace("%SERVICE_TOKEN%", serviceToken));
+        }
+
+        const string authorizationResponse =
+@"<AuthorizationResponse>
+      <Status>200</Status>
+      <SessionToken>%SESSION_TOKEN%</SessionToken>
+      <SessionExpires>2025-05-29T15:05:00Z</SessionExpires>
+      <Message>Authorization successful.</Message>
+  </AuthorizationResponse>";
+
+        public async Task<IActionResult> OnPostAuthorizeAsync()
+        {
+            using var reader = new StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+            var myObject = JsonSerializer.Deserialize<string>(body);
+
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(myObject);
+
+            var sessionToken = xmlDoc.SelectSingleNode("//SessionToken")?.InnerText;
+            if (string.IsNullOrEmpty(sessionToken))
+            {
+                _logger.LogWarning("Bad request: 'SessionToken'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
+            }
+
+            var registerRequest = RegisterViewerRequests.Values.FirstOrDefault(r => r.ServiceToken == sessionToken);
+
+            if (registerRequest == null)
+            {
+                _logger.LogWarning($"Invalid 'SessionToken': {sessionToken}");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
+            }
+
+            //RegisterViewerRequests.AddOrUpdate(sessionToken, new RegisterViewerRequest
+            //{
+            //    EndPoint = sessionToken,
+            //    ServiceToken = serviceToken
+            //}, (key, oldValue) => new RegisterViewerRequest
+            //{
+            //    EndPoint = sessionToken,
+            //    ServiceToken = serviceToken
+            //});
+
+            return Content(authorizationResponse.Replace("%SESSION_TOKEN%", sessionToken));
         }
 
         public async Task<IActionResult> OnGetAsync(string owner, string repo, string folder, string branch = "main", string workflowId = null)

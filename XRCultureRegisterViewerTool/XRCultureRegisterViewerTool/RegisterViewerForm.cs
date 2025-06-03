@@ -32,13 +32,8 @@ namespace XRCultureRegisterViewerTool
             {
                 try
                 {
-                    var filePath = openFileDialog.FileName;
                     var streamReader = new StreamReader(openFileDialog.FileName);
                     var registerRequest = streamReader.ReadToEnd();
-
-                    //var jsonObject = new { body = registerRequest };
-                    //var content = new StringContent(JsonConvert.SerializeObject(jsonObject), Encoding.UTF8, "application/json");
-
 
                     using (HttpClient client = new HttpClient())
                     {
@@ -58,7 +53,13 @@ namespace XRCultureRegisterViewerTool
                         var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
                         if (status?.Trim() == "202")
                         {
-                            ServiceToken = xmlDoc.SelectSingleNode("//ServiceToken")?.InnerText;
+                            SessionToken = xmlDoc.SelectSingleNode("//ServiceToken")?.InnerText;
+                            _buttonAuthorize.Enabled = true;
+                        }
+                        else
+                        {
+                            SessionToken = null;
+                            _buttonAuthorize.Enabled = false;
                         }
                     }
                 }
@@ -70,9 +71,55 @@ namespace XRCultureRegisterViewerTool
             }
         }
 
-        private void _buttonAuthorize_Click(object sender, EventArgs e)
+        async private void _buttonAuthorize_Click(object sender, EventArgs e)
         {
-            _textBoxMiddleware.Text = "http://localhost:5253/";
+            var openFileDialog = new OpenFileDialog()
+            {
+                FileName = "XML file",
+                Filter = "XML files (*.xml)|*.xml",
+                Title = "Open XML file"
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var streamReader = new StreamReader(openFileDialog.FileName);
+                    var authorizeRequest = streamReader.ReadToEnd().Replace("%SESSION_TOKEN%", SessionToken);
+
+                    using (HttpClient client = new HttpClient())
+                    {
+                        var url = _textBoxMiddleware.Text + "Registry?handler=Authorize";
+                        var content = new StringContent(JsonConvert.SerializeObject($"{authorizeRequest}"), Encoding.UTF8, "application/json");
+
+                        HttpResponseMessage response = await client.PostAsync(url, content);
+
+                        string responseString = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine(responseString);
+
+                        _textBoxLog.Text = responseString;
+
+                        XmlDocument xmlDoc = new XmlDocument();
+                        xmlDoc.LoadXml(responseString);
+
+                        var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
+                        if (status?.Trim() == "200")
+                        {
+                            MessageBox.Show($"Status: '{status}'.");
+                        }
+                    }
+                }
+                catch (SecurityException ex)
+                {
+                    MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\n" +
+                    $"Details:\n\n{ex.StackTrace}");
+                }
+                finally
+                {
+                    SessionToken = null;
+                    _buttonAuthorize.Enabled = false;
+                }
+            }
         }
 
         private void _buttonClose_Click(object sender, EventArgs e)
@@ -80,19 +127,6 @@ namespace XRCultureRegisterViewerTool
             Close();
         }
 
-        private void sendAuthorizationRequest(string serviceToken)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                var url = _textBoxMiddleware.Text + "Registry?handler=Authorize";
-                var content = new StringContent(JsonConvert.SerializeObject(new { ServiceToken = serviceToken }), Encoding.UTF8, "application/json");
-                HttpResponseMessage response = client.PostAsync(url, content).Result;
-                string responseString = response.Content.ReadAsStringAsync().Result;
-                Console.WriteLine(responseString);
-                _textBoxLog.Text = responseString;
-            }
-        }
-
-        private string? ServiceToken { get; set; }
+        private string? SessionToken { get; set; }
     }
 }
