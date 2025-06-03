@@ -31,6 +31,11 @@ namespace XRCultureMiddleware.Pages
             _singletonOperationInstance = singletonOperationInstance;
         }
 
+        public IActionResult OnGetViewers()
+        {
+            return Content(JsonSerializer.Serialize(_singletonOperationInstance.Viewers.Keys));
+        }
+
         const string registrationResponse =
 @"<RegistrationResponse>
       <Status>202</Status> <!-- ACCEPTED / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
