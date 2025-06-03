@@ -20,6 +20,31 @@
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    let workflowId = "XRCulture-Middleware-Registry";
+    let polling = true;
+
+    async function pollLogs() {
+        if (!workflowId) return;
+        while (polling) {
+            const logResponse = await fetch(`/Registry?handler=Logs&workflowId=${workflowId}`);
+            if (logResponse.ok) {
+                const logs = await logResponse.text();
+                const logArea = document.getElementById('logArea');
+                logArea.value = logs;
+                logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
+
+                // Check if workflow is finished and show the link
+                if (logs.includes("Archive") && logs.includes("created successfully")) {
+                    showResultLinks(workflowId);
+                    polling = false; // Stop polling if you want
+                }
+            }
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    pollLogs();
+
     async function log(message) {
         const logArea = document.getElementById('logArea');
         logArea.value += '*******************************************************************\n';
@@ -62,8 +87,7 @@
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    let workflowId = null;
-    let polling = false;
+    
 
     async function startWorkflow(owner, repo, folder, branch = "main") {
         document.getElementById('divExecute').style.display = 'none';
@@ -76,25 +100,7 @@
         }
     }
 
-    async function pollLogs() {
-        if (!workflowId) return;
-        while (polling) {
-            const logResponse = await fetch(`/Registry?handler=Logs&workflowId=${workflowId}`);
-            if (logResponse.ok) {
-                const logs = await logResponse.text();
-                const logArea = document.getElementById('logArea');
-                logArea.value = logs;
-                logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
-
-                // Check if workflow is finished and show the link
-                if (logs.includes("Archive") && logs.includes("created successfully")) {
-                    showResultLinks(workflowId);
-                    polling = false; // Stop polling if you want
-                }
-            }
-            await new Promise(r => setTimeout(r, 1000));
-        }
-    }
+    
 
     function showResultLinks(workflowId) {
         document.getElementById('divExecute').style.display = 'block';

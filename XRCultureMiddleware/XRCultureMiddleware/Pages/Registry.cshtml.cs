@@ -50,6 +50,13 @@ namespace XRCultureMiddleware.Pages
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
             var xmlRequest = JsonSerializer.Deserialize<string>(body);
+            if (string.IsNullOrEmpty(xmlRequest))
+            {
+                AppendRegistryLog("Received empty request.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Received empty request."));
+            }
+
+            AppendRegistryLog($"****** RegistrationRequest ******\n{xmlRequest}");
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xmlRequest);
@@ -57,13 +64,13 @@ namespace XRCultureMiddleware.Pages
             var endpoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
             if (string.IsNullOrEmpty(endpoint))
             {
-                _logger.LogWarning("Bad request: 'Endpoint'.");
+                AppendRegistryLog("Bad request: 'Endpoint'.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'Endpoint'."));
             }
 
             if (RegisterViewerRequests.Keys.Contains(endpoint))
             {
-                _logger.LogWarning($"Viewer registration is in progress for 'Endpoint': {endpoint}");
+                AppendRegistryLog($"Viewer registration is in progress for 'Endpoint': {endpoint}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
@@ -102,26 +109,34 @@ namespace XRCultureMiddleware.Pages
             var body = await reader.ReadToEndAsync();
             var xmlRequest = JsonSerializer.Deserialize<string>(body);
 
+            if (string.IsNullOrEmpty(xmlRequest))
+            {
+                AppendRegistryLog("Received empty request.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Received empty request."));
+            }
+
+            AppendRegistryLog($"****** AuthorizationRequest ******\n{xmlRequest}");
+
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xmlRequest);
 
             var sessionToken = xmlDoc.SelectSingleNode("//SessionToken")?.InnerText;
             if (string.IsNullOrEmpty(sessionToken))
             {
-                _logger.LogWarning("Bad request: 'SessionToken'.");
+                AppendRegistryLog("Bad request: 'SessionToken'.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
             }
 
             var registerRequest = RegisterViewerRequests.Values.FirstOrDefault(r => r.ServiceToken == sessionToken);
             if (registerRequest == null)
             {
-                _logger.LogWarning($"Invalid 'SessionToken': {sessionToken}");
+                AppendRegistryLog($"Invalid 'SessionToken': {sessionToken}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
             }
 
             if (_singletonOperationInstance.Viewers.Keys.Contains(registerRequest.EndPoint))
             {
-                _logger.LogWarning($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
+                AppendRegistryLog($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
             }
 
@@ -244,6 +259,9 @@ namespace XRCultureMiddleware.Pages
         {
             if (string.IsNullOrEmpty(workflowId) || !WorkflowLogs.TryGetValue(workflowId, out var log))
                 return NotFound("No logs found.");
+
+            WorkflowLogs.Clear(); // Clear logs after retrieval to prevent memory bloat
+
             return Content(log.ToString());
         }
 
@@ -578,6 +596,11 @@ namespace XRCultureMiddleware.Pages
             var log = WorkflowLogs.GetOrAdd(workflowId, _ => new System.Text.StringBuilder());
             log.AppendLine($"[{DateTime.Now:HH:mm:ss}] {message}");
             _logger.LogInformation("[{WorkflowId}] {Message}", workflowId, message);
+        }
+
+        private void AppendRegistryLog(string message)
+        {
+            AppendLog("XRCulture-Middleware-Registry", message);
         }
 
         private async Task RunWorkflowAsync(string owner, string repo, string folder, string branch, string workflowId)
