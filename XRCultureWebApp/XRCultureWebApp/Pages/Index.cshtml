@@ -100,15 +100,17 @@ else
 
     function downloadGitHubRepo() {
         const input = document.getElementById('txtGHFolder').value.trim();
-        const match = input.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/tree\/main\/([^\/]+)$/);
+        const match = input.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/tree\/([^\/]+)\/([^\/]+)$/);
         if (!match) {
             alert('Please enter a valid GitHub repository URL (e.g., https://github.com/svilenvarbanov2019/xrculture_testdata/tree/main/bag)');
             return;
         }
         const owner = match[1];
         const repo = match[2];
-        const folder = match[3];
-        startWorkflow(owner, repo, folder);
+        const branch = match[3];
+        const folder = match[4];
+        console.log(`Starting download for owner: ${owner}, repo: ${repo}, folder: ${folder}, branch: ${branch}`);
+        startWorkflow(owner, repo, folder, branch);
     }
 
     function downloadGitHubFolder(owner, repo, folder, branch = "main") {
