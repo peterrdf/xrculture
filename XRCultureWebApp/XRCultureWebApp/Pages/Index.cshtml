@@ -18,8 +18,8 @@
                 <input id="txtGHFolder" type="text" style="width: 400px;" />
                 <button type="button" onclick="downloadGitHubRepo()">Process</button>
             </div>
-            <label for="txtGHFolder"><i>Example: https://github.com/svilenvarbanov2019/xrculture_testdata/tree/main/bag</i></label><br />
-            <br />
+            <label for="txtGHFolder"><i>Example: https://github.com/[owner]/[repository]/tree/[branch]/[folder]</i></label><br />
+            @* <br />
             <br />
             <h1>Examples</h1>
             <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'bag', 'main')">Bag (RDF LTD, 34 images, iPhone 13)</button>
@@ -28,12 +28,11 @@
             <hr />
             <button onclick="downloadGitHubFolder('svilenvarbanov2019', 'xrculture_testdata', 'angel', 'main')">Angel (RDF LTD, 75 images, Samsung 23 FE)</button>
             <hr />
-            <button onclick="downloadGitHubFolder('openMVG', 'ImageDataset_SceauxCastle', 'images', 'master')">Sceaux Castle (Photographer: Copyright 2012 Pierre MOULON http://imagine.enpc.fr/~moulonp/)</button>
+            <button onclick="downloadGitHubFolder('openMVG', 'ImageDataset_SceauxCastle', 'images', 'master')">Sceaux Castle (Photographer: Copyright 2012 Pierre MOULON http://imagine.enpc.fr/~moulonp/)</button> *@
             <hr />
         </div>
     </div>
 
-    <br />
     <label for="logArea"><b>Output</b></label>
     <br />
     <textarea id="logArea" rows="10" style="width:100%"></textarea>
