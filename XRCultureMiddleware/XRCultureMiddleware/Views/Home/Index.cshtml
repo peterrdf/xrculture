@@ -39,6 +39,7 @@
 
         const fetchResponse = await fetch('/Registry?handler=Register', settings);
         const data = await fetchResponse.text();
+        console.log(data);
         log('<***** Registration Response *****>\n' + data);
     }
 

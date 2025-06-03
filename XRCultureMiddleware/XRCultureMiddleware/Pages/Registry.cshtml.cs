@@ -12,6 +12,8 @@ namespace XRCultureMiddleware.Pages
     [IgnoreAntiforgeryToken]
     public class RegistryModel : PageModel
     {
+        private static readonly ConcurrentDictionary<string, RegisterViewerRequest> RegisterViewerRequests = new();
+        // This is a static dictionary to store logs for each workflow ID
         // Add this static dictionary for workflow logs
         private static readonly ConcurrentDictionary<string, System.Text.StringBuilder> WorkflowLogs = new();
 
@@ -26,6 +28,27 @@ namespace XRCultureMiddleware.Pages
             _singletonOperation = singletonOperation;
         }
 
+        const string registrationResponse =
+@"<RegistrationResponse>
+      <Status>202</Status> <!-- ACCEPTED / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
+      <ServiceToken>%SERVICE_TOKEN%</ServiceToken>
+      <ExpiresIn>3600</ExpiresIn> <!-- in seconds -->
+      <Message>Service successfully registered.</Message>
+  </RegistrationResponse>";
+
+        const string registrationResponseError =
+@"<RegistrationResponse>
+      <Status>400</Status> <!-- Bad Request -->
+      <Message>%MESSAGE%</Message>
+</RegistrationResponse>";
+
+        const string authorizationResponse =
+@"<AuthorizationResponse>
+      <Status>200</Status>
+      <SessionToken>eyJ0eXAiOi...</SessionToken>
+      <SessionExpires>2025-05-29T15:05:00Z</SessionExpires>
+      <Message>Authorization successful.</Message>
+  </AuthorizationResponse>";
 
         public async Task<IActionResult> OnPostRegisterAsync()
         {
@@ -36,15 +59,32 @@ namespace XRCultureMiddleware.Pages
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(myObject);
 
-            var registrationResponse = 
-                @"<RegistrationResponse>
-                  <Status>202</Status>
-                  <ServiceToken>eyJhbGciOi...</ServiceToken>
-                  <ExpiresIn>3600</ExpiresIn> <!-- in seconds -->
-                  <Message>Service successfully registered.</Message>
-                </RegistrationResponse>";
+            var endpoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
+            if (string.IsNullOrEmpty(endpoint))
+            {
+                _logger.LogWarning("Bad request: Endpoint.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: Endpoint."));
+            }
 
-            return Content(registrationResponse);
+            if (RegisterViewerRequests.Keys.Contains(endpoint))
+            {
+                _logger.LogWarning("Viewer registration is in progress for endpoint: {Endpoint}", endpoint);
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
+            }
+
+            var serviceToken = xmlDoc.SelectSingleNode("//ServiceToken")?.InnerText;
+
+            RegisterViewerRequests.AddOrUpdate(endpoint, new RegisterViewerRequest
+            {
+                EndPoint = endpoint,
+                ServiceToken = serviceToken
+            }, (key, oldValue) => new RegisterViewerRequest
+            {
+                EndPoint = endpoint,
+                ServiceToken = serviceToken
+            });
+
+            return Content(registrationResponse.Replace("%SERVICE_TOKEN%", serviceToken));
         }
 
         public async Task<IActionResult> OnGetAsync(string owner, string repo, string folder, string branch = "main", string workflowId = null)
@@ -627,5 +667,12 @@ namespace XRCultureMiddleware.Pages
         public string Name { get; set; }
         public string Download_Url { get; set; }
         public string Type { get; set; }
+    }
+
+    public class RegisterViewerRequest
+    {
+        public string EndPoint { get; set; }
+        public string ServiceToken { get; set; }
+        public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
     }
 }
