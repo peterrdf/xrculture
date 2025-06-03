@@ -1,4 +1,7 @@
-﻿namespace XRCultureMiddleware
+﻿using System.Collections.Concurrent;
+using XRCultureMiddleware.Pages;
+
+namespace XRCultureMiddleware
 {
     public interface IOperation
     {
@@ -15,16 +18,18 @@
 
     public interface IOperationSingleton : IOperation
     {
-        public bool Started { get; set; }
+        public bool Started { get; set; }        
     }
 
     public interface IOperationSingletonInstance : IOperation
     {
+        public ConcurrentDictionary<string, Viewer> Viewers { get; }
     }
 
     public class Operation : IOperationTransient, IOperationScoped, IOperationSingleton, IOperationSingletonInstance
     {
         Guid _guid;
+        ConcurrentDictionary<string, Viewer> _viewers = new();
         public Operation() : this(Guid.NewGuid())
         {
 
@@ -38,6 +43,8 @@
         public Guid OperationId => _guid;
 
         public bool Started { get; set; } = false;
+
+        ConcurrentDictionary<string, Viewer> IOperationSingletonInstance.Viewers => _viewers;
     }
 
     public class OperationService
@@ -57,5 +64,12 @@
             SingletonOperation = singletonOperation;
             SingletonInstanceOperation = instanceOperation;
         }
+    }
+
+    public class Viewer
+    {
+        public string EndPoint { get; set; }
+        public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
+        public string XmlDefinition { get; set; }
     }
 }

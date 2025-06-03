@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.FileProviders;
 using System.Collections.Concurrent;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Xml;
@@ -20,12 +21,14 @@ namespace XRCultureMiddleware.Pages
         private readonly ILogger<RegistryModel> _logger;
         private readonly IConfiguration _configuration;
         private readonly IOperationSingleton _singletonOperation;
+        private readonly IOperationSingletonInstance _singletonOperationInstance;
 
-        public RegistryModel(ILogger<RegistryModel> logger, IConfiguration configuration, IOperationSingleton singletonOperation)
+        public RegistryModel(ILogger<RegistryModel> logger, IConfiguration configuration, IOperationSingleton singletonOperation, IOperationSingletonInstance singletonOperationInstance    )
         {
             _logger = logger;
             _configuration = configuration;
             _singletonOperation = singletonOperation;
+            _singletonOperationInstance = singletonOperationInstance;
         }
 
         const string registrationResponse =
@@ -46,10 +49,10 @@ namespace XRCultureMiddleware.Pages
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
-            var myObject = JsonSerializer.Deserialize<string>(body);
+            var xmlRequest = JsonSerializer.Deserialize<string>(body);
 
             XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml(myObject);
+            xmlDoc.LoadXml(xmlRequest);
 
             var endpoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
             if (string.IsNullOrEmpty(endpoint))
@@ -87,14 +90,20 @@ namespace XRCultureMiddleware.Pages
       <Message>Authorization successful.</Message>
   </AuthorizationResponse>";
 
+        const string authorizationResponseError =
+@"<AuthorizationResponse>
+      <Status>400</Status> <!-- Bad Request -->
+      <Message>%MESSAGE%</Message>
+</AuthorizationResponse>";
+
         public async Task<IActionResult> OnPostAuthorizeAsync()
         {
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
-            var myObject = JsonSerializer.Deserialize<string>(body);
+            var xmlRequest = JsonSerializer.Deserialize<string>(body);
 
             XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.LoadXml(myObject);
+            xmlDoc.LoadXml(xmlRequest);
 
             var sessionToken = xmlDoc.SelectSingleNode("//SessionToken")?.InnerText;
             if (string.IsNullOrEmpty(sessionToken))
@@ -104,22 +113,29 @@ namespace XRCultureMiddleware.Pages
             }
 
             var registerRequest = RegisterViewerRequests.Values.FirstOrDefault(r => r.ServiceToken == sessionToken);
-
             if (registerRequest == null)
             {
                 _logger.LogWarning($"Invalid 'SessionToken': {sessionToken}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
             }
 
-            //RegisterViewerRequests.AddOrUpdate(sessionToken, new RegisterViewerRequest
-            //{
-            //    EndPoint = sessionToken,
-            //    ServiceToken = serviceToken
-            //}, (key, oldValue) => new RegisterViewerRequest
-            //{
-            //    EndPoint = sessionToken,
-            //    ServiceToken = serviceToken
-            //});
+            if (_singletonOperationInstance.Viewers.Keys.Contains(registerRequest.EndPoint))
+            {
+                _logger.LogWarning($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
+            }
+
+            _singletonOperationInstance.Viewers.AddOrUpdate(registerRequest.EndPoint, new Viewer
+            {
+                EndPoint = registerRequest.EndPoint,
+                XmlDefinition = xmlRequest,
+            }, (key, oldValue) => new Viewer
+            {
+                EndPoint = registerRequest.EndPoint,
+                XmlDefinition = xmlRequest,
+            });
+
+            RegisterViewerRequests.Remove(registerRequest.EndPoint, out _);
 
             return Content(authorizationResponse.Replace("%SESSION_TOKEN%", sessionToken));
         }
