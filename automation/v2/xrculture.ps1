@@ -33,14 +33,14 @@ function COLMAP-Create-Sparse-Model {
 		
 		Log-Info -_message "*** Mapper..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" mapper --database_path $_outputPath\databse.db --image_path $_outputPath\images --output_path $_outputPath\sparse
+			& "$global:COLMAP_DIR\colmap.exe" mapper --database_path $_outputPath\databse.db --image_path $_inputPath\images --output_path $_outputPath\sparse
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Image undistorter..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" image_undistorter --image_path $_outputPath\images --input_path $_outputPath\sparse\0 --output_path $_outputPath\dense --output_type COLMAP --max_image_size 2000
+			& "$global:COLMAP_DIR\colmap.exe" image_undistorter --image_path $_inputPath\images --input_path $_outputPath\sparse\0 --output_path $_outputPath\dense --output_type COLMAP --max_image_size 2000
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -155,7 +155,7 @@ function COLMAP-openMVS-Run-Workflow {
 		
 		Log-Info -_message "*** Import 3D reconstruction from COLMAP..."
 		$startDateTime = Get-Date
-			& "$global:openMVS_DIR\InterfaceColmap.exe" --input-file $_inputPath\dense --binary=1 --image-folder $_inputPath\images --output-file model.mvs
+			& "$global:openMVS_DIR\InterfaceColmap.exe" --input-file $outputPath\dense --binary=1 --image-folder $_inputPath\images --output-file model.mvs
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -477,7 +477,7 @@ function openMVG-openMVS-Run-Workflow-Global {
 			return $false
 		}		
 		
-		Copy-Item -Path ".\*.ply" -Destination $_inputPath -Force		
+		Copy-Item -Path ".\*.ply" -Destination $outputPath -Force		
 		
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
