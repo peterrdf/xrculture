@@ -382,7 +382,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, "*** Texturing Mesh started...");
 
             var exePath = _configuration["ToolPaths:OpenMVS"] + @"\TextureMesh.exe";
-            var args = $"--working-folder {inputDir} --export-type=obj --output-file {inputDir}\\obj\\model.obj --input-file {inputDir}\\model_dense_mesh.mvs";
+            var args = $"--working-folder {inputDir} --export-type=obj --output-file {inputDir}\\obj\\model.obj --input-file {inputDir}\\model_dense_mesh_refine.mvs";
 
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
