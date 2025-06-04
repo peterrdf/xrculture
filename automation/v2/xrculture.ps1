@@ -18,9 +18,10 @@ function COLMAP-Create-Sparse-Model {
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		Log-Info -_message "*** Exhaustive Matcher..."
+		# exhaustive_matcher
+		Log-Info -_message "*** Sequential Matcher..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" exhaustive_matcher --database_path $_inputPath\databse.db
+			& "$global:COLMAP_DIR\colmap.exe" sequential_matcher --database_path $_inputPath\databse.db
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -199,7 +200,7 @@ function openMVG-Create-SfM {
 		
 		Log-Info -_message "*** Compute features..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_inputPath\matches\sfm_data.json --outdir $_inputPath\matches --describerMethod "SIFT" --describerPreset "ULTRA"
+			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_inputPath\matches\sfm_data.json --outdir $_inputPath\matches --describerMethod "SIFT" --describerPreset "HIGH"
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -225,14 +226,76 @@ function openMVG-Create-SfM {
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		<#
-		Log-Info -_message "*** Filter matches: GLOBAL..."
+		Log-Info -_message "*** Sequential/Incremental reconstruction..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_GeometricFilter.exe" --input_file $_inputPath\matches\sfm_data.json --matches $_inputPath\matches.putative.bin -g e --output_file $_inputPath\matches\matches.e.bin
+			& "$global:openMVG_DIR\openMVG_main_SfM.exe" --sfm_engine "INCREMENTAL" --input_file $_inputPath\matches\sfm_data.json --match_dir $_inputPath\matches --output_dir $_inputPath\reconstruction
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
-		#>
+		
+		Log-Info -_message "*** Colorize Structure..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeSfM_DataColor.exe" --input_file $_inputPath\reconstruction\sfm_data.bin --output_file $_inputPath\reconstruction\colorized.ply
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "** openMVG: END."
+		
+		return $true
+	}
+	catch
+	{
+		Log-Err -_message "Exception: $_"
+	}
+	
+	return $false
+}
+
+function openMVG-Create-SfM-VLAD {
+	[CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$_inputPath = ""
+    )
+    try
+	{
+		Log-Info -_message "** openMVG: START..."
+				
+		Log-Info -_message "*** Intrinsics analysis..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_SfMInit_ImageListing.exe" --imageDirectory $_inputPath\images --outputDirectory $_inputPath\matches -f 1920 #--sensorWidthDatabase $global:openMVG_DIR\exif\sensor_width_database\sensor_width_camera_database.txt
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Compute features..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_inputPath\matches\sfm_data.json --outdir $_inputPath\matches --describerMethod "SIFT" --describerPreset "HIGH"
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Compute matching pairs..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeVLAD.exe" -i $_inputPath\matches\sfm_data.json -o $_inputPath\matches --pair_file $_inputPath\matches\vlad_pairs.txt
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Compute matches..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeMatches.exe" --input_file $_inputPath\matches\sfm_data.json  --output_file $_inputPath\matches\matches.putatives_vlad.bin --pair_list $_inputPath\matches\vlad_pairs.txt
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Filter matches: INCREMENTAL..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_GeometricFilter.exe" --input_file $_inputPath\matches\sfm_data.json --matches $_inputPath\matches\matches.putatives_vlad.bin -g f --output_file $_inputPath\matches\matches.f.bin
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Sequential/Incremental reconstruction..."
 		$startDateTime = Get-Date
@@ -241,14 +304,76 @@ function openMVG-Create-SfM {
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		<#
+		Log-Info -_message "*** Colorize Structure..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeSfM_DataColor.exe" --input_file $_inputPath\reconstruction\sfm_data.bin --output_file $_inputPath\reconstruction\colorized.ply
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "** openMVG: END."
+		
+		return $true
+	}
+	catch
+	{
+		Log-Err -_message "Exception: $_"
+	}
+	
+	return $false
+}
+
+function openMVG-Create-SfM-Global {
+	[CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$_inputPath = ""
+    )
+    try
+	{
+		Log-Info -_message "** openMVG: START..."
+				
+		Log-Info -_message "*** Intrinsics analysis..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_SfMInit_ImageListing.exe" --imageDirectory $_inputPath\images --outputDirectory $_inputPath\matches -f 1920 #--sensorWidthDatabase $global:openMVG_DIR\exif\sensor_width_database\sensor_width_camera_database.txt
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Compute features..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_inputPath\matches\sfm_data.json --outdir $_inputPath\matches --describerMethod "SIFT" --describerPreset "HIGH"
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Compute matching pairs..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_PairGenerator.exe" --input_file $_inputPath\matches\sfm_data.json --output_file $_inputPath\matches\pairs.bin
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		Log-Info -_message "*** Compute matches..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_ComputeMatches.exe" --input_file $_inputPath\matches\sfm_data.json --pair_list $_inputPath\matches\pairs.bin --output_file $_inputPath\matches\matches.putative.bin
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+				
+		Log-Info -_message "*** Filter matches: GLOBAL..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_GeometricFilter.exe" --input_file $_inputPath\matches\sfm_data.json --matches $_inputPath\matches.putative.bin -g e --output_file $_inputPath\matches\matches.e.bin
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"		
+		
 		Log-Info -_message "*** Global reconstruction..."
 		$startDateTime = Get-Date
 			& "$global:openMVG_DIR\openMVG_main_SfM.exe" --sfm_engine "GLOBAL" --input_file $_inputPath\matches\sfm_data.json --match_file $_inputPath\matches.e.bin --output_dir $_inputPath\reconstruction
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
-		#>
 		
 		Log-Info -_message "*** Colorize Structure..."
 		$startDateTime = Get-Date
@@ -317,6 +442,53 @@ function openMVG-openMVS-Run-Workflow {
 	return $false
 }
 
+function openMVG-openMVS-Run-Workflow-Global {
+	[CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$_inputPath = ""
+    )
+    try
+	{
+		Log-Info -_message "* openMVG-openMVS Workflow: START..."
+		Log-Info -_message "* Input: '$_inputPath'"
+		$startDateTime = Get-Date
+		
+		if (!(openMVG-Create-SfM-Global -_inputPath $_inputPath)) {
+			return $false
+		}
+		
+		Log-Info -_message "*** Import 3D reconstruction from openMVG..."
+		$startDateTime = Get-Date
+			& "$global:openMVG_DIR\openMVG_main_openMVG2openMVS.exe" --sfmdata $_inputPath\reconstruction\sfm_data.bin --outfile model.mvs --outdir $_inputPath\undistored
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "*** Done in $duration"
+		
+		if (!(openMVS-Create-OBJ -_inputPath $_inputPath)) {
+			return $false
+		}		
+		
+		Copy-Item -Path ".\*.ply" -Destination $_inputPath -Force		
+		
+		$endDateTime = Get-Date
+		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
+		Log-Info -_message "* Done in $duration"
+		Log-Info -_message "* openMVG-openMVS Workflow: END."
+		
+		if (!(COLMAP-openMVS-Cleanup)) {
+			return $false
+		}
+		
+		return $true
+	}
+	catch
+	{
+		Log-Err -_message "Exception: $_"
+	}
+	
+	return $false
+}
 
 function COLMAP-openMVS-Cleanup {
 	try
