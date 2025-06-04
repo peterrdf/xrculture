@@ -5,15 +5,15 @@
     ViewData["Title"] = "Home Page";
 }
 
-<h1 class="display-4">Welcome</h1>
-<p>Learn about <a href="https://pro.europeana.eu/project/xrculture">Europeana XRCulture</a></p>
+<h1 class="display-4">3D Reconstruction</h1>
 
 @if (!Model.Started)
 {
     <div class="text-center">
-
+        <h5><a href="/Library" target="_blank">Library</a></h5>
+        <hr />
         <div id="divExecute">
-            <h1>GitHub folder</h1>            
+            <h5>GitHub folder</h5>            
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <input id="txtGHFolder" type="text" style="width: 400px;" />
                 <button type="button" onclick="downloadGitHubRepo()">Process</button>
@@ -39,7 +39,8 @@
 
     <hr />
 
-    <div id="resultLinks"></div>
+    <div id="resultLinks"></div>  
+    
 }
 else
 {
