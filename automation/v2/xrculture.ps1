@@ -5,7 +5,8 @@ function COLMAP-Create-Sparse-Model {
 	[CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [string]$_inputPath = ""
+        [string]$_inputPath = "",
+		[string]$_outputPath = ""
     )
     try
 	{
@@ -13,34 +14,33 @@ function COLMAP-Create-Sparse-Model {
 				
 		Log-Info -_message "*** Feature extractor..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" feature_extractor --database_path $_inputPath\databse.db --image_path $_inputPath\images
+			& "$global:COLMAP_DIR\colmap.exe" feature_extractor --database_path $_outputPath\databse.db --image_path $_inputPath\images
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		# exhaustive_matcher
 		Log-Info -_message "*** Sequential Matcher..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" sequential_matcher --database_path $_inputPath\databse.db
+			& "$global:COLMAP_DIR\colmap.exe" sequential_matcher --database_path $_outputPath\databse.db
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		if (Test-Path "$_inputPath\sparse") {
-			Remove-Item -Force -Recurse -Path "$_inputPath\sparse"
+		if (Test-Path "$_outputPath\sparse") {
+			Remove-Item -Force -Recurse -Path "$_outputPath\sparse"
 		}
-		New-Item -ItemType Directory -Force -Path "$_inputPath\sparse"
+		New-Item -ItemType Directory -Force -Path "$_outputPath\sparse"
 		
 		Log-Info -_message "*** Mapper..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" mapper --database_path $_inputPath\databse.db --image_path $_inputPath\images --output_path $_inputPath\sparse
+			& "$global:COLMAP_DIR\colmap.exe" mapper --database_path $_outputPath\databse.db --image_path $_outputPath\images --output_path $_outputPath\sparse
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Image undistorter..."
 		$startDateTime = Get-Date
-			& "$global:COLMAP_DIR\colmap.exe" image_undistorter --image_path $_inputPath\images --input_path $_inputPath\sparse\0 --output_path $_inputPath\dense --output_type COLMAP --max_image_size 2000
+			& "$global:COLMAP_DIR\colmap.exe" image_undistorter --image_path $_outputPath\images --input_path $_outputPath\sparse\0 --output_path $_outputPath\dense --output_type COLMAP --max_image_size 2000
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -61,7 +61,8 @@ function openMVS-Create-OBJ {
 	[CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [string]$_inputPath = ""
+        [string]$_inputPath = "",
+		[string]$_outputPath = ""
     )
     try
 	{
@@ -88,31 +89,31 @@ function openMVS-Create-OBJ {
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		if (Test-Path "$_inputPath\obj") {
-			Remove-Item -Force -Recurse -Path "$_inputPath\obj"
+		if (Test-Path "$_outputPath\obj") {
+			Remove-Item -Force -Recurse -Path "$_outputPath\obj"
 		}
-		New-Item -ItemType Directory -Force -Path "$_inputPath\obj"
+		New-Item -ItemType Directory -Force -Path "$_outputPath\obj"		
 		
 		Log-Info -_message "*** Texture Mesh..."
 		$startDateTime = Get-Date
 		$model = (Get-Item $_inputPath).Name
-			& "$global:openMVS_DIR\TextureMesh.exe" --export-type=obj --output-file $_inputPath\obj\$model.obj model_dense_mesh_refine.mvs
+			& "$global:openMVS_DIR\TextureMesh.exe" --export-type=obj --output-file $_outputPath\obj\$model.obj model_dense_mesh_refine.mvs
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		Remove-Item -Force -Path "$_inputPath\obj\$model.mvs"
+		Remove-Item -Force -Path "$_outputPath\obj\$model.mvs"
 		
 		Log-Info -_message "*** OBJ2BIN..."
 		$startDateTime = Get-Date
-			& "./obj2bin.exe" -convert $_inputPath\obj $_inputPath\obj
+			& "./obj2bin.exe" -convert $_outputPath\obj $_outputPath\obj
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** BINZ..."
 		$startDateTime = Get-Date
-			& Get-ChildItem -Path "$_inputPath\obj\*.bin", "$_inputPath\obj\*.jpg" | Compress-Archive -DestinationPath "$_inputPath\obj\$model.binz" -Update
+			& Get-ChildItem -Path "$_outputPath\obj\*.bin", "$_outputPath\obj\*.jpg" | Compress-Archive -DestinationPath "$_outputPath\obj\$model.binz" -Update
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -141,11 +142,14 @@ function COLMAP-openMVS-Run-Workflow {
 		Log-Info -_message "* Input: '$_inputPath'"
 		$startDateTime = Get-Date
 		
-		if (!(COLMAP-openMVS-Cleanup)) {
+		if (!(Workflow-Cleanup)) {
 			return $false
 		}
 		
-		if (!(COLMAP-Create-Sparse-Model -_inputPath $_inputPath)) {
+		$outputPath = Get-Date -UFormat "$_inputPath\COLMAP-openMVS-%Y-%m-%d_%H-%M-%S"
+		New-Item -ItemType Directory -Force -Path "$outputPath"
+		
+		if (!(COLMAP-Create-Sparse-Model -_inputPath $_inputPath -_outputPath $outputPath)) {
 			return $false
 		}
 		
@@ -156,7 +160,7 @@ function COLMAP-openMVS-Run-Workflow {
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		if (!(openMVS-Create-OBJ -_inputPath $_inputPath)) {
+		if (!(openMVS-Create-OBJ -_inputPath $_inputPath -_outputPath $outputPath)) {
 			return $false
 		}		
 		
@@ -167,7 +171,7 @@ function COLMAP-openMVS-Run-Workflow {
 		Log-Info -_message "* Done in $duration"
 		Log-Info -_message "* COLMAP-openMVS Workflow: END."
 		
-		if (!(COLMAP-openMVS-Cleanup)) {
+		if (!(Workflow-Cleanup)) {
 			return $false
 		}
 		
@@ -185,7 +189,8 @@ function openMVG-Create-SfM {
 	[CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [string]$_inputPath = ""
+        [string]$_inputPath = "",
+		[string]$_outputPath = ""
     )
     try
 	{
@@ -193,49 +198,49 @@ function openMVG-Create-SfM {
 				
 		Log-Info -_message "*** Intrinsics analysis..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_SfMInit_ImageListing.exe" --imageDirectory $_inputPath\images --outputDirectory $_inputPath\matches -f 1920 #--sensorWidthDatabase $global:openMVG_DIR\exif\sensor_width_database\sensor_width_camera_database.txt
+			& "$global:openMVG_DIR\openMVG_main_SfMInit_ImageListing.exe" --imageDirectory $_inputPath\images --outputDirectory $_outputPath\matches -f 1920 #--sensorWidthDatabase $global:openMVG_DIR\exif\sensor_width_database\sensor_width_camera_database.txt
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Compute features..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_inputPath\matches\sfm_data.json --outdir $_inputPath\matches --describerMethod "SIFT" --describerPreset "HIGH"
+			& "$global:openMVG_DIR\openMVG_main_ComputeFeatures.exe" --input_file $_outputPath\matches\sfm_data.json --outdir $_outputPath\matches --describerMethod "SIFT" --describerPreset "HIGH"
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Compute matching pairs..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_PairGenerator.exe" --input_file $_inputPath\matches\sfm_data.json --output_file $_inputPath\matches\pairs.bin
+			& "$global:openMVG_DIR\openMVG_main_PairGenerator.exe" --input_file $_outputPath\matches\sfm_data.json --output_file $_outputPath\matches\pairs.bin
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Compute matches..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_ComputeMatches.exe" --input_file $_inputPath\matches\sfm_data.json --pair_list $_inputPath\matches\pairs.bin --output_file $_inputPath\matches\matches.putative.bin
+			& "$global:openMVG_DIR\openMVG_main_ComputeMatches.exe" --input_file $_outputPath\matches\sfm_data.json --pair_list $_outputPath\matches\pairs.bin --output_file $_outputPath\matches\matches.putative.bin
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Filter matches: INCREMENTAL..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_GeometricFilter.exe" --input_file $_inputPath\matches\sfm_data.json --matches $_inputPath\matches\matches.putative.bin -g f --output_file $_inputPath\matches\matches.f.bin
+			& "$global:openMVG_DIR\openMVG_main_GeometricFilter.exe" --input_file $_outputPath\matches\sfm_data.json --matches $_outputPath\matches\matches.putative.bin -g f --output_file $_outputPath\matches\matches.f.bin
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Sequential/Incremental reconstruction..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_SfM.exe" --sfm_engine "INCREMENTAL" --input_file $_inputPath\matches\sfm_data.json --match_dir $_inputPath\matches --output_dir $_inputPath\reconstruction
+			& "$global:openMVG_DIR\openMVG_main_SfM.exe" --sfm_engine "INCREMENTAL" --input_file $_outputPath\matches\sfm_data.json --match_dir $_outputPath\matches --output_dir $_outputPath\reconstruction
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
 		Log-Info -_message "*** Colorize Structure..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_ComputeSfM_DataColor.exe" --input_file $_inputPath\reconstruction\sfm_data.bin --output_file $_inputPath\reconstruction\colorized.ply
+			& "$global:openMVG_DIR\openMVG_main_ComputeSfM_DataColor.exe" --input_file $_outputPath\reconstruction\sfm_data.bin --output_file $_outputPath\reconstruction\colorized.ply
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
@@ -406,29 +411,32 @@ function openMVG-openMVS-Run-Workflow {
 		Log-Info -_message "* Input: '$_inputPath'"
 		$startDateTime = Get-Date
 		
-		if (!(openMVG-Create-SfM -_inputPath $_inputPath)) {
+		$outputPath = Get-Date -UFormat "$_inputPath\openMVG-openMVS-%Y-%m-%d_%H-%M-%S"
+		New-Item -ItemType Directory -Force -Path "$outputPath"
+		
+		if (!(openMVG-Create-SfM -_inputPath $_inputPath -_outputPath $outputPath)) {
 			return $false
 		}
 		
 		Log-Info -_message "*** Import 3D reconstruction from openMVG..."
 		$startDateTime = Get-Date
-			& "$global:openMVG_DIR\openMVG_main_openMVG2openMVS.exe" --sfmdata $_inputPath\reconstruction\sfm_data.bin --outfile model.mvs --outdir $_inputPath\undistored
+			& "$global:openMVG_DIR\openMVG_main_openMVG2openMVS.exe" --sfmdata $outputPath\reconstruction\sfm_data.bin --outfile model.mvs --outdir $outputPath\undistored
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "*** Done in $duration"
 		
-		if (!(openMVS-Create-OBJ -_inputPath $_inputPath)) {
+		if (!(openMVS-Create-OBJ -_inputPath $_inputPath -_outputPath $outputPath)) {
 			return $false
 		}		
 		
-		Copy-Item -Path ".\*.ply" -Destination $_inputPath -Force		
+		Copy-Item -Path ".\*.ply" -Destination $outputPath -Force
 		
 		$endDateTime = Get-Date
 		$duration = New-TimeSpan -Start $startDateTime -End $endDateTime
 		Log-Info -_message "* Done in $duration"
 		Log-Info -_message "* openMVG-openMVS Workflow: END."
 		
-		if (!(COLMAP-openMVS-Cleanup)) {
+		if (!(Workflow-Cleanup)) {
 			return $false
 		}
 		
@@ -476,7 +484,7 @@ function openMVG-openMVS-Run-Workflow-Global {
 		Log-Info -_message "* Done in $duration"
 		Log-Info -_message "* openMVG-openMVS Workflow: END."
 		
-		if (!(COLMAP-openMVS-Cleanup)) {
+		if (!(Workflow-Cleanup)) {
 			return $false
 		}
 		
@@ -490,13 +498,13 @@ function openMVG-openMVS-Run-Workflow-Global {
 	return $false
 }
 
-function COLMAP-openMVS-Cleanup {
+function Workflow-Cleanup {
 	try
 	{
-		Remove-Item -Force  -Path ".\*.mvs"
-		Remove-Item -Force  -Path ".\*.dmap"
-		Remove-Item -Force  -Path ".\*.ply"
-		Remove-Item -Force  -Path ".\*.log"
+		Remove-Item -Force -Path ".\*.mvs"
+		Remove-Item -Force -Path ".\*.dmap"
+		Remove-Item -Force -Path ".\*.ply"
+		Remove-Item -Force -Path ".\*.log"
 		
 		return $true
 	}
