@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
 using System.Net.Http.Headers;
+using System.Text;
 using XRCultureWebApp;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -17,6 +18,7 @@ public class DownloadFolderModel : PageModel
     private readonly ILogger<DownloadFolderModel> _logger;
     private readonly IConfiguration _configuration;
     private readonly IOperationSingleton _singletonOperation;
+    private string _inputGitHub;
 
     public DownloadFolderModel(ILogger<DownloadFolderModel> logger, IConfiguration configuration, IOperationSingleton singletonOperation)
     {
@@ -486,6 +488,8 @@ public class DownloadFolderModel : PageModel
             client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));
 
             var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
+            //https://github.com/[owner]/[repository]/tree/[branch]/[folder]
+            _inputGitHub = $"https://github.com/{owner}/{repo}/tree/{branch}/{folder}";
             var response = await client.GetAsync(apiUrl);
             if (!response.IsSuccessStatusCode)
             {
@@ -585,14 +589,20 @@ public class DownloadFolderModel : PageModel
                 archive.CreateEntryFromFile(file, entryName);
             }
 
-            //// Add an HTML file with your link
-            //string htmlContent = @"<h4><a href=""viewer.html?model=rabbit"" target=""_blank"">Rabbit (RDF LTD, 43 images, Samsung 23 FE)</a></h4>";
-            //var htmlEntry = archive.CreateEntry("index.html");
-            //using (var entryStream = htmlEntry.Open())
-            //using (var writer = new StreamWriter(entryStream))
-            //{
-            //    writer.Write(htmlContent);
-            //}
+            StringBuilder xml = new StringBuilder();
+            xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            xml.AppendLine("<model>");
+            xml.AppendLine($"\t<input>{_inputGitHub}</input>");
+            xml.AppendLine($"\t<workflow>");
+            xml.AppendLine("\t\t<id>openMVG-OpenMVS</id>"); //#todo
+            xml.AppendLine("\t\t<name><![CDATA[openMVG & OpenMVS]]></name>"); //#todo
+            xml.AppendLine($"\t\t<parameters></parameters>");
+            xml.AppendLine($"\t</workflow>");
+            xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
+            xml.AppendLine("</model>");
+
+            // Add XML file
+            System.IO.File.WriteAllText(Path.Combine(dataDir, $"{workflowId}.xml"), xml.ToString());
         }
 
         //AppendLog(workflowId, $"Archive {archivePath} created successfully.");
