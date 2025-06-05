@@ -91,7 +91,6 @@
     <None Include="wwwroot\viewer\fonts\glyphicons-halflings-regular.ttf" />
     <None Include="wwwroot\viewer\fonts\glyphicons-halflings-regular.woff" />
     <None Include="wwwroot\viewer\geom.js" />
-    <None Include="wwwroot\viewer\index.html" />
     <None Include="wwwroot\viewer\iscroll\iscroll.js" />
     <None Include="wwwroot\viewer\jquery-ui-1.11.4.custom\external\jquery\jquery.js" />
     <None Include="wwwroot\viewer\jquery-ui-1.11.4.custom\images\ui-bg_diagonals-thick_18_b81900_40x40.png" />
