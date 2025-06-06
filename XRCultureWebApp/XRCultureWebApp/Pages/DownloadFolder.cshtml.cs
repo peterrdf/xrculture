@@ -395,10 +395,30 @@ public class DownloadFolderModel : PageModel
         }
 
         {
+            AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
+
+            var exePath = "python.exe";
+            string pythonScript = Path.Combine(
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
+                @"python\MeshLab\meshing_decimation_quadric_edge_collapse_with_texture.py");
+            Directory.CreateDirectory(Path.Combine(inputDir, "obj\\MeshLab_QECD"));
+            var args = $"{pythonScript} {inputDir}\\obj\\model.obj {inputDir}\\obj\\MeshLab_QECD\\model.obj";
+
+            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            if (exitCode != 0)
+            {
+                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+            }
+
+            AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
+
+        {
             AppendLog(workflowId, "*** OBJ2BIN started...");
 
             var exePath = _configuration["ToolPaths:OBJ2BIN"] + @"\obj2bin.exe";
-            var args = $"-convert {inputDir}\\obj {inputDir}\\obj";
+            var args = $"-convert {inputDir}\\obj\\MeshLab_QECD {inputDir}\\obj\\MeshLab_QECD";
 
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
@@ -580,12 +600,12 @@ public class DownloadFolderModel : PageModel
         using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
         {
             // Add .bin and .jpg files
-            var files = Directory.EnumerateFiles(sourceDir + "\\obj", "*.*", SearchOption.AllDirectories)
+            var files = Directory.EnumerateFiles(sourceDir + "\\obj\\MeshLab_QECD", "*.*", SearchOption.AllDirectories)
                 .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase));
 
             foreach (var file in files)
             {
-                string entryName = Path.GetRelativePath(sourceDir + "\\obj", file);
+                string entryName = Path.GetRelativePath(sourceDir + "\\obj\\MeshLab_QECD", file);
                 archive.CreateEntryFromFile(file, entryName);
             }
 

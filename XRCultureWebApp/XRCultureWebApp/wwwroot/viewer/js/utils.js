@@ -17,11 +17,13 @@
 			return null;
 		}
 				
-		var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+        var names = ["webgl2", "webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
 	
 		for (var i = 0; i < names.length; ++i) {
 		try {
-			ctx = canvas.getContext(names[i]);
+            ctx = canvas.getContext(names[i]);
+
+            console.log("WebGL context obtained: " + names[i]);
 		} 
 		catch(e) {}
 			if (ctx) {

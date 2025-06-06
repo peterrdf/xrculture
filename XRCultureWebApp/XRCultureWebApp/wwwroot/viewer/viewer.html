@@ -61,7 +61,7 @@
         else
             p += "/geom.js";
         document.write("<scr" + "ipt type='text/javascript' src='" + p + "'></scr" + "ipt>");
-    </script>    
+    </script>
     <script type="text/javascript" src="js/spin.min.js"></script>
     <script type='text/javascript' src='js/viewer.js'></script>
 
@@ -77,19 +77,16 @@
         uniform float EnableLighting;
         uniform float EnableTexture;
 
-        varying vec3 EyespaceNormal;
-        varying vec3 Diffuse;
-        varying float _EnableLighting;
-        varying float _EnableTexture;
-        varying vec2 _UV;
+        varying highp vec3 EyespaceNormal;
+        varying lowp vec3 Diffuse;
+        varying lowp float _EnableLighting;
+        varying lowp float _EnableTexture;
+        varying mediump vec2 _UV;
 
         void main()
         {
-            if (EnableLighting > 0.5)
-            {
-                EyespaceNormal = NormalMatrix * Normal;
-                Diffuse = DiffuseMaterial;
-            }
+            EyespaceNormal = NormalMatrix * Normal;
+            Diffuse = DiffuseMaterial;
 
             _EnableLighting = EnableLighting;
             _EnableTexture = EnableTexture;
@@ -101,13 +98,13 @@
     </script>
 
     <script id="shader-fs" type="x-shader/x-fragment">
-        precision highp float;
+        precision mediump float;
 
-        varying vec3 EyespaceNormal;
-        varying vec3 Diffuse;
-        varying float _EnableLighting;
-        varying float _EnableTexture;
-        varying vec2 _UV;
+        varying highp vec3 EyespaceNormal;
+        varying lowp vec3 Diffuse;
+        varying lowp float _EnableLighting;
+        varying lowp float _EnableTexture;
+        varying mediump vec2 _UV;
 
         uniform vec3 LightPosition;
         uniform vec3 AmbientMaterial;
@@ -121,34 +118,30 @@
 
         void main()
         {
-            if (_EnableTexture < 0.5)
-            {
-                if (_EnableLighting > 0.5)
-                {
-                    vec3 N = normalize(EyespaceNormal);
-                    vec3 L = normalize(LightPosition);
-                    vec3 E = vec3(0, 0, 1);
-                    vec3 H = normalize(L + E);
-
-                    float df = max(0.0, dot(N, L));
-                    float sf = max(0.0, dot(N, H));
-                    sf = pow(sf, Shininess);
-
-                    vec3 color =
-                        (AmbientMaterial * AmbientLightWeighting) +
-                        (df * Diffuse * DiffuseLightWeighting) +
-                        (sf * SpecularMaterial * SpecularLightWeighting);
-                    gl_FragColor = vec4(color, Transparency);
-                }
-                else
-                {
-                    gl_FragColor = vec4(AmbientMaterial, 1);
-                }
-            }
-            else
-            {
+            // Texture rendering path
+            if (_EnableTexture > 0.5) {
                 gl_FragColor = texture2D(Sampler, _UV);
+                return;
             }
+
+            // Lighting path
+            vec3 color = AmbientMaterial;
+            if (_EnableLighting > 0.5) {
+                vec3 N = normalize(EyespaceNormal);
+                vec3 L = normalize(LightPosition);
+                vec3 E = vec3(0.0, 0.0, 1.0);
+                vec3 H = normalize(L + E);
+
+                float df = max(dot(N, L), 0.0);
+                float sf = pow(max(dot(N, H), 0.0), Shininess);
+
+                color =
+                    (AmbientMaterial * AmbientLightWeighting) +
+                    (df * Diffuse * DiffuseLightWeighting) +
+                    (sf * SpecularMaterial * SpecularLightWeighting);
+            }
+
+            gl_FragColor = vec4(color, Transparency);
         }
     </script>
 
@@ -255,7 +248,7 @@
     <script src="custom-js/load.js"></script>
     <script src="custom-js/interaction.js"></script>
     <script src='custom-js/integrator.js'></script>
-    <script async src="/viewer/emifcengine.js"></script>
+    <script async src="emifcengine.js"></script>
 </body>
 
 </html>

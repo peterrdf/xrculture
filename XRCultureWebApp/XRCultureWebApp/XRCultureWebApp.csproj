@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\python\MeshLab\meshing_decimation_quadric_edge_collapse_with_texture.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="wwwroot\viewer\assets\favicon.ico" />
     <None Include="wwwroot\viewer\assets\img\arrow-collapse.png" />
     <None Include="wwwroot\viewer\assets\img\arrow-expand.png" />
