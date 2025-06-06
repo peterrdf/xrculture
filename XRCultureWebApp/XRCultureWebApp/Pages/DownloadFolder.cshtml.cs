@@ -397,14 +397,14 @@ public class DownloadFolderModel : PageModel
         {
             AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
 
-            var exePath = "python.exe";
+            var exePath = _configuration["ToolPaths:Python"] + @"\python.exe";
             string pythonScript = Path.Combine(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
                 @"python\MeshLab\meshing_decimation_quadric_edge_collapse_with_texture.py");
             Directory.CreateDirectory(Path.Combine(inputDir, "obj\\MeshLab_QECD"));
             var args = $"{pythonScript} {inputDir}\\obj\\model.obj {inputDir}\\obj\\MeshLab_QECD\\model.obj";
 
-            var exitCode = ExecuteProcess(exePath, args, workflowId);
+            var exitCode = ExecuteProcess(exePath, args, workflowId, inputDir);
             if (exitCode != 0)
             {
                 _logger.LogError("Process exited with code {ExitCode}", exitCode);
@@ -435,7 +435,7 @@ public class DownloadFolderModel : PageModel
         return StatusCode(200, "OK");
     }
 
-    private int ExecuteProcess(string exePath, string args, string workflowId)
+    private int ExecuteProcess(string exePath, string args, string workflowId, string workingDirectory = "")
     {
         var process = new System.Diagnostics.Process
         {
@@ -446,7 +446,8 @@ public class DownloadFolderModel : PageModel
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                WorkingDirectory = workingDirectory
             }
         };
 
