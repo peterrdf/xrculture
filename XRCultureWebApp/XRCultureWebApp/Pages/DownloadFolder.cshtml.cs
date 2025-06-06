@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Python.Runtime;
 using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
 using System.Net.Http.Headers;
@@ -397,19 +398,18 @@ public class DownloadFolderModel : PageModel
         {
             AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
 
-            var exePath = _configuration["ToolPaths:Python"] + @"\python.exe";
-            string pythonScript = Path.Combine(
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
-                @"python\MeshLab\meshing_decimation_quadric_edge_collapse_with_texture.py");
-            Directory.CreateDirectory(Path.Combine(inputDir, "obj\\MeshLab_QECD"));
-            var args = $"{pythonScript} {inputDir}\\obj\\model.obj {inputDir}\\obj\\MeshLab_QECD\\model.obj";
-
-            var exitCode = ExecuteProcess(exePath, args, workflowId, inputDir);
-            if (exitCode != 0)
+            PythonEngine.Initialize();
+            using (Py.GIL())
             {
-                _logger.LogError("Process exited with code {ExitCode}", exitCode);
-                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+                dynamic sys = Py.Import("sys");
+                dynamic pymeshlab = Py.Import("pymeshlab");
+
+                dynamic ms = pymeshlab.MeshSet();
+                ms.load_new_mesh("{inputDir}\\obj\\model.obj");
+                ms.meshing_decimation_quadric_edge_collapse_with_texture();
+                ms.save_current_mesh("{inputDir}\\obj\\MeshLab_QECD\\model.obj");
             }
+            PythonEngine.Shutdown();
 
             AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
