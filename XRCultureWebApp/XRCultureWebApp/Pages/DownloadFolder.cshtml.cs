@@ -1,13 +1,15 @@
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using Python.Runtime;
+using Newtonsoft.Json;
 using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Xml;
 using XRCultureWebApp;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -193,7 +195,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"*** Importing 3D reconstruction from openMVG completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
 
-        result = openMVS_Create_MVS(inputDir, workflowId);
+        result = openMVS_Create_MVSAsync(inputDir, workflowId).Result;
         if (result.StatusCode != 200)
         {
             return result;
@@ -326,7 +328,7 @@ public class DownloadFolderModel : PageModel
         return StatusCode(200, "OK");
     }
 
-    private ObjectResult openMVS_Create_MVS(string inputDir, string workflowId)
+    private async Task<ObjectResult> openMVS_Create_MVSAsync(string inputDir, string workflowId)
     {
         AppendLog(workflowId, "openMVS: Create Multi View Stereo reconstruction started...");
         var stopWatch = System.Diagnostics.Stopwatch.StartNew();
@@ -398,18 +400,37 @@ public class DownloadFolderModel : PageModel
         {
             AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
 
-            PythonEngine.Initialize();
-            using (Py.GIL())
-            {
-                dynamic sys = Py.Import("sys");
-                dynamic pymeshlab = Py.Import("pymeshlab");
+            string applyFilterRequest =
+@"<ApplyFilterRequest>
+    <Name>%FILTER%</Name>
+    <Parameters>
+        <InputMesh>%INPUT_MESH%</InputMesh>
+        <OutputMesh>%OUTPUT_MESH%</OutputMesh>
+    </Parameters>
+</ApplyFilterRequest>";
 
-                dynamic ms = pymeshlab.MeshSet();
-                ms.load_new_mesh("{inputDir}\\obj\\model.obj");
-                ms.meshing_decimation_quadric_edge_collapse_with_texture();
-                ms.save_current_mesh("{inputDir}\\obj\\MeshLab_QECD\\model.obj");
+            applyFilterRequest = applyFilterRequest.Replace("%FILTER%", "meshing_decimation_quadric_edge_collapse_with_texture");
+            applyFilterRequest = applyFilterRequest.Replace("%INPUT_MESH%", $"{inputDir}\\obj\\model.obj");
+            applyFilterRequest = applyFilterRequest.Replace("%OUTPUT_MESH%", $"{inputDir}\\obj\\MeshLab_QECD\\model.obj");
+
+            using (HttpClient client = new HttpClient())
+            {
+                var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply";
+                var content = new StringContent(JsonConvert.SerializeObject($"{applyFilterRequest}"), Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await client.PostAsync(url, content); // Waits here
+
+                string responseString = await response.Content.ReadAsStringAsync(); // Waits here
+
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.LoadXml(responseString);
+
+                var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
+                if (status?.Trim() != "200")
+                {
+                    throw new Exception($"MeshLab Server returned error: {status}");
+                }
             }
-            PythonEngine.Shutdown();
 
             AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
