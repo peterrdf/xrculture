@@ -6,6 +6,7 @@ using System.Xml;
 
 namespace MeshLabServer.Pages
 {
+    [IgnoreAntiforgeryToken]
     public class FiltersModel : PageModel
     {
         const string badRequestResponse =
