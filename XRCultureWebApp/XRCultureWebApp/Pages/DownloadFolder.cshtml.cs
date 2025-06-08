@@ -48,7 +48,7 @@ public class DownloadFolderModel : PageModel
             var response = await client.GetAsync(apiUrl);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("GitHub API returned {StatusCode} for {ApiUrl}", response.StatusCode, apiUrl);
+                AppendLog(workflowId, $"GitHub API returned {response.StatusCode} for {apiUrl}");
                 return NotFound("Folder not found on GitHub.");
             }
 
@@ -448,7 +448,7 @@ public class DownloadFolderModel : PageModel
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
             {
-                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                AppendLog(workflowId, $"Process exited with code {exitCode}");
                 return StatusCode(500, $"Process failed with exit code {exitCode}.");
             }
 
@@ -492,15 +492,15 @@ public class DownloadFolderModel : PageModel
         string error = errorBuilder.ToString();
 
         // Log output and errors
-        _logger.LogInformation("Process output: {Output}", output);
+        AppendLog(workflowId, $"Process output: {output}");
         if (!string.IsNullOrWhiteSpace(error))
-            _logger.LogError("Process error: {Error}", error);
+            AppendLog(workflowId, $"Process error: {error}");
 
         AppendLog(workflowId, "External process finished.");
 
         if (exitCode != 0)
         {
-            _logger.LogError("Process exited with code {ExitCode}", exitCode);
+            AppendLog(workflowId, $"Process exited with code {exitCode}");
         }
 
         return exitCode;
