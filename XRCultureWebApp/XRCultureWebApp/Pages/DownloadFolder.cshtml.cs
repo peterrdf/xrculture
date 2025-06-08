@@ -400,6 +400,8 @@ public class DownloadFolderModel : PageModel
         {
             AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
 
+            Directory.CreateDirectory($"{inputDir}\\obj\\MeshLab_QECD");
+
             string applyFilterRequest =
 @"<ApplyFilterRequest>
     <Name>%FILTER%</Name>
