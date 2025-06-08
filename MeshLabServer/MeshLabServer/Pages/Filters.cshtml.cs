@@ -15,6 +15,12 @@ namespace MeshLabServer.Pages
     <Message>%MESSAGE%</Message>
 </ApplyFilterResponse>";
 
+        const string serverErrorResponse =
+@"<ApplyFilterResponse>
+    <Status>500</Status> <!-- Internal Server Error -->
+    <Message>%MESSAGE%</Message>
+</ApplyFilterResponse>";
+
         const string successResponse =
 @"<ApplyFilterResponse>
     <Status>200</Status>
@@ -93,7 +99,7 @@ namespace MeshLabServer.Pages
                 return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'OutputMesh'."));
             }
 
-            var exePath = @"python.exe";
+            var exePath = @"C:\Users\svile\AppData\Local\Microsoft\WindowsApps\python.exe";
             string pythonScript = Path.Combine(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
                 @"python\meshing_decimation_quadric_edge_collapse_with_texture.py");
@@ -102,8 +108,8 @@ namespace MeshLabServer.Pages
             var exitCode = ExecuteProcess(exePath, args, LOG_CATEGORY);
             if (exitCode != 0)
             {
-                _logger.LogError("Process exited with code {ExitCode}", exitCode);
-                return StatusCode(500, $"Process failed with exit code {exitCode}.");
+                AppendApplyFilterLog($"Process exited with code {exitCode}");
+                return Content(serverErrorResponse.Replace("%MESSAGE%", $"Process failed with exit code {exitCode}."));
             }
 
             return Content(successResponse);
@@ -152,15 +158,15 @@ namespace MeshLabServer.Pages
             string error = errorBuilder.ToString();
 
             // Log output and errors
-            _logger.LogInformation("Process output: {Output}", output);
+            AppendApplyFilterLog($"Process exited with code {output}");
             if (!string.IsNullOrWhiteSpace(error))
-                _logger.LogError("Process error: {Error}", error);
+                AppendApplyFilterLog($"Process exited with code {error}");
 
             AppendLog(LOG_CATEGORY, "External process finished.");
 
             if (exitCode != 0)
             {
-                _logger.LogError("Process exited with code {ExitCode}", exitCode);
+                AppendApplyFilterLog($"Process exited with code {exitCode}");
             }
 
             return exitCode;
