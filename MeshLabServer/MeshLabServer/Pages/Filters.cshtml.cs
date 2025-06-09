@@ -100,7 +100,7 @@ namespace MeshLabServer.Pages
                 return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'OutputMesh'."));
             }
 
-            var exePath = @"C:\Users\svile\AppData\Local\Microsoft\WindowsApps\python.exe";
+            var exePath = _configuration["ToolPaths:Python"] + @"\python.exe";
             string pythonScript = Path.Combine(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
                 @"python\meshing_decimation_quadric_edge_collapse_with_texture.py");

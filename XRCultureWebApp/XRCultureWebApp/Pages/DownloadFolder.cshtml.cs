@@ -40,60 +40,66 @@ public class DownloadFolderModel : PageModel
         try
         {
             AppendLog(workflowId, "Downloading file list from GitHub...");
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AppName", "1.0"));
-
-            var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
-            var response = await client.GetAsync(apiUrl);
-            if (!response.IsSuccessStatusCode)
+            using (var handler = new HttpClientHandler())
             {
-                AppendLog(workflowId, $"GitHub API returned {response.StatusCode} for {apiUrl}");
-                return NotFound("Folder not found on GitHub.");
-            }
-
-            var files = System.Text.Json.JsonSerializer.Deserialize<List<GitHubFile>>(
-                await response.Content.ReadAsStringAsync(),
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            AppendLog(workflowId, $"Downloaded file list in {sw.ElapsedMilliseconds} ms.");
-
-            // 1. Create ZIP in memory
-            AppendLog(workflowId, "Creating ZIP in memory...");
-            using var ms = new MemoryStream();
-            using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
-            {
-                foreach (var file in files.Where(f => f.Type == "file"))
+                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+                using (var client = new HttpClient(handler))
                 {
-                    var fileBytes = await client.GetByteArrayAsync(file.Download_Url);
-                    var entry = archive.CreateEntry(file.Name);
-                    using var entryStream = entry.Open();
-                    await entryStream.WriteAsync(fileBytes, 0, fileBytes.Length);
+                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AppName", "1.0"));
+
+                    var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
+                    var response = await client.GetAsync(apiUrl);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        AppendLog(workflowId, $"GitHub API returned {response.StatusCode} for {apiUrl}");
+                        return NotFound("Folder not found on GitHub.");
+                    }
+
+                    var files = System.Text.Json.JsonSerializer.Deserialize<List<GitHubFile>>(
+                        await response.Content.ReadAsStringAsync(),
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    AppendLog(workflowId, $"Downloaded file list in {sw.ElapsedMilliseconds} ms.");
+
+                    // 1. Create ZIP in memory
+                    AppendLog(workflowId, "Creating ZIP in memory...");
+                    using var ms = new MemoryStream();
+                    using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
+                    {
+                        foreach (var file in files.Where(f => f.Type == "file"))
+                        {
+                            var fileBytes = await client.GetByteArrayAsync(file.Download_Url);
+                            var entry = archive.CreateEntry(file.Name);
+                            using var entryStream = entry.Open();
+                            await entryStream.WriteAsync(fileBytes, 0, fileBytes.Length);
+                        }
+                    }
+
+                    AppendLog(workflowId, $"ZIP created in {sw.ElapsedMilliseconds} ms.");
+
+                    // 2. Save ZIP to temp folder
+                    AppendLog(workflowId, "Saving ZIP to temp folder...");
+                    var tempPath = Path.GetTempPath();
+                    var zipFileName = $"{Guid.NewGuid()}.zip";
+                    zipFilePath = Path.Combine(tempPath, zipFileName);
+                    await System.IO.File.WriteAllBytesAsync(zipFilePath, ms.ToArray());
+
+                    AppendLog(workflowId, $"ZIP saved in {sw.ElapsedMilliseconds} ms.");
+
+                    // 3. Unzip to a new temp directory
+                    AppendLog(workflowId, "Extracting ZIP...");
+                    extractPath = Path.Combine(tempPath, Path.GetFileNameWithoutExtension(zipFileName));
+                    ZipFile.ExtractToDirectory(zipFilePath, extractPath + @"\images");
+
+                    AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
+
+                    AppendLog(workflowId, "Running workflow...");
+                    var result = openMVG_openMVS_Workflow(extractPath, workflowId);
+                    AppendLog(workflowId, "Workflow finished.");
+
+                    return Content(workflowId); // Return workflowId to client
                 }
             }
-
-            AppendLog(workflowId, $"ZIP created in {sw.ElapsedMilliseconds} ms.");
-
-            // 2. Save ZIP to temp folder
-            AppendLog(workflowId, "Saving ZIP to temp folder...");
-            var tempPath = Path.GetTempPath();
-            var zipFileName = $"{Guid.NewGuid()}.zip";
-            zipFilePath = Path.Combine(tempPath, zipFileName);
-            await System.IO.File.WriteAllBytesAsync(zipFilePath, ms.ToArray());
-
-            AppendLog(workflowId, $"ZIP saved in {sw.ElapsedMilliseconds} ms.");
-
-            // 3. Unzip to a new temp directory
-            AppendLog(workflowId, "Extracting ZIP...");
-            extractPath = Path.Combine(tempPath, Path.GetFileNameWithoutExtension(zipFileName));
-            ZipFile.ExtractToDirectory(zipFilePath, extractPath + @"\images");
-
-            AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
-
-            AppendLog(workflowId, "Running workflow...");
-            var result = openMVG_openMVS_Workflow(extractPath, workflowId);
-            AppendLog(workflowId, "Workflow finished.");
-
-            return Content(workflowId); // Return workflowId to client
         }
         catch (HttpRequestException ex)
         {
@@ -414,10 +420,10 @@ public class DownloadFolderModel : PageModel
             applyFilterRequest = applyFilterRequest.Replace("%INPUT_MESH%", $"{inputDir}\\obj\\model.obj");
             applyFilterRequest = applyFilterRequest.Replace("%OUTPUT_MESH%", $"{inputDir}\\obj\\MeshLab_QECD\\model.obj");
 
+            using (var handler = new HttpClientHandler())
             {
-                HttpClientHandler handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-                using (HttpClient client = new HttpClient(handler))
+                using (var client = new HttpClient(handler))
                 {
                     var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply";
                     var content = new StringContent(JsonConvert.SerializeObject($"{applyFilterRequest}"), Encoding.UTF8, "application/json");
@@ -447,42 +453,50 @@ public class DownloadFolderModel : PageModel
                 }
             }
 
-            // retrieve from MeshLab Server
-            string apiBase = _configuration["Services:MeshLabServer"] + "Filters";
-            string meshObjPath = $"{inputDir}/obj";
-            string meshLabQecdPath = $"{inputDir}\\obj\\MeshLab_QECD";
-            string dirContentsUrl = $"{apiBase}?handler=DirectoryContents&folder={Uri.EscapeDataString(meshLabQecdPath)}";
-
-            using var httpClient = new HttpClient();
-            var dirResponse = await httpClient.GetAsync(dirContentsUrl);
-            dirResponse.EnsureSuccessStatusCode();
-            var dirJson = await dirResponse.Content.ReadAsStringAsync();
-            var files = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dirJson);
-
-            if (files == null || files.Count == 0)
             {
-                AppendLog(workflowId, "No files found in MeshLab_QECD directory.");
-                return StatusCode(404, "No files found in MeshLab_QECD directory.");
-            }
+                // retrieve from MeshLab Server
+                string apiBase = _configuration["Services:MeshLabServer"] + "Filters";
+                string meshObjPath = $"{inputDir}/obj";
+                string meshLabQecdPath = $"{inputDir}\\obj\\MeshLab_QECD";
+                string dirContentsUrl = $"{apiBase}?handler=DirectoryContents&folder={Uri.EscapeDataString(meshLabQecdPath)}";
 
-            foreach (var file in files)
-            {
-                // Download each file
-                var fileUrl = $"{apiBase}?handler=File&file={Uri.EscapeDataString(Path.Combine(meshLabQecdPath, file))}";
-                var fileResponse = await httpClient.GetAsync(fileUrl);
-                fileResponse.EnsureSuccessStatusCode();
-                var fileBytes = await fileResponse.Content.ReadAsByteArrayAsync();
+                using (var handler = new HttpClientHandler())
+                {
+                    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+                    using (var httpClient = new HttpClient(handler))
+                    {
+                        var dirResponse = await httpClient.GetAsync(dirContentsUrl);
+                        dirResponse.EnsureSuccessStatusCode();
+                        var dirJson = await dirResponse.Content.ReadAsStringAsync();
+                        var files = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dirJson);
 
-                // Save/replace in obj directory
-                var destFile = Path.Combine(meshObjPath, file);
-                await System.IO.File.WriteAllBytesAsync(destFile, fileBytes);
+                        if (files == null || files.Count == 0)
+                        {
+                            AppendLog(workflowId, "No files found in MeshLab_QECD directory.");
+                            return StatusCode(404, "No files found in MeshLab_QECD directory.");
+                        }
+
+                        foreach (var file in files)
+                        {
+                            // Download each file
+                            var fileUrl = $"{apiBase}?handler=File&file={Uri.EscapeDataString(Path.Combine(meshLabQecdPath, file))}";
+                            var fileResponse = await httpClient.GetAsync(fileUrl);
+                            fileResponse.EnsureSuccessStatusCode();
+                            var fileBytes = await fileResponse.Content.ReadAsByteArrayAsync();
+
+                            // Save/replace in obj directory
+                            var destFile = Path.Combine(meshObjPath, file);
+                            await System.IO.File.WriteAllBytesAsync(destFile, fileBytes);
+                        }
+                    }
+                }
             }
 
             AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
 
         {
-            AppendLog(workflowId, "*** OBJ2BIN started...");            
+            AppendLog(workflowId, "*** OBJ2BIN started...");
 
             var exePath = _configuration["ToolPaths:OBJ2BIN"] + @"\obj2bin.exe";
             var args = $"-convert {inputDir}\\obj\\MeshLab_QECD {inputDir}\\obj\\MeshLab_QECD";
@@ -572,61 +586,67 @@ public class DownloadFolderModel : PageModel
         {
             AppendLog(workflowId, "Starting workflow...");
             AppendLog(workflowId, "Downloading file list from GitHub...");
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));
-
-            var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
-            //https://github.com/[owner]/[repository]/tree/[branch]/[folder]
-            _inputGitHub = $"https://github.com/{owner}/{repo}/tree/{branch}/{folder}";
-            var response = await client.GetAsync(apiUrl);
-            if (!response.IsSuccessStatusCode)
+            using (var handler = new HttpClientHandler())
             {
-                AppendLog(workflowId, $"GitHub API returned {response.StatusCode} for {apiUrl}");
-                AppendLog(workflowId, "Folder not found on GitHub.");
-                return;
-            }
-
-            var files = System.Text.Json.JsonSerializer.Deserialize<List<GitHubFile>>(
-                await response.Content.ReadAsStringAsync(),
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            AppendLog(workflowId, $"Downloaded file list in {sw.ElapsedMilliseconds} ms.");
-
-            // 1. Create ZIP in memory
-            AppendLog(workflowId, "Creating ZIP in memory...");
-            using var ms = new MemoryStream();
-            using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
-            {
-                foreach (var file in files.Where(f => f.Type == "file"))
+                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+                using (var client = new HttpClient(handler))
                 {
-                    var fileBytes = await client.GetByteArrayAsync(file.Download_Url);
-                    var entry = archive.CreateEntry(file.Name);
-                    using var entryStream = entry.Open();
-                    await entryStream.WriteAsync(fileBytes, 0, fileBytes.Length);
+                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));
+
+                    var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
+                    //https://github.com/[owner]/[repository]/tree/[branch]/[folder]
+                    _inputGitHub = $"https://github.com/{owner}/{repo}/tree/{branch}/{folder}";
+                    var response = await client.GetAsync(apiUrl);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        AppendLog(workflowId, $"GitHub API returned {response.StatusCode} for {apiUrl}");
+                        AppendLog(workflowId, "Folder not found on GitHub.");
+                        return;
+                    }
+
+                    var files = System.Text.Json.JsonSerializer.Deserialize<List<GitHubFile>>(
+                        await response.Content.ReadAsStringAsync(),
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    AppendLog(workflowId, $"Downloaded file list in {sw.ElapsedMilliseconds} ms.");
+
+                    // 1. Create ZIP in memory
+                    AppendLog(workflowId, "Creating ZIP in memory...");
+                    using var ms = new MemoryStream();
+                    using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
+                    {
+                        foreach (var file in files.Where(f => f.Type == "file"))
+                        {
+                            var fileBytes = await client.GetByteArrayAsync(file.Download_Url);
+                            var entry = archive.CreateEntry(file.Name);
+                            using var entryStream = entry.Open();
+                            await entryStream.WriteAsync(fileBytes, 0, fileBytes.Length);
+                        }
+                    }
+
+                    AppendLog(workflowId, $"ZIP created in {sw.ElapsedMilliseconds} ms.");
+
+                    // 2. Save ZIP to temp folder
+                    AppendLog(workflowId, "Saving ZIP to temp folder...");
+                    var tempPath = Path.GetTempPath();
+                    var zipFileName = $"{Guid.NewGuid()}.zip";
+                    zipFilePath = Path.Combine(tempPath, zipFileName);
+                    await System.IO.File.WriteAllBytesAsync(zipFilePath, ms.ToArray());
+
+                    AppendLog(workflowId, $"ZIP saved in {sw.ElapsedMilliseconds} ms.");
+
+                    // 3. Unzip to a new temp directory
+                    AppendLog(workflowId, "Extracting ZIP...");
+                    extractPath = Path.Combine(tempPath, Path.GetFileNameWithoutExtension(zipFileName));
+                    ZipFile.ExtractToDirectory(zipFilePath, extractPath + @"\images");
+
+                    AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
+
+                    AppendLog(workflowId, "Running workflow...");
+                    openMVG_openMVS_Workflow(extractPath, workflowId);
+                    AppendLog(workflowId, "Workflow finished.");
                 }
             }
-
-            AppendLog(workflowId, $"ZIP created in {sw.ElapsedMilliseconds} ms.");
-
-            // 2. Save ZIP to temp folder
-            AppendLog(workflowId, "Saving ZIP to temp folder...");
-            var tempPath = Path.GetTempPath();
-            var zipFileName = $"{Guid.NewGuid()}.zip";
-            zipFilePath = Path.Combine(tempPath, zipFileName);
-            await System.IO.File.WriteAllBytesAsync(zipFilePath, ms.ToArray());
-
-            AppendLog(workflowId, $"ZIP saved in {sw.ElapsedMilliseconds} ms.");
-
-            // 3. Unzip to a new temp directory
-            AppendLog(workflowId, "Extracting ZIP...");
-            extractPath = Path.Combine(tempPath, Path.GetFileNameWithoutExtension(zipFileName));
-            ZipFile.ExtractToDirectory(zipFilePath, extractPath + @"\images");
-
-            AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
-
-            AppendLog(workflowId, "Running workflow...");
-            openMVG_openMVS_Workflow(extractPath, workflowId);
-            AppendLog(workflowId, "Workflow finished.");
         }
         catch (Exception ex)
         {
