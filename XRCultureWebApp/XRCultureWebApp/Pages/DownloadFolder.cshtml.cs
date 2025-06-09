@@ -492,6 +492,13 @@ public class DownloadFolderModel : PageModel
                 }
             }
 
+            // Clean up MeshLab_QECD directory
+            string targetDir = Path.Combine(inputDir, "obj", "MeshLab_QECD");
+            if (Directory.Exists(targetDir))
+            {
+                Directory.Delete(targetDir, recursive: true);
+            }
+
             AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
 

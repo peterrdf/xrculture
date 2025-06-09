@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
 using System.Collections.Concurrent;
 
 namespace XRCultureWebApp
@@ -10,6 +11,15 @@ namespace XRCultureWebApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            var logDir = Path.Combine(builder.Configuration["ToolPaths:OpenMVG-OpenMVS-Output"], @"logs");
+            Directory.CreateDirectory(logDir);
+
+            // Add Serilog
+            builder.Host.UseSerilog((context, services, configuration) => configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .WriteTo.File(Path.Combine(logDir, "log.txt"), rollingInterval: RollingInterval.Day)
+            );
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
