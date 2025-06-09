@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.FileProviders;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Xml;
@@ -113,6 +114,44 @@ namespace MeshLabServer.Pages
             }
 
             return Content(successResponse);
+        }
+
+        public IActionResult OnGetFile(string file)
+        {
+            AppendLog(LOG_CATEGORY, $"File requested: {file}");
+            if (string.IsNullOrEmpty(file))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid file request.");
+                return BadRequest("Invalid file request.");
+            }
+            var provider = new PhysicalFileProvider(Path.GetDirectoryName(file)!);
+            var fileInfo = provider.GetFileInfo(Path.GetFileName(file));
+            if (!fileInfo.Exists)
+                return NotFound();
+
+            var result = PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
+            
+            return result;
+        }
+
+        public IActionResult OnGetDirectoryContents(string folder)
+        {
+            AppendLog(LOG_CATEGORY, $"Directory contents requested: {folder}");
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid or non-existent folder.");
+                return BadRequest("Invalid or non-existent folder.");
+            }
+
+            var files = Directory.GetFiles(folder)
+                .Select(Path.GetFileName)
+                .ToList();
+
+            // Return as JSON
+            return new JsonResult(files);
         }
 
         private void AppendApplyFilterLog(string message)
