@@ -456,7 +456,7 @@ public class DownloadFolderModel : PageModel
             {
                 // retrieve from MeshLab Server
                 string apiBase = _configuration["Services:MeshLabServer"] + "Filters";
-                string meshObjPath = $"{inputDir}/obj";
+                string meshObjPath = $"{inputDir}\\obj";
                 string meshLabQecdPath = $"{inputDir}\\obj\\MeshLab_QECD";
                 string dirContentsUrl = $"{apiBase}?handler=DirectoryContents&folder={Uri.EscapeDataString(meshLabQecdPath)}";
 
@@ -499,7 +499,7 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, "*** OBJ2BIN started...");
 
             var exePath = _configuration["ToolPaths:OBJ2BIN"] + @"\obj2bin.exe";
-            var args = $"-convert {inputDir}\\obj\\MeshLab_QECD {inputDir}\\obj\\MeshLab_QECD";
+            var args = $"-convert {inputDir}\\obj {inputDir}\\obj";
 
             var exitCode = ExecuteProcess(exePath, args, workflowId);
             if (exitCode != 0)
