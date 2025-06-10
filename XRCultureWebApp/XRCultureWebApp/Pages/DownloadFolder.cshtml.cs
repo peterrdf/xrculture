@@ -402,105 +402,105 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"*** Texturing Mesh completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
 
-        {
-            AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
+//        {
+//            AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
 
-            Directory.CreateDirectory($"{inputDir}\\obj\\MeshLab_QECD");
+//            Directory.CreateDirectory($"{inputDir}\\obj\\MeshLab_QECD");
 
-            string applyFilterRequest =
-@"<ApplyFilterRequest>
-    <Name>%FILTER%</Name>
-    <Parameters>
-        <InputMesh>%INPUT_MESH%</InputMesh>
-        <OutputMesh>%OUTPUT_MESH%</OutputMesh>
-    </Parameters>
-</ApplyFilterRequest>";
+//            string applyFilterRequest =
+//@"<ApplyFilterRequest>
+//    <Name>%FILTER%</Name>
+//    <Parameters>
+//        <InputMesh>%INPUT_MESH%</InputMesh>
+//        <OutputMesh>%OUTPUT_MESH%</OutputMesh>
+//    </Parameters>
+//</ApplyFilterRequest>";
 
-            applyFilterRequest = applyFilterRequest.Replace("%FILTER%", "meshing_decimation_quadric_edge_collapse_with_texture");
-            applyFilterRequest = applyFilterRequest.Replace("%INPUT_MESH%", $"{inputDir}\\obj\\model.obj");
-            applyFilterRequest = applyFilterRequest.Replace("%OUTPUT_MESH%", $"{inputDir}\\obj\\MeshLab_QECD\\model.obj");
+//            applyFilterRequest = applyFilterRequest.Replace("%FILTER%", "meshing_decimation_quadric_edge_collapse_with_texture");
+//            applyFilterRequest = applyFilterRequest.Replace("%INPUT_MESH%", $"{inputDir}\\obj\\model.obj");
+//            applyFilterRequest = applyFilterRequest.Replace("%OUTPUT_MESH%", $"{inputDir}\\obj\\MeshLab_QECD\\model.obj");
 
-            using (var handler = new HttpClientHandler())
-            {
-                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-                using (var client = new HttpClient(handler))
-                {
-                    var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply";
-                    var content = new StringContent(JsonConvert.SerializeObject($"{applyFilterRequest}"), Encoding.UTF8, "application/json");
+//            using (var handler = new HttpClientHandler())
+//            {
+//                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+//                using (var client = new HttpClient(handler))
+//                {
+//                    var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply";
+//                    var content = new StringContent(JsonConvert.SerializeObject($"{applyFilterRequest}"), Encoding.UTF8, "application/json");
 
-                    HttpResponseMessage response = await client.PostAsync(url, content); // Waits here
+//                    HttpResponseMessage response = await client.PostAsync(url, content); // Waits here
 
-                    string responseString = await response.Content.ReadAsStringAsync(); // Waits here
+//                    string responseString = await response.Content.ReadAsStringAsync(); // Waits here
 
-                    XmlDocument xmlDoc = new XmlDocument();
-                    xmlDoc.LoadXml(responseString);
+//                    XmlDocument xmlDoc = new XmlDocument();
+//                    xmlDoc.LoadXml(responseString);
 
-                    var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
-                    if (status?.Trim() != "200")
-                    {
-                        throw new Exception($"MeshLab Server returned error: {status}");
-                    }
-                }
-            }
+//                    var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
+//                    if (status?.Trim() != "200")
+//                    {
+//                        throw new Exception($"MeshLab Server returned error: {status}");
+//                    }
+//                }
+//            }
 
-            // Clean up old obj files
-            string objPath = Path.Combine(inputDir, "obj");
-            if (Directory.Exists(objPath))
-            {
-                foreach (var file in Directory.GetFiles(objPath))
-                {
-                    System.IO.File.Delete(file);
-                }
-            }
+//            // Clean up old obj files
+//            string objPath = Path.Combine(inputDir, "obj");
+//            if (Directory.Exists(objPath))
+//            {
+//                foreach (var file in Directory.GetFiles(objPath))
+//                {
+//                    System.IO.File.Delete(file);
+//                }
+//            }
 
-            {
-                // retrieve from MeshLab Server
-                string apiBase = _configuration["Services:MeshLabServer"] + "Filters";
-                string meshObjPath = $"{inputDir}\\obj";
-                string meshLabQecdPath = $"{inputDir}\\obj\\MeshLab_QECD";
-                string dirContentsUrl = $"{apiBase}?handler=DirectoryContents&folder={Uri.EscapeDataString(meshLabQecdPath)}";
+//            {
+//                // retrieve from MeshLab Server
+//                string apiBase = _configuration["Services:MeshLabServer"] + "Filters";
+//                string meshObjPath = $"{inputDir}\\obj";
+//                string meshLabQecdPath = $"{inputDir}\\obj\\MeshLab_QECD";
+//                string dirContentsUrl = $"{apiBase}?handler=DirectoryContents&folder={Uri.EscapeDataString(meshLabQecdPath)}";
 
-                using (var handler = new HttpClientHandler())
-                {
-                    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-                    using (var httpClient = new HttpClient(handler))
-                    {
-                        var dirResponse = await httpClient.GetAsync(dirContentsUrl);
-                        dirResponse.EnsureSuccessStatusCode();
-                        var dirJson = await dirResponse.Content.ReadAsStringAsync();
-                        var files = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dirJson);
+//                using (var handler = new HttpClientHandler())
+//                {
+//                    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+//                    using (var httpClient = new HttpClient(handler))
+//                    {
+//                        var dirResponse = await httpClient.GetAsync(dirContentsUrl);
+//                        dirResponse.EnsureSuccessStatusCode();
+//                        var dirJson = await dirResponse.Content.ReadAsStringAsync();
+//                        var files = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dirJson);
 
-                        if (files == null || files.Count == 0)
-                        {
-                            AppendLog(workflowId, "No files found in MeshLab_QECD directory.");
-                            return StatusCode(404, "No files found in MeshLab_QECD directory.");
-                        }
+//                        if (files == null || files.Count == 0)
+//                        {
+//                            AppendLog(workflowId, "No files found in MeshLab_QECD directory.");
+//                            return StatusCode(404, "No files found in MeshLab_QECD directory.");
+//                        }
 
-                        foreach (var file in files)
-                        {
-                            // Download each file
-                            var fileUrl = $"{apiBase}?handler=File&file={Uri.EscapeDataString(Path.Combine(meshLabQecdPath, file))}";
-                            var fileResponse = await httpClient.GetAsync(fileUrl);
-                            fileResponse.EnsureSuccessStatusCode();
-                            var fileBytes = await fileResponse.Content.ReadAsByteArrayAsync();
+//                        foreach (var file in files)
+//                        {
+//                            // Download each file
+//                            var fileUrl = $"{apiBase}?handler=File&file={Uri.EscapeDataString(Path.Combine(meshLabQecdPath, file))}";
+//                            var fileResponse = await httpClient.GetAsync(fileUrl);
+//                            fileResponse.EnsureSuccessStatusCode();
+//                            var fileBytes = await fileResponse.Content.ReadAsByteArrayAsync();
 
-                            // Save/replace in obj directory
-                            var destFile = Path.Combine(meshObjPath, file);
-                            await System.IO.File.WriteAllBytesAsync(destFile, fileBytes);
-                        }
-                    }
-                }
-            }
+//                            // Save/replace in obj directory
+//                            var destFile = Path.Combine(meshObjPath, file);
+//                            await System.IO.File.WriteAllBytesAsync(destFile, fileBytes);
+//                        }
+//                    }
+//                }
+//            }
 
-            // Clean up MeshLab_QECD directory
-            string targetDir = Path.Combine(inputDir, "obj", "MeshLab_QECD");
-            if (Directory.Exists(targetDir))
-            {
-                Directory.Delete(targetDir, recursive: true);
-            }
+//            // Clean up MeshLab_QECD directory
+//            string targetDir = Path.Combine(inputDir, "obj", "MeshLab_QECD");
+//            if (Directory.Exists(targetDir))
+//            {
+//                Directory.Delete(targetDir, recursive: true);
+//            }
 
-            AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
-        }
+//            AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+//        }
 
         {
             AppendLog(workflowId, "*** OBJ2BIN started...");
