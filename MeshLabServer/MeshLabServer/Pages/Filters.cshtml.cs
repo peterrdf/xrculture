@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.FileProviders;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Text.Json;
 using System.Xml;
 
@@ -116,6 +117,19 @@ namespace MeshLabServer.Pages
             return Content(successResponse);
         }
 
+        public IActionResult OnGetLogs()
+        {
+            AppendLog(LOG_CATEGORY, "Logs requested.");
+            if (ServerLogs.TryGetValue(LOG_CATEGORY, out var logContent))
+            {
+                return Content(logContent.ToString(), "text/plain");
+            }
+            else
+            {
+                return NotFound("No logs available.");
+            }
+        }
+
         public IActionResult OnGetFile(string file)
         {
             AppendLog(LOG_CATEGORY, $"File requested: {file}");
@@ -209,6 +223,172 @@ namespace MeshLabServer.Pages
             }
 
             return exitCode;
+        }
+
+        // POST handler for applying the filter with a zip file containing the mesh
+        public async Task<IActionResult> OnPostApply2Async()
+        {
+            if (!Request.HasFormContentType)
+                return BadRequest("Content-Type must be multipart/form-data");
+
+            var form = await Request.ReadFormAsync();
+
+            // Get XML request part
+            var xmlRequest = form.Files.FirstOrDefault(f => f.Name == "request");
+            string xmlString = null;
+            if (xmlRequest != null)
+            {
+                using var reader = new StreamReader(xmlRequest.OpenReadStream());
+                xmlString = await reader.ReadToEndAsync();
+            }
+            else if (form.TryGetValue("request", out var xmlField))
+            {
+                xmlString = xmlField.ToString();
+            }
+            if (string.IsNullOrEmpty(xmlString))
+                return BadRequest("Missing XML request part.");
+
+            // Get zip file part
+            var zipFile = form.Files.FirstOrDefault(f => f.Name == "file");
+            if (zipFile == null || zipFile.Length == 0)
+                return BadRequest("Missing or empty zip file.");
+
+            // Save zip to temp
+            var resultId = Guid.NewGuid().ToString();
+            var tempZipPath = Path.Combine(Path.GetTempPath(), $"{resultId}.zip");
+            using (var fs = System.IO.File.Create(tempZipPath))
+            using (var zipStream = zipFile.OpenReadStream())
+            {
+                await zipStream.CopyToAsync(fs);
+            }
+
+            // Extract zip
+            var extractDir = Path.Combine(Path.GetTempPath(), resultId);
+            Directory.CreateDirectory(extractDir);
+            System.IO.Compression.ZipFile.ExtractToDirectory(tempZipPath, extractDir);
+            System.IO.File.Delete(tempZipPath);
+
+            // Parse XML and process as needed
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(xmlString);
+
+            var filter = xmlDoc.SelectSingleNode("//ApplyFilterRequest/Name")?.InnerText;
+            if (string.IsNullOrEmpty(filter))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'Name'."));
+
+            var inputMesh = xmlDoc.SelectSingleNode("//ApplyFilterRequest/Parameters/InputMesh")?.InnerText;
+            var outputMesh = xmlDoc.SelectSingleNode("//ApplyFilterRequest/Parameters/OutputMesh")?.InnerText;
+            if (string.IsNullOrEmpty(inputMesh) || string.IsNullOrEmpty(outputMesh))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'InputMesh' or 'OutputMesh'."));
+
+            // Compose full paths
+            var inputMeshPath = Path.Combine(extractDir, inputMesh);
+            var outDir = Path.Combine(extractDir, "out");
+            Directory.CreateDirectory(outDir);
+            var outputMeshPath = Path.Combine(outDir, outputMesh);
+
+            // Run your process
+            var exePath = _configuration["ToolPaths:Python"] + @"\python.exe";
+            string pythonScript = Path.Combine(
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
+                @"python\meshing_decimation_quadric_edge_collapse_with_texture.py");
+            var args = $"{pythonScript} {inputMeshPath} {outputMeshPath}";
+
+            var exitCode = ExecuteProcess(exePath, args, LOG_CATEGORY);
+            if (exitCode != 0)
+            {
+                AppendApplyFilterLog($"Process exited with code {exitCode}");
+                return Content(serverErrorResponse.Replace("%MESSAGE%", $"Process failed with exit code {exitCode}."));
+            }
+
+            var response = successResponseWithParameters.Replace("%PARAMETERS%",
+                $"<ResultId>{resultId}</ResultId>");
+
+            return Content(response, "application/xml");
+        }
+
+        public IActionResult OnGetResultContents(string resultId)
+        {
+            AppendLog(LOG_CATEGORY, $"Result contents requested: {resultId}");
+
+            if (string.IsNullOrEmpty(resultId))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid result request.");
+                return BadRequest("Invalid result request.");
+            }
+
+            var resultDir = Path.Combine(Path.GetTempPath(), resultId, "out");
+            if (string.IsNullOrEmpty(resultDir) || !Directory.Exists(resultDir))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid or non-existent folder.");
+                return BadRequest("Invalid or non-existent folder.");
+            }
+
+            var files = Directory.GetFiles(resultDir)
+                .Select(Path.GetFileName)
+                .ToList();
+
+            // Return as JSON
+            return new JsonResult(files);
+        }
+
+        public IActionResult OnGetResultFile(string resultId, string file)
+        {
+            AppendLog(LOG_CATEGORY, $"File requested: {resultId} - {file}");
+
+            if (string.IsNullOrEmpty(resultId))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid result request.");
+                return BadRequest("Invalid result request.");
+            }
+
+            if (string.IsNullOrEmpty(file))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid file request.");
+                return BadRequest("Invalid file request.");
+            }
+
+            var resultDir = Path.Combine(Path.GetTempPath(), resultId, "out");
+            if (string.IsNullOrEmpty(resultDir) || !Directory.Exists(resultDir))
+            {
+                AppendLog(LOG_CATEGORY, "Invalid or non-existent folder.");
+                return BadRequest("Invalid or non-existent folder.");
+            }
+
+            var provider = new PhysicalFileProvider(resultDir);
+            var fileInfo = provider.GetFileInfo(file);
+            if (!fileInfo.Exists)
+                return NotFound();
+
+            var result = PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
+
+            return result;
+        }
+
+        public IActionResult OnDeleteResult(string resultId)
+        {
+            AppendLog(LOG_CATEGORY, $"Delete requested: {resultId}");
+
+            if (string.IsNullOrEmpty(resultId))
+                return BadRequest("Invalid resultId.");
+
+            var resultDir = Path.Combine(Path.GetTempPath(), resultId);
+            if (!Directory.Exists(resultDir))
+                return NotFound("Result folder not found.");
+
+            try
+            {
+                Directory.Delete(resultDir, true);
+                return StatusCode(200, "OK");
+            }
+            catch (Exception ex)
+            {
+                AppendLog(LOG_CATEGORY, $"Delete failed: {ex.Message}");
+                return StatusCode(500, "Failed to delete result folder.");
+            }
         }
     }
 }
