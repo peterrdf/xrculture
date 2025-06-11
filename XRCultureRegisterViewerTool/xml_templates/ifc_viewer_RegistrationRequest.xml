@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Protocol version="1.0">
+  <RegistrationRequest>
+      <ServiceID>service-1234</ServiceID>
+      <ServiceName>Middleware</ServiceName>
+      <Endpoint>https://example.com/api/ifcviewer</Endpoint> <!-- only HTTPS connections are supported -->
+      <PublicKey>MIIBIjANBgkqh...</PublicKey>
+      <ContactEmail>admin@example.com</ContactEmail>
+      <Timestamp>2025-05-20T14:00:00Z</Timestamp>
+  </RegistrationRequest>
+ </Protocol>
