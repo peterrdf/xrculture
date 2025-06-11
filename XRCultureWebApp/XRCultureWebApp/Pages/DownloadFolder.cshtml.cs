@@ -7,7 +7,10 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Xml;
 using XRCultureWebApp;
@@ -402,105 +405,110 @@ public class DownloadFolderModel : PageModel
             AppendLog(workflowId, $"*** Texturing Mesh completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
         }
 
-//        {
-//            AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
+        {
+            AppendLog(workflowId, "*** MeshLab Quadric Edge Collapse Decimation with texture preservation started...");
 
-//            Directory.CreateDirectory($"{inputDir}\\obj\\MeshLab_QECD");
+            // xml request for MeshLab Server
+            string applyFilterRequest =
+@"<ApplyFilterRequest>
+    <Name>%FILTER%</Name>
+    <Parameters>
+        <InputMesh>%INPUT_MESH%</InputMesh>
+        <OutputMesh>%OUTPUT_MESH%</OutputMesh>
+    </Parameters>
+</ApplyFilterRequest>";
+            applyFilterRequest = applyFilterRequest.Replace("%FILTER%", "meshing_decimation_quadric_edge_collapse_with_texture");
+            applyFilterRequest = applyFilterRequest.Replace("%INPUT_MESH%", "model.obj");
+            applyFilterRequest = applyFilterRequest.Replace("%OUTPUT_MESH%", "model.obj");
 
-//            string applyFilterRequest =
-//@"<ApplyFilterRequest>
-//    <Name>%FILTER%</Name>
-//    <Parameters>
-//        <InputMesh>%INPUT_MESH%</InputMesh>
-//        <OutputMesh>%OUTPUT_MESH%</OutputMesh>
-//    </Parameters>
-//</ApplyFilterRequest>";
+            // zip the obj directory
+            string objDir = Path.Combine(inputDir, "obj");
+            CreateZipArchive(objDir, inputDir, "model.zip");
 
-//            applyFilterRequest = applyFilterRequest.Replace("%FILTER%", "meshing_decimation_quadric_edge_collapse_with_texture");
-//            applyFilterRequest = applyFilterRequest.Replace("%INPUT_MESH%", $"{inputDir}\\obj\\model.obj");
-//            applyFilterRequest = applyFilterRequest.Replace("%OUTPUT_MESH%", $"{inputDir}\\obj\\MeshLab_QECD\\model.obj");
+            using (var handler = new HttpClientHandler())
+            {
+                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+                using (var client = new HttpClient(handler))
+                {
+                    var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply2";
+                    using (var form = new MultipartFormDataContent())
+                    {
+                        // Add XML request as a form part
+                        form.Add(new StringContent(applyFilterRequest, Encoding.UTF8, "application/xml"), "request", "request.xml");
 
-//            using (var handler = new HttpClientHandler())
-//            {
-//                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-//                using (var client = new HttpClient(handler))
-//                {
-//                    var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply";
-//                    var content = new StringContent(JsonConvert.SerializeObject($"{applyFilterRequest}"), Encoding.UTF8, "application/json");
+                        // Add the zip file as a form part
+                        using (var fileStream = System.IO.File.OpenRead(Path.Combine(inputDir, "model.zip")))
+                        {
+                            if (fileStream == null || fileStream.Length == 0)
+                                throw new Exception("File stream is null or empty. Please check the file path.");
 
-//                    HttpResponseMessage response = await client.PostAsync(url, content); // Waits here
+                            var fileContent = new StreamContent(fileStream);
+                            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+                            form.Add(fileContent, "file", "model.zip");
 
-//                    string responseString = await response.Content.ReadAsStringAsync(); // Waits here
+                            var response = await client.PostAsync(url, form);
+                            string responseString = await response.Content.ReadAsStringAsync();
 
-//                    XmlDocument xmlDoc = new XmlDocument();
-//                    xmlDoc.LoadXml(responseString);
+                            var xmlDoc = new XmlDocument();
+                            xmlDoc.LoadXml(responseString);
 
-//                    var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
-//                    if (status?.Trim() != "200")
-//                    {
-//                        throw new Exception($"MeshLab Server returned error: {status}");
-//                    }
-//                }
-//            }
+                            var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
+                            if (status?.Trim() != "200")
+                            {
+                                throw new Exception($"MeshLab Server returned error: {status}");
+                            }
 
-//            // Clean up old obj files
-//            string objPath = Path.Combine(inputDir, "obj");
-//            if (Directory.Exists(objPath))
-//            {
-//                foreach (var file in Directory.GetFiles(objPath))
-//                {
-//                    System.IO.File.Delete(file);
-//                }
-//            }
+                            var resultId = xmlDoc.SelectSingleNode("//Parameters/ResultId")?.InnerText;
+                            if (string.IsNullOrEmpty(resultId))
+                            {
+                                throw new Exception("MeshLab Server did not return a 'ResultId'.");
+                            }
 
-//            {
-//                // retrieve from MeshLab Server
-//                string apiBase = _configuration["Services:MeshLabServer"] + "Filters";
-//                string meshObjPath = $"{inputDir}\\obj";
-//                string meshLabQecdPath = $"{inputDir}\\obj\\MeshLab_QECD";
-//                string dirContentsUrl = $"{apiBase}?handler=DirectoryContents&folder={Uri.EscapeDataString(meshLabQecdPath)}";
+                            url = _configuration["Services:MeshLabServer"] + $"Filters?handler=ResultContents&resultId={Uri.EscapeDataString(resultId)}";
+                            var resultResponse = await client.GetAsync(url);
+                            resultResponse.EnsureSuccessStatusCode();
+                            var dirJson = await resultResponse.Content.ReadAsStringAsync();
 
-//                using (var handler = new HttpClientHandler())
-//                {
-//                    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-//                    using (var httpClient = new HttpClient(handler))
-//                    {
-//                        var dirResponse = await httpClient.GetAsync(dirContentsUrl);
-//                        dirResponse.EnsureSuccessStatusCode();
-//                        var dirJson = await dirResponse.Content.ReadAsStringAsync();
-//                        var files = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dirJson);
+                            var files = System.Text.Json.JsonSerializer.Deserialize<List<string>>(dirJson);
+                            if (files == null || files.Count == 0)
+                            {
+                                AppendLog(workflowId, "No result files found.");
+                                return StatusCode(404, "No result files found.");
+                            }
 
-//                        if (files == null || files.Count == 0)
-//                        {
-//                            AppendLog(workflowId, "No files found in MeshLab_QECD directory.");
-//                            return StatusCode(404, "No files found in MeshLab_QECD directory.");
-//                        }
+                            // Clean up old obj files                            
+                            if (Directory.Exists(objDir))
+                            {
+                                foreach (var file in Directory.GetFiles(objDir))
+                                {
+                                    System.IO.File.Delete(file);
+                                }
+                            }
 
-//                        foreach (var file in files)
-//                        {
-//                            // Download each file
-//                            var fileUrl = $"{apiBase}?handler=File&file={Uri.EscapeDataString(Path.Combine(meshLabQecdPath, file))}";
-//                            var fileResponse = await httpClient.GetAsync(fileUrl);
-//                            fileResponse.EnsureSuccessStatusCode();
-//                            var fileBytes = await fileResponse.Content.ReadAsByteArrayAsync();
+                            // Get the result files
+                            foreach (var file in files)
+                            {
+                                // Download each file
+                                var fileUrl = _configuration["Services:MeshLabServer"] + $"Filters?handler=ResultFile&resultId={Uri.EscapeDataString(resultId)}&file={Uri.EscapeDataString(file)}";
+                                var fileResponse = await client.GetAsync(fileUrl);
+                                fileResponse.EnsureSuccessStatusCode();
+                                var fileBytes = await fileResponse.Content.ReadAsByteArrayAsync();
 
-//                            // Save/replace in obj directory
-//                            var destFile = Path.Combine(meshObjPath, file);
-//                            await System.IO.File.WriteAllBytesAsync(destFile, fileBytes);
-//                        }
-//                    }
-//                }
-//            }
+                                // Save/replace in obj directory
+                                var destFile = Path.Combine(objDir, file);
+                                await System.IO.File.WriteAllBytesAsync(destFile, fileBytes);
+                            }
 
-//            // Clean up MeshLab_QECD directory
-//            string targetDir = Path.Combine(inputDir, "obj", "MeshLab_QECD");
-//            if (Directory.Exists(targetDir))
-//            {
-//                Directory.Delete(targetDir, recursive: true);
-//            }
+                            url = _configuration["Services:MeshLabServer"] + $"Filters?handler=Result&resultId={Uri.EscapeDataString(resultId)}";
+                            var deleteResponse = await client.DeleteAsync(url);
+                            deleteResponse.EnsureSuccessStatusCode();
+                        }
+                    }
+                }
+            }
 
-//            AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
-//        }
+            AppendLog(workflowId, $"*** MeshLab Quadric Edge Collapse Decimation with texture preservation completed successfully in {stopWatch.ElapsedMilliseconds} ms.");
+        }
 
         {
             AppendLog(workflowId, "*** OBJ2BIN started...");
@@ -679,13 +687,35 @@ public class DownloadFolderModel : PageModel
         }
     }
 
-    private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
+    private void CreateZipArchive(string sourceDir, string outputDir, string zipName)
     {
-        // Ensure destination directory exists
-        //string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
-        //string dataDir = Path.Combine(webRoot, "data");
+        string archivePath = Path.Combine(outputDir, zipName);
+
+        _logger.LogInformation($"Creating archive '{zipName}'...");
+
+        using (var zipStream = new FileStream(archivePath, FileMode.Create))
+        using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+        {
+            // Add .bin and .jpg files
+            var files = Directory.EnumerateFiles(sourceDir, "*.*", SearchOption.AllDirectories).Where(f => 
+                f.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) ||
+                f.EndsWith(".mtl", StringComparison.OrdinalIgnoreCase) ||
+                f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase));
+
+            foreach (var file in files)
+            {
+                string entryName = Path.GetRelativePath(sourceDir, file);
+                archive.CreateEntryFromFile(file, entryName);
+            }
+        }
+
+        _logger.LogInformation($"Archive 'model.zip' created successfully.");
+    }
+
+    private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
+    {        
         string dataDir = _configuration["ToolPaths:OpenMVG-OpenMVS-Output"];
-        Directory.CreateDirectory(dataDir);
+        Directory.CreateDirectory(dataDir); // Ensure destination directory exists
         string archivePath = Path.Combine(dataDir, archiveName);
 
         //AppendLog(workflowId, $"Creating archive {archivePath}...");
@@ -720,7 +750,6 @@ public class DownloadFolderModel : PageModel
             System.IO.File.WriteAllText(Path.Combine(dataDir, $"{workflowId}.xml"), xml.ToString());
         }
 
-        //AppendLog(workflowId, $"Archive {archivePath} created successfully.");
         AppendLog(workflowId, $"Archive {archiveName} created successfully.");
     }
 
