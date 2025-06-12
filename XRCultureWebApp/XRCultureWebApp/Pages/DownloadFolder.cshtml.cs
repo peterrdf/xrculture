@@ -430,6 +430,9 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
+                    // Set a longer timeout (e.g., 10 minutes instead of default 100 seconds)
+                    client.Timeout = TimeSpan.FromMinutes(10);
+                    
                     var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply2";
                     using (var form = new MultipartFormDataContent())
                     {
@@ -446,7 +449,7 @@ public class DownloadFolderModel : PageModel
                             fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
                             form.Add(fileContent, "file", "model.zip");
 
-                            var response = await client.PostAsync(url, form);
+                            var response = await RetryPostAsync(client, url, form);
                             string responseString = await response.Content.ReadAsStringAsync();
 
                             var xmlDoc = new XmlDocument();
@@ -773,5 +776,36 @@ public class DownloadFolderModel : PageModel
         {
             Console.WriteLine("Write access failed: " + ex.Message);
         }
+    }
+
+    // Add this retry method for the HTTP POST
+    private async Task<HttpResponseMessage> RetryPostAsync(HttpClient client, string url, HttpContent content, int maxRetries = 3)
+    {
+        int retryCount = 0;
+        HttpResponseMessage response = null;
+        
+        while (retryCount < maxRetries)
+        {
+            try
+            {
+                response = await client.PostAsync(url, content);
+                return response;
+            }
+            catch (HttpRequestException ex)
+            {
+                retryCount++;
+                if (retryCount >= maxRetries)
+                    throw;
+                    
+                int delayMs = (int)Math.Pow(2, retryCount) * 1000; // Exponential backoff
+                await Task.Delay(delayMs);
+                
+                // Log retry attempt
+                _logger.LogWarning("Retry {Count}/{Max} for {Url} after error: {Error}", 
+                    retryCount, maxRetries, url, ex.Message);
+            }
+        }
+        
+        return response;
     }
 }
