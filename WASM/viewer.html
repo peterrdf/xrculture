@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="model-page" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>RDF Ltd.</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" href="favicon/favicon.ico" />
+    <!-- Font Awesome icons (free version)-->
+    <script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js" crossorigin="anonymous"></script>
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <!--link href="css/bootstrap.css" rel="stylesheet"-->
+    <!--link href="css/style.css" rel="stylesheet"-->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="https://cdn.maptiler.com/client-js/v1.8.1/maptiler-client.umd.min.js"></script>
+
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="css/icon-styles.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet" />
+    <link href="css/custom.css?" rel="stylesheet" />
+    <link href="css/rdf.css?" rel="stylesheet">
+
+    <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type='text/javascript' src="jstree-3.2.1/jstree.min.js"></script>
+    <script type='text/javascript' src='js/gl-matrix-min.js'></script>
+    <script type="text/javascript" src="snap/snap.min.js"></script>
+    <script type="text/javascript" src="iscroll/iscroll.js"></script>
+
+    <script type="text/javascript" src="js/gunzip.min.js"></script>
+    <script type="text/javascript" src="js/jszip.min.js"></script>
+    <script type="text/javascript" src="js/jszip-utils.min.js"></script>
+    <script type="text/javascript" src="js/js.cookie.js"></script>
+    <script type='text/javascript' src='js/utils.js'></script>
+    <script type="text/javascript" src="settings.js"></script>
+
+    <script type="text/javascript">
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        var p = getParameterByName("path") || "";
+        if (p == "")
+            p = "geom.js";
+        else
+            p += "/geom.js";
+        document.write("<scr" + "ipt type='text/javascript' src='" + p + "'></scr" + "ipt>");
+    </script>
+    <script type="text/javascript" src="js/spin.min.js"></script>
+    <script type='text/javascript' src='js/viewer.js'></script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec4 Position;
+        attribute vec3 Normal;
+        attribute vec2 UV;
+
+        uniform mat4 ProjectionMatrix;
+        uniform mat4 ModelViewMatrix;
+        uniform mat3 NormalMatrix;
+        uniform vec3 DiffuseMaterial;
+        uniform float EnableLighting;
+        uniform float EnableTexture;
+
+        varying highp vec3 EyespaceNormal;
+        varying lowp vec3 Diffuse;
+        varying lowp float _EnableLighting;
+        varying lowp float _EnableTexture;
+        varying mediump vec2 _UV;
+
+        void main()
+        {
+            EyespaceNormal = NormalMatrix * Normal;
+            Diffuse = DiffuseMaterial;
+
+            _EnableLighting = EnableLighting;
+            _EnableTexture = EnableTexture;
+            _UV = UV;
+
+            gl_Position = ProjectionMatrix * ModelViewMatrix * Position;
+            gl_PointSize = 5.0;
+        }
+    </script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+
+        varying highp vec3 EyespaceNormal;
+        varying lowp vec3 Diffuse;
+        varying lowp float _EnableLighting;
+        varying lowp float _EnableTexture;
+        varying mediump vec2 _UV;
+
+        uniform vec3 LightPosition;
+        uniform vec3 AmbientMaterial;
+        uniform vec3 SpecularMaterial;
+        uniform float Transparency;
+        uniform float Shininess;
+        uniform vec3 AmbientLightWeighting;
+        uniform vec3 DiffuseLightWeighting;
+        uniform vec3 SpecularLightWeighting;
+        uniform sampler2D Sampler;
+
+        void main()
+        {
+            // Texture rendering path
+            if (_EnableTexture > 0.5) {
+                gl_FragColor = texture2D(Sampler, _UV);
+                return;
+            }
+
+            // Lighting path
+            vec3 color = AmbientMaterial;
+            if (_EnableLighting > 0.5) {
+                vec3 N = normalize(EyespaceNormal);
+                vec3 L = normalize(LightPosition);
+                vec3 E = vec3(0.0, 0.0, 1.0);
+                vec3 H = normalize(L + E);
+
+                float df = max(dot(N, L), 0.0);
+                float sf = pow(max(dot(N, H), 0.0), Shininess);
+
+                color =
+                    (AmbientMaterial * AmbientLightWeighting) +
+                    (df * Diffuse * DiffuseLightWeighting) +
+                    (sf * SpecularMaterial * SpecularLightWeighting);
+            }
+
+            gl_FragColor = vec4(color, Transparency);
+        }
+    </script>
+
+    <script id="code-js" type="text/javascript" src="custom-js/handlers.js"></script>
+
+    <script type="text/javascript">
+        g_onRunWebGLAppEvent = function (object) {
+            try {
+                setTimeout(() => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const model = urlParams.get('model');
+                    if (model) {
+                        loadFileByUri(model + '.binz');
+                    }
+                }, 500)
+            } catch (ex) {
+                console.log(ex)
+            }
+        }
+    </script>
+
+</head>
+
+<body id="page-top" class="model-page rdf-app" onload='runWebGLApp()'>
+
+
+    <div id='canvas_container' class="canvas_container" style="height: 100%; width: 100%;">
+        <canvas id='canvas-element-id' width='480' height='400'>
+            Your browser does not support the HTML5 canvas element.
+        </canvas>
+        <div id="labels-container"></div>
+    </div>
+
+    <div class="zoom-nav" id="zoom-nav">
+        <a class="btn-front" id="btnFront" title="Front view" data="1"> <span>Front</span> </a>
+        <a class="btn-top" id="btnTop" title="Top view" data="3"> <span>Top</span> </a>
+        <a class="btn-left" id="btnLeft" title="Left view" data="5"> <span>Bottom</span> </a>
+        <a class="btn-perspective" id="btnPerspective" title="Default Perspective view" data="0"> <span>Perspective</span> </a>
+        <a class="btn-right" id="btnRight" title="Right view" data="6"> <span>Left</span> </a>
+        <a class="btn-bottom" id="btnBottom" title="Bottom view" data="4"> <span>Right</span> </a>
+        <a class="btn-rear" id="btnRear" title="Rear view" data="2"> <span>Rear</span> </a>
+    </div>
+
+    <!-- hidden input -->
+    <input id="load_ifc_file" type="file" accept=".ifc, .ifx, .ifcOWL, .ttl, .stp, .bin, .dxf, .dae, .zae, .obj, .binz, .gml, citygml, .xml, .json"
+           onclick="this.value = null;" onchange="loadFile(this.files[0]);" style="display:none;" />
+
+    <div id="contextMenu" class="context-menu" style="display: none">
+        <ul>
+            <li><a href="#" id="view-item">View</a></li>
+        </ul>
+    </div>
+
+    <div id="contextMenuCanvas" class="context-menu" style="display: none">
+        <ul>
+            <li><a href="#" id="view-faces">Show Faces</a></li>
+            <li><a href="#" id="view-wireframes">Show Wireframes</a></li>
+        </ul>
+    </div>
+
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/scripts.js"></script>
+    <!-- MDB -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.1/mdb.min.js"></script>
+
+    <script>
+        const canvas = document.getElementById('canvas_container')
+        document.body.addEventListener('click', function (event) {
+            const menu = $('#contextMenuCanvas')
+            menu.hide()
+        })
+
+        canvas.addEventListener('contextmenu', function (event) {
+            event.preventDefault()
+
+            const menu = $('#contextMenuCanvas')
+
+            menu.show()
+            menu.css('left', event.pageX + 'px')
+            menu.css('top', event.pageY + 'px')
+        })
+
+        const viewFaces = document.getElementById('view-faces')
+        viewFaces.addEventListener('click', function (event) {
+            event.preventDefault()
+
+            g_viewer._viewTriangles = !g_viewer._viewTriangles
+
+            PENDING_DRAW_SCENE = true
+        })
+
+        const viewWireframes = document.getElementById('view-wireframes')
+        viewWireframes.addEventListener('click', function (event) {
+            event.preventDefault()
+
+            g_viewer._viewWireframes = !g_viewer._viewWireframes
+
+            PENDING_DRAW_SCENE = true
+        })
+    </script>
+    <script src="custom-js/load.js"></script>
+    <script src="custom-js/interaction.js"></script>
+    <script src='custom-js/integrator.js'></script>
+    <script async src="emifcengine.js"></script>
+</body>
+
+</html>
