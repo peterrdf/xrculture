@@ -51,7 +51,7 @@ function addContent(fileName, fileExtension, fileContent) {
 
     Module.unload()
 
-    let wasmFileName = fileExtension == 'glb' ? fileName : 'input.ifc'
+    let wasmFileName = (fileExtension == 'gltf') || (fileExtension == 'glb') ? fileName : 'input.ifc'
     Module['FS_createDataFile']('/data/', wasmFileName, fileContent, true, true)
 
     if (fileExtension === 'dxf') {
@@ -65,7 +65,7 @@ function addContent(fileName, fileExtension, fileContent) {
     }
     else if (fileExtension == 'obj') {
         Module.loadOBJ(true, !embeddedMode())
-    } else if (fileExtension == 'glb') {
+    } else if ((fileExtension == 'gltf') || (fileExtension == 'glb')) {
         Module.loadGLB('/data/' + wasmFileName)
     }
     else if ((fileExtension == 'gml') ||
@@ -104,7 +104,7 @@ function addContent(fileName, fileExtension, fileContent) {
     g_viewer._scaleFactor = SCALE_AND_CENTER ? Module.getScale() : 1.0
     g_viewer.loadInstances()
 
-    if (fileExtension === 'glb') {
+    if ((fileExtension === 'gltf') || (fileExtension === 'glb')) {
         var textureCnt = Module.getTextureCnt()
         for (let t = 0; t < textureCnt; t++) {
             var textureName = Module.getTextureInfo(t + 1)
