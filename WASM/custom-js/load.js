@@ -50,7 +50,9 @@ function addContent(fileName, fileExtension, fileContent) {
     g_geometries = []
 
     Module.unload()
-    Module['FS_createDataFile']('/data/', 'input.ifc', fileContent, true, true)
+
+    let wasmFileName = fileExtension == 'glb' ? fileName : 'input.ifc'
+    Module['FS_createDataFile']('/data/', wasmFileName, fileContent, true, true)
 
     if (fileExtension === 'dxf') {
         Module.loadDXF(true, !embeddedMode())
@@ -64,7 +66,7 @@ function addContent(fileName, fileExtension, fileContent) {
     else if (fileExtension == 'obj') {
         Module.loadOBJ(true, !embeddedMode())
     } else if (fileExtension == 'glb') {
-        Module.loadGLB(fileName)
+        Module.loadGLB('/data/' + wasmFileName)
     }
     else if ((fileExtension == 'gml') ||
         (fileExtension == 'citygml') ||
@@ -76,7 +78,7 @@ function addContent(fileName, fileExtension, fileContent) {
         Module.loadSTEP(true, !embeddedMode(), false) // SCALE_AND_CENTER; Patch for Multiple IFC Model - World Coordinates
     }
 
-    FS.unlink('/data/' + 'input.ifc')
+    FS.unlink('/data/' + wasmFileName)
 
     loadInstances(false)
 
@@ -101,6 +103,14 @@ function addContent(fileName, fileExtension, fileContent) {
     // Update Viewer
     g_viewer._scaleFactor = SCALE_AND_CENTER ? Module.getScale() : 1.0
     g_viewer.loadInstances()
+
+    if (fileExtension === 'glb') {
+        var textureCnt = Module.getTextureCnt()
+        for (let t = 0; t < textureCnt; t++) {
+            var textureName = Module.getTextureInfo(t + 1)
+            loadTexture(false, textureName)
+        }
+    }
 
     console.log('addContent END: ' + fileName)
 }
@@ -460,11 +470,89 @@ function getBINFile(zip) {
     return null
 }
 
-function loadTexture(zip, textureName) {
+function createTexture_WASM_FS(textureFile) {
+    try {
+        var viewer = this;
+        var texture = gl.createTexture();
+
+        // Temp texture until the image is loaded
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            1,
+            1,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            new Uint8Array([0, 0, 0, 255]));
+
+        // Read the file from the WASM file system (synchronous)
+        var fileData;
+        try {
+            fileData = Module.FS.readFile(textureFile, { encoding: 'binary' });
+        } catch (err) {
+            console.error("Can't load '" + textureFile + "' from WASM file system:", err);
+            return texture;
+        }
+
+        // Convert the binary data to a blob
+        var blob = new Blob([fileData], { type: 'image/png' });
+        var blobUrl = URL.createObjectURL(blob);
+
+        var image = new Image();
+        image.addEventListener('error', function () {
+            console.error("Can't load image from blob URL.");
+            URL.revokeObjectURL(blobUrl); // Clean up
+        });
+
+        image.addEventListener('load', function () {
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(
+                gl.TEXTURE_2D,
+                0,
+                gl.RGBA,
+                gl.RGBA,
+                gl.UNSIGNED_BYTE,
+                image);
+
+            if (viewer.isPowerOf2(image.width) && viewer.isPowerOf2(image.height)) {
+                gl.generateMipmap(gl.TEXTURE_2D);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            } else {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            URL.revokeObjectURL(blobUrl); // Clean up
+            PENDING_DRAW_SCENE = true;
+        });
+
+        image.src = blobUrl;
+        return texture;
+    } catch (ex) {
+        console.error(ex);
+    }
+
+    return null;
+}
+
+function loadTexture(zip, textureName) {    
     if (zip) {
+        // Load texture from JSZip
         zip.file(textureName).async('blob').then(function (blob) {
             g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob)
         })
+    } else {
+        // Load texture from WASM file system
+        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName);
     }
 }
 
