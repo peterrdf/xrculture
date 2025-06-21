@@ -63,6 +63,8 @@ function addContent(fileName, fileExtension, fileContent) {
     }
     else if (fileExtension == 'obj') {
         Module.loadOBJ(true, !embeddedMode())
+    } else if (fileExtension == 'glb') {
+        Module.loadGLB(fileName)
     }
     else if ((fileExtension == 'gml') ||
         (fileExtension == 'citygml') ||
@@ -155,25 +157,25 @@ function loadFile(file) {
 
     var fileReader = new FileReader()
     fileReader.onload = function () {
-        var fileContent = new Uint8Array(fileReader.result)
+            var fileContent = new Uint8Array(fileReader.result)
 
-        var fileExtension = getFileExtension(file.name)
-        if (fileExtension === 'zae') {
+            var fileExtension = getFileExtension(file.name)
+            if (fileExtension === 'zae') {
             try {
                 loadZAE(file.name, fileContent)
             }
             catch (e) {
                 console.error(e)
             }
-        }
+            }
         else if (fileExtension === 'binz') {
             try {
                 loadBINZ(file.name, fileContent)
-            }
-            catch (e) {
-                console.error(e)
-            }
         }
+        catch (e) {
+            console.error(e)
+        }        
+    }
         else {
             loadContent(file.name, fileExtension, fileContent)
         }
@@ -401,7 +403,8 @@ function loadFileByPath(file) {
     });
 }
 
-function readFileByUri(file, callback) {
+// .NET Core File service (Docker)
+function readFileByUriFileService(file, callback) {
     try {
         var rawFile = new XMLHttpRequest()
         rawFile.open('GET', "http://localhost:8088/fileservice/byUri?fileUri=" + encodeURIComponent(file))
@@ -409,6 +412,23 @@ function readFileByUri(file, callback) {
         rawFile.onreadystatechange = function () {
             if (rawFile.readyState === 4 && rawFile.status === 200) {
                 callback(rawFile.responseText)
+            }
+        }
+        rawFile.send()
+    }
+    catch (ex) {
+        console.error(ex)
+    }
+}
+
+function readFileByUri(file, callback) {
+    try {
+        var rawFile = new XMLHttpRequest()
+        rawFile.open('GET', encodeURIComponent(file))
+        rawFile.responseType = "arraybuffer";
+        rawFile.onreadystatechange = function () {
+            if (rawFile.readyState === 4 && rawFile.status === 200) {
+                callback(new Uint8Array(rawFile.response))
             }
         }
         rawFile.send()
