@@ -130,7 +130,7 @@ function loadContent(fileName, fileExtension, fileContent) {
 function loadZAE(fileName, data) {
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
-        let daeFile = getDAEFile(zip)
+        let daeFile = zipGetFileNameByExtension(zip, 'dae')
         if (daeFile) {
             zip.file(daeFile).async('string').then(function (fileContent) {
                 loadContent(fileName, 'dae', fileContent)
@@ -148,7 +148,7 @@ function loadZAE(fileName, data) {
 function loadBINZ(fileName, data) {
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
-        let binFile = getBINFile(zip)
+        let binFile = zipGetFileNameByExtension(zip, 'bin')
         if (binFile) {
             zip.file(binFile).async('Uint8Array').then(function (fileContent) {
                 loadContent(fileName, 'bin', fileContent)
@@ -164,10 +164,9 @@ function loadBINZ(fileName, data) {
 }
 
 function loadOBJZ(fileName, data) {
-    console.log('loadOBJZ: ' + fileName)
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
-        let objFile = getOBJFile(zip)
+        let objFile = zipGetFileNameByExtension(zip, 'obj')
         if (objFile) {
             zip.file(objFile).async('Uint8Array').then(function (fileContent) {
                 loadContent(fileName, 'obj', fileContent)
@@ -475,32 +474,10 @@ function readFileByUri(file, callback) {
     }
 }
 
-function getDAEFile(zip) {
+function zipGetFileNameByExtension(zip, extension) {
     if (zip) {
         for (let [fileName] of Object.entries(zip.files)) {
-            if (getFileExtension(fileName) === 'dae') {
-                return fileName
-            }
-        }
-    }
-    return null
-}
-
-function getBINFile(zip) {
-    if (zip) {
-        for (let [fileName] of Object.entries(zip.files)) {
-            if (getFileExtension(fileName) === 'bin') {
-                return fileName
-            }
-        }
-    }
-    return null
-}
-
-function getOBJFile(zip) {
-    if (zip) {
-        for (let [fileName] of Object.entries(zip.files)) {
-            if (getFileExtension(fileName) === 'obj') {
+            if (getFileExtension(fileName) === extension) {
                 return fileName
             }
         }
