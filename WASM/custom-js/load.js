@@ -52,8 +52,8 @@ function addContent(fileName, fileExtension, fileContent) {
     Module.unload()
 
     let wasmFileName = (fileExtension == 'gltf') ||
-            (fileExtension == 'glb') ||
-            (fileExtension == 'obj') ? fileName : 'input.ifc'
+        (fileExtension == 'glb') ||
+        (fileExtension == 'obj') ? fileName : 'input.ifc'
     Module['FS_createDataFile']('/data/', wasmFileName, fileContent, true, true)
 
     if (fileExtension === 'dxf') {
@@ -66,13 +66,10 @@ function addContent(fileName, fileExtension, fileContent) {
         Module.loadDAE(true, !embeddedMode())
     }
     else if (fileExtension == 'obj') {
-        Module.loadOBJ(true, !embeddedMode())
+        Module.loadOBJ('/data/' + wasmFileName)
     } else if ((fileExtension == 'gltf') || (fileExtension == 'glb')) {
         Module.loadGLB('/data/' + wasmFileName)
-    } else if (fileExtension == 'obj') {
-        Module.loadOBJ('/data/' + wasmFileName)
-    }
-    else if ((fileExtension == 'gml') ||
+    } else if ((fileExtension == 'gml') ||
         (fileExtension == 'citygml') ||
         (fileExtension == 'xml') ||
         (fileExtension == 'json')) {
@@ -167,6 +164,7 @@ function loadBINZ(fileName, data) {
 }
 
 function loadOBJZ(fileName, data) {
+    console.log('loadOBJZ: ' + fileName)
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
         let objFile = getOBJFile(zip)
@@ -619,6 +617,18 @@ function loadFileByUri(file) {
                     throw err
                 }
                 loadBINZ(file, data)
+            })
+        }
+        catch (e) {
+            console.error(e)
+        }
+    } else if (fileExtension === 'objz') {
+        try {
+            JSZipUtils.getBinaryContent(file, function (err, data) {
+                if (err) {
+                    throw err
+                }
+                loadOBJZ(file, data)
             })
         }
         catch (e) {
