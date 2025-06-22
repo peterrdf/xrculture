@@ -6,6 +6,7 @@ var Module = {
 
 var g_fileName = null;
 var g_logCache = [];
+var g_extraInputFiles = [];
 
 function jsLogCallback(event) {
     g_logCache.push(event + '\n');
@@ -55,6 +56,11 @@ function addContent(fileName, fileExtension, fileContent) {
         (fileExtension == 'glb') ||
         (fileExtension == 'obj') ? fileName : 'input.ifc'
     Module['FS_createDataFile']('/data/', wasmFileName, fileContent, true, true)
+
+    for (let i = 0; i < g_extraInputFiles.length; i++) {
+        let extraFile = g_extraInputFiles[i]
+        Module['FS_createDataFile']('/data/', extraFile.fileName, extraFile.fileContent, true, true)
+    }
 
     if (fileExtension === 'dxf') {
         Module.loadDXF(true, !embeddedMode())
@@ -166,18 +172,31 @@ function loadBINZ(fileName, data) {
 function loadOBJZ(fileName, data) {
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
-        let objFile = zipGetFileNameByExtension(zip, 'obj')
-        if (objFile) {
-            zip.file(objFile).async('Uint8Array').then(function (fileContent) {
-                loadContent(fileName, 'obj', fileContent)
+        try {
+            let mtlFile = zipGetFileNameByExtension(zip, 'mtl')
+            if (mtlFile) {
+                zip.file(mtlFile).async('Uint8Array').then(function (fileContent) {
+                    g_extraInputFiles.push({ fileName: mtlFile, fileContent: fileContent })
+                })
+            }
 
-                var textureCnt = Module.getTextureCnt()
-                for (let t = 0; t < textureCnt; t++) {
-                    var textureName = Module.getTextureInfo(t + 1)
-                    loadTexture(zip, textureName)
-                }
-            })
+            let objFile = zipGetFileNameByExtension(zip, 'obj')
+            if (objFile) {
+                zip.file(objFile).async('Uint8Array').then(function (fileContent) {
+                    loadContent(fileName, 'obj', fileContent)
+
+                    var textureCnt = Module.getTextureCnt()
+                    for (let t = 0; t < textureCnt; t++) {
+                        var textureName = Module.getTextureInfo(t + 1)
+                        loadTexture(zip, textureName)
+                    }
+                })
+            }
+        } catch (e) {
+            console.error(e)
         }
+
+        g_extraInputFiles = []
     })
 }
 
