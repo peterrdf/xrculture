@@ -51,7 +51,9 @@ function addContent(fileName, fileExtension, fileContent) {
 
     Module.unload()
 
-    let wasmFileName = (fileExtension == 'gltf') || (fileExtension == 'glb') ? fileName : 'input.ifc'
+    let wasmFileName = (fileExtension == 'gltf') ||
+            (fileExtension == 'glb') ||
+            (fileExtension == 'obj') ? fileName : 'input.ifc'
     Module['FS_createDataFile']('/data/', wasmFileName, fileContent, true, true)
 
     if (fileExtension === 'dxf') {
@@ -67,6 +69,8 @@ function addContent(fileName, fileExtension, fileContent) {
         Module.loadOBJ(true, !embeddedMode())
     } else if ((fileExtension == 'gltf') || (fileExtension == 'glb')) {
         Module.loadGLB('/data/' + wasmFileName)
+    } else if (fileExtension == 'obj') {
+        Module.loadOBJ('/data/' + wasmFileName)
     }
     else if ((fileExtension == 'gml') ||
         (fileExtension == 'citygml') ||
@@ -162,30 +166,55 @@ function loadBINZ(fileName, data) {
     })
 }
 
+function loadOBJZ(fileName, data) {
+    var jsZip = new JSZip()
+    jsZip.loadAsync(data).then(function (zip) {
+        let objFile = getOBJFile(zip)
+        if (objFile) {
+            zip.file(objFile).async('Uint8Array').then(function (fileContent) {
+                loadContent(fileName, 'obj', fileContent)
+
+                var textureCnt = Module.getTextureCnt()
+                for (let t = 0; t < textureCnt; t++) {
+                    var textureName = Module.getTextureInfo(t + 1)
+                    loadTexture(zip, textureName)
+                }
+            })
+        }
+    })
+}
+
 function loadFile(file) {
     resetFields()
 
     var fileReader = new FileReader()
     fileReader.onload = function () {
-            var fileContent = new Uint8Array(fileReader.result)
+        var fileContent = new Uint8Array(fileReader.result)
 
-            var fileExtension = getFileExtension(file.name)
-            if (fileExtension === 'zae') {
+        var fileExtension = getFileExtension(file.name)
+        if (fileExtension === 'zae') {
             try {
                 loadZAE(file.name, fileContent)
             }
             catch (e) {
                 console.error(e)
             }
-            }
+        }
         else if (fileExtension === 'binz') {
             try {
                 loadBINZ(file.name, fileContent)
+            }
+            catch (e) {
+                console.error(e)
+            }
+        } else if (fileExtension === 'objz') {
+            try {
+                loadOBJZ(file.name, fileContent)
+            }
+            catch (e) {
+                console.error(e)
+            }
         }
-        catch (e) {
-            console.error(e)
-        }        
-    }
         else {
             loadContent(file.name, fileExtension, fileContent)
         }
@@ -470,6 +499,17 @@ function getBINFile(zip) {
     return null
 }
 
+function getOBJFile(zip) {
+    if (zip) {
+        for (let [fileName] of Object.entries(zip.files)) {
+            if (getFileExtension(fileName) === 'obj') {
+                return fileName
+            }
+        }
+    }
+    return null
+}
+
 function createTexture_WASM_FS(textureFile) {
     try {
         var viewer = this;
@@ -544,7 +584,7 @@ function createTexture_WASM_FS(textureFile) {
     return null;
 }
 
-function loadTexture(zip, textureName) {    
+function loadTexture(zip, textureName) {
     if (zip) {
         // Load texture from JSZip
         zip.file(textureName).async('blob').then(function (blob) {
