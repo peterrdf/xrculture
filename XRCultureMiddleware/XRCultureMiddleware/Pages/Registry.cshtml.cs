@@ -51,11 +51,11 @@ namespace XRCultureMiddleware.Pages
             var xmlRequest = JsonSerializer.Deserialize<string>(body);
             if (string.IsNullOrEmpty(xmlRequest))
             {
-                AppendRegistryLog("Received empty request.");
+                AppendLog("Received empty request.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Received empty request."));
             }
 
-            AppendRegistryLog($"****** RegistrationRequest ******\n{xmlRequest}");
+            AppendLog($"****** RegistrationRequest ******\n{xmlRequest}");
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xmlRequest);
@@ -63,13 +63,13 @@ namespace XRCultureMiddleware.Pages
             var endpoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
             if (string.IsNullOrEmpty(endpoint))
             {
-                AppendRegistryLog("Bad request: 'Endpoint'.");
+                AppendLog("Bad request: 'Endpoint'.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'Endpoint'."));
             }
 
             if (RegisterViewerRequests.Keys.Contains(endpoint))
             {
-                AppendRegistryLog($"Viewer registration is in progress for 'Endpoint': {endpoint}");
+                AppendLog($"Viewer registration is in progress for 'Endpoint': {endpoint}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
@@ -110,11 +110,11 @@ namespace XRCultureMiddleware.Pages
 
             if (string.IsNullOrEmpty(xmlRequest))
             {
-                AppendRegistryLog("Received empty request.");
+                AppendLog("Received empty request.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Received empty request."));
             }
 
-            AppendRegistryLog($"****** AuthorizationRequest ******\n{xmlRequest}");
+            AppendLog($"****** AuthorizationRequest ******\n{xmlRequest}");
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xmlRequest);
@@ -122,20 +122,20 @@ namespace XRCultureMiddleware.Pages
             var sessionToken = xmlDoc.SelectSingleNode("//SessionToken")?.InnerText;
             if (string.IsNullOrEmpty(sessionToken))
             {
-                AppendRegistryLog("Bad request: 'SessionToken'.");
+                AppendLog("Bad request: 'SessionToken'.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
             }
 
             var registerRequest = RegisterViewerRequests.Values.FirstOrDefault(r => r.ServiceToken == sessionToken);
             if (registerRequest == null)
             {
-                AppendRegistryLog($"Invalid 'SessionToken': {sessionToken}");
+                AppendLog($"Invalid 'SessionToken': {sessionToken}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
             }
 
             if (_singletonOperationInstance.Viewers.Keys.Contains(registerRequest.EndPoint))
             {
-                AppendRegistryLog($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
+                AppendLog($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
             }
 
@@ -163,11 +163,11 @@ namespace XRCultureMiddleware.Pages
         {
             if (_singletonOperation.Started)
             {
-                AppendRegistryLog("Registry is already started.");
+                AppendLog("Registry is already started.");
                 return BadRequest("Registry is already started.");
             }
             _singletonOperation.Started = true;
-            AppendRegistryLog("Registry started successfully.");
+            AppendLog("Registry started successfully.");
             return Content("Registry started successfully.");
         }
 
@@ -176,11 +176,11 @@ namespace XRCultureMiddleware.Pages
         {
             if (!_singletonOperation.Started)
             {
-                AppendRegistryLog("Registry is not started.");
+                AppendLog("Registry is not started.");
                 return BadRequest("Registry is not started.");
             }
             _singletonOperation.Started = false;
-            AppendRegistryLog("Registry stopped successfully.");
+            AppendLog("Registry stopped successfully.");
             return Content("Registry stopped successfully.");
         }
 
@@ -202,7 +202,7 @@ namespace XRCultureMiddleware.Pages
             return Content(JsonSerializer.Serialize(_singletonOperationInstance.Viewers.Keys));
         }
 
-        private void AppendRegistryLog(string message)
+        private void AppendLog(string message)
         {
             var formattedMessage = $"[{DateTime.Now:HH:mm:ss}] {message}";
             LogBag.Add(formattedMessage);
