@@ -73,6 +73,12 @@ namespace XRCultureMiddleware.Pages
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
+            if (_singletonOperationInstance.Viewers.Keys.Contains(endpoint))
+            {
+                AppendLog($"Viewer is already registered 'Endpoint': {endpoint}");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
+            }
+
             var serviceToken = Guid.NewGuid().ToString();
 
             RegisterViewerRequests.AddOrUpdate(endpoint, new RegisterViewerRequest
@@ -111,7 +117,7 @@ namespace XRCultureMiddleware.Pages
             if (string.IsNullOrEmpty(xmlRequest))
             {
                 AppendLog("Received empty request.");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Received empty request."));
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Received empty request."));
             }
 
             AppendLog($"****** AuthorizationRequest ******\n{xmlRequest}");
@@ -123,14 +129,20 @@ namespace XRCultureMiddleware.Pages
             if (string.IsNullOrEmpty(sessionToken))
             {
                 AppendLog("Bad request: 'SessionToken'.");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
             }
 
             var registerRequest = RegisterViewerRequests.Values.FirstOrDefault(r => r.ServiceToken == sessionToken);
             if (registerRequest == null)
             {
                 AppendLog($"Invalid 'SessionToken': {sessionToken}");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
+            }
+
+            if (string.IsNullOrEmpty(registerRequest.EndPoint))
+            {
+                AppendLog("Bad request: 'Endpoint'.");
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Internal error: 'Endpoint'."));
             }
 
             if (_singletonOperationInstance.Viewers.Keys.Contains(registerRequest.EndPoint))
@@ -170,7 +182,6 @@ namespace XRCultureMiddleware.Pages
             AppendLog("Registry started successfully.");
             return Content("Registry started successfully.");
         }
-
 
         public IActionResult OnGetStop()
         {
