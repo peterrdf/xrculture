@@ -154,12 +154,39 @@ namespace XRCultureMiddleware.Pages
             return Content(authorizationResponse.Replace("%SESSION_TOKEN%", sessionToken));
         }
 
+        public IActionResult OnGet()
+        {
+            throw new NotImplementedException("This method is not implemented. Use specific endpoints for operations.");
+        }
+
+        public IActionResult OnGetStart()
+        {
+            if (_singletonOperation.Started)
+            {
+                AppendRegistryLog("Registry is already started.");
+                return BadRequest("Registry is already started.");
+            }
+            _singletonOperation.Started = true;
+            AppendRegistryLog("Registry started successfully.");
+            return Content("Registry started successfully.");
+        }
+
+
+        public IActionResult OnGetStop()
+        {
+            if (!_singletonOperation.Started)
+            {
+                AppendRegistryLog("Registry is not started.");
+                return BadRequest("Registry is not started.");
+            }
+            _singletonOperation.Started = false;
+            AppendRegistryLog("Registry stopped successfully.");
+            return Content("Registry stopped successfully.");
+        }
+
         public IActionResult OnGetLogs()
         {
-            if (LogBag.Count == 0)
-                return NotFound("No logs found.");
-
-            // Return logs as plain text
+             // Return logs as plain text
             var logBuilder = new StringBuilder();
             foreach (var entry in LogBag)
             {

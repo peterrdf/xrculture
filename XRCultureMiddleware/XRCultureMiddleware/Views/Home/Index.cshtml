@@ -13,13 +13,15 @@
 <textarea id="viewersLinks" style="width:100%"></textarea>
 
 <script>
-    let polling = true;
-    async function pollLogs() {
-        while (polling) {
+    let fetchingState = true;
+    async function fetchState() {
+        while (fetchingState) {
             const logResponse = await fetch(`/Registry?handler=Logs`);
             if (logResponse.ok) {
                 const logs = await logResponse.text();
-                log(logs);
+                if (logs.length > 0) {
+                    log(logs);
+                }                
             }
 
             const viewersResponse = await fetch(`/Registry?handler=Viewers`);
@@ -33,13 +35,13 @@
         }
     }
 
-    pollLogs();
+    fetchState();
 
     async function log(message) {
         const logArea = document.getElementById('logArea');
         logArea.value += '*******************************************************************\n';
         logArea.value += message;
-        //logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
+        logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
     }
 
     async function postRegisterVeiwerRequest(xml) {
