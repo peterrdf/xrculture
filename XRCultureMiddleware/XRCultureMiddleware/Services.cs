@@ -68,8 +68,8 @@ namespace XRCultureMiddleware
 
     public class Viewer
     {
-        public string EndPoint { get; set; }
+        public string? EndPoint { get; set; }
         public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
-        public string XmlDefinition { get; set; }
+        public string? XmlDefinition { get; set; }
     }
 }

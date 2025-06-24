@@ -4,12 +4,6 @@
 
 <h1 class="display-4">Welcome</h1>
 <p>Learn about <a href="https://pro.europeana.eu/project/xrculture">Europeana XRCulture</a></p>
-@* <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-    <input id="txtViewerRequestXML" type="text" readonly style="width: 400px;" />
-    <button type="button" onclick="document.getElementById('selectViewerRequestXML').click()">Register</button>
-    <input id="selectViewerRequestXML" type="file" accept=".xml"
-           onclick="this.value = null;" onchange="loadViewerRequestXML(this.files[0]);" style="display:none;" />
-</div> *@
 <br />
 <label for="logArea"><b>Log</b></label>
 <br />
@@ -19,21 +13,13 @@
 <textarea id="viewersLinks" style="width:100%"></textarea>
 
 <script>
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    let workflowId = "XRCulture-Middleware-Registry";
     let polling = true;
-
     async function pollLogs() {
-        if (!workflowId) return;
         while (polling) {
-            const logResponse = await fetch(`/Registry?handler=Logs&workflowId=${workflowId}`);
+            const logResponse = await fetch(`/Registry?handler=Logs`);
             if (logResponse.ok) {
                 const logs = await logResponse.text();
-                const logArea = document.getElementById('logArea');
-                logArea.value = logs;
-                logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
+                log(logs);
             }
 
             const viewersResponse = await fetch(`/Registry?handler=Viewers`);
@@ -43,7 +29,7 @@
                 viewersLinks.value = viewers;
             }
 
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 2000));
         }
     }
 
@@ -53,7 +39,7 @@
         const logArea = document.getElementById('logArea');
         logArea.value += '*******************************************************************\n';
         logArea.value += message;
-        logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
+        //logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
     }
 
     async function postRegisterVeiwerRequest(xml) {
@@ -87,21 +73,5 @@
         }
 
         fileReader.readAsText(file)
-    }    
-
-    function showResultLinks(workflowId) {
-        document.getElementById('divExecute').style.display = 'block';
-        const resultDiv = document.getElementById('resultLinks');
-        const cacheBuster = Date.now();
-        const binzUrl = `/Registry?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
-        const viewerUrl = `/viewer/viewer.html?model=${workflowId}&v=${cacheBuster}`;
-        resultDiv.innerHTML = `
-            <h5>
-                <a href="${viewerUrl}" target="_blank">View 3D Model in WebGL Viewer</a>
-            </h5>
-            <h5>
-                <a href="${binzUrl}" target="_blank">Download .binz Archive</a>
-            </h5>
-        `;
-            }
+    }
 </script>
