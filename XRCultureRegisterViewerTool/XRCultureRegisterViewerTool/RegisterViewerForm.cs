@@ -21,6 +21,32 @@ namespace XRCultureRegisterViewerTool
 
         async private void _buttonRegister_Click(object sender, EventArgs e)
         {
+            // Reset the session token and button state
+            SessionToken = null;
+            _buttonAuthorize.Enabled = false;
+            _textBoxLog.Text = string.Empty;
+
+            // Validate the middleware URL input
+            if (string.IsNullOrWhiteSpace(_textBoxMiddleware.Text))
+            {
+                MessageBox.Show("Please enter the middleware URL.");
+                return;
+            }
+
+            // Validate the middleware URL
+            if (!Uri.TryCreate(_textBoxMiddleware.Text, UriKind.Absolute, out Uri? middlewareUri) || !middlewareUri.IsWellFormedOriginalString())
+            {
+                MessageBox.Show("Please enter a valid middleware URL.");
+                return;
+            }
+            // Check if the scheme is either http or https
+            if (!middlewareUri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase) &&
+                !middlewareUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Please enter a valid middleware URL with http or https scheme.");
+                return;
+            }
+
             var openFileDialog = new OpenFileDialog()
             {
                 FileName = "XML file",
@@ -54,19 +80,14 @@ namespace XRCultureRegisterViewerTool
                         if (status?.Trim() == "202")
                         {
                             SessionToken = xmlDoc.SelectSingleNode("//ServiceToken")?.InnerText;
-                            _buttonAuthorize.Enabled = true;
-                        }
-                        else
-                        {
-                            SessionToken = null;
-                            _buttonAuthorize.Enabled = false;
+                            _buttonAuthorize.Enabled = !string.IsNullOrEmpty(SessionToken);
                         }
                     }
                 }
-                catch (SecurityException ex)
+                catch (Exception ex)
                 {
-                    MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\n" +
-                    $"Details:\n\n{ex.StackTrace}");
+                    MessageBox.Show($"Error:\n\n{ex.Message}\n\n" +
+                        $"Details:\n\n{ex.StackTrace}");
                 }
             }
         }
@@ -105,14 +126,14 @@ namespace XRCultureRegisterViewerTool
                         var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
                         if (status?.Trim() == "200")
                         {
-                            MessageBox.Show($"Status: '{status}'.");
+                            MessageBox.Show($"Status:\n\n{status}");
                         }
                     }
                 }
-                catch (SecurityException ex)
+                catch (Exception ex)
                 {
-                    MessageBox.Show($"Security error.\n\nError message: {ex.Message}\n\n" +
-                    $"Details:\n\n{ex.StackTrace}");
+                    MessageBox.Show($"Error:\n\n{ex.Message}\n\n" +
+                        $"Details:\n\n{ex.StackTrace}");
                 }
                 finally
                 {
