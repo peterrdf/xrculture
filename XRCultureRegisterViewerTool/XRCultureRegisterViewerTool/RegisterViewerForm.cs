@@ -162,7 +162,7 @@ namespace XRCultureRegisterViewerTool
             //#todo Midlleware - get viewer endpoint and credentials
             string username = "xrculture";
             string password = "Q7!vRz2#pLw8@tXb";
-            string viewerBaseUrl = "http://xrculture:30026/";
+            string viewerBaseUrl = "https://xrculture:5131/";
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -180,6 +180,7 @@ namespace XRCultureRegisterViewerTool
                     using (var handler = new HttpClientHandler())
                     {
                         handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+
                         // Allow cookies to be stored and sent with requests
                         handler.UseCookies = true;
                         handler.CookieContainer = new System.Net.CookieContainer();
@@ -188,7 +189,7 @@ namespace XRCultureRegisterViewerTool
                         {
                             client.Timeout = TimeSpan.FromMinutes(10);
 
-                            // Step 1: First get the login page to extract the verification token
+                            // Get the login page to extract the verification token
                             var loginPageResponse = await client.GetAsync(viewerBaseUrl);
                             var loginPageContent = await loginPageResponse.Content.ReadAsStringAsync();
 
@@ -202,7 +203,7 @@ namespace XRCultureRegisterViewerTool
                                 throw new Exception("Could not extract authentication token from login page.");
                             }
 
-                            // Step 2: Submit the login form with complete parameters
+                            // Submit the login form with complete parameters
                             var loginData = new FormUrlEncodedContent(new[]
                             {
                                 new KeyValuePair<string, string>("Username", username),
@@ -211,10 +212,7 @@ namespace XRCultureRegisterViewerTool
                                 new KeyValuePair<string, string>("ReturnUrl", "/"),
                                 new KeyValuePair<string, string>("RememberMe", "true")  // Enable persistent cookies
                             });
-
-                            // Some sites use /Account/Login instead
                             var loginResponse = await client.PostAsync(viewerBaseUrl + "Login", loginData);
-                            // Check if login was successful by verifying redirection or content
                             if (!loginResponse.IsSuccessStatusCode)
                             {
                                 throw new Exception($"Login failed with status code: {loginResponse.StatusCode}");
@@ -231,21 +229,8 @@ namespace XRCultureRegisterViewerTool
                                 throw new Exception("Login appears to have failed. Server still shows login form.");
                             }
 
-                            // Optional: Log cookies for debugging
-                            //foreach (var cookie in handler.CookieContainer.GetCookies(new Uri(viewerBaseUrl)))
-                            //{
-                            //    Console.WriteLine($"Cookie: {cookie.Name}={cookie.Value}");
-                            //}
-
-                            // Get a new anti-forgery token for the ViewModel request if needed
-                            var antiForgeryToken = GetAntiForgeryTokenFromPage(verificationContent);
-                            if (!string.IsNullOrEmpty(antiForgeryToken))
-                            {
-                                client.DefaultRequestHeaders.Add("RequestVerificationToken", antiForgeryToken);
-                            }
-
-                            // Step 3: Now make the actual ViewModel request with the authenticated session
-                            var viewerUrl = viewerBaseUrl + "Viewer?handler=ViewModel";
+                            // Make the actual ViewModel request with the authenticated session
+                            var viewerUrl = viewerBaseUrl + "Index?handler=ViewModel";
                             using (var form = new MultipartFormDataContent())
                             {
                                 // Add XML request as a form part
@@ -332,13 +317,6 @@ namespace XRCultureRegisterViewerTool
                     _buttonAuthorize.Enabled = false;
                 }
             }
-        }
-
-        private string GetAntiForgeryTokenFromPage(string pageContent)
-        {
-            string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]*)\"";
-            var match = System.Text.RegularExpressions.Regex.Match(pageContent, tokenPattern);
-            return match.Success ? match.Groups[1].Value : string.Empty;
         }
 
         private string? SessionToken { get; set; }
