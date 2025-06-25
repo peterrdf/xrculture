@@ -1,19 +1,141 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Xml;
 
 namespace XRCultureViewer.Pages
 {
+    [IgnoreAntiforgeryToken]
     public class IndexModel : PageModel
     {
-        private readonly ILogger<IndexModel> _logger;
+        private readonly string successResponse =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>200</Status></ViewModelResponse>";
+        private readonly string successResponseWithParameters =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>200</Status><Parameters>%PARAMETERS%</Parameters></ViewModelResponse>";
+        private readonly string badRequestResponse =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>400</Status><Message>%MESSAGE%</Message></ViewModelResponse>";
+        private readonly string serverErrorResponse =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>500</Status><Message>%MESSAGE%</Message></ViewModelResponse>";
+        private readonly string notFoundResponse =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>404</Status><Message>%MESSAGE%</Message></ViewModelResponse>";
 
-        public IndexModel(ILogger<IndexModel> logger)
+        private readonly ILogger<IndexModel> _logger;
+        private readonly IConfiguration _configuration;
+
+        public IndexModel(ILogger<IndexModel> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
 
         public void OnGet()
         {
+        }
+
+        /*
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+        <ViewModelRequest>
+            <Name>%NAME%</Name>
+                <Parameters>%PARAMETERS%</Parameters>
+        </ViewModelRequest>";
+        */
+        public async Task<IActionResult> OnPostViewModelAsync()
+        {
+            if (!Request.HasFormContentType)
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Content-Type must be multipart/form-data."));
+
+            var form = await Request.ReadFormAsync();
+
+            // Get XML request part
+            var xmlRequest = form.Files.FirstOrDefault(f => f.Name == "request");
+            string? xmlString = null;
+            if (xmlRequest != null)
+            {
+                using var reader = new StreamReader(xmlRequest.OpenReadStream());
+                xmlString = await reader.ReadToEndAsync();
+            }
+            else if (form.TryGetValue("request", out var xmlField))
+            {
+                xmlString = xmlField.ToString();
+            }
+            if (string.IsNullOrEmpty(xmlString))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Missing XML request part."));
+
+            // Validate XML
+            if (!xmlString.Trim().StartsWith("<?xml", StringComparison.OrdinalIgnoreCase))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Invalid XML format."));
+            if (!xmlString.Contains("<ViewModelRequest", StringComparison.OrdinalIgnoreCase))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "XML does not contain <ViewModelRequest> element."));
+            if (!xmlString.Contains("<Name", StringComparison.OrdinalIgnoreCase))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "XML does not contain <Name> element."));
+            if (!xmlString.Contains("<Parameters", StringComparison.OrdinalIgnoreCase))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "XML does not contain <Parameters> element."));
+            // Validate XML structure
+            if (xmlString.Length > 1000000) // 1 MB limit
+                return Content(badRequestResponse.Replace("%MESSAGE%", "XML request is too large. Maximum size is 1 MB."));
+
+            XmlDocument viewModelRequestXml = new();
+            try
+            {
+                viewModelRequestXml.LoadXml(xmlString);
+                var root = viewModelRequestXml.DocumentElement;
+                if (root == null || root.Name != "ViewModelRequest")
+                    return Content(badRequestResponse.Replace("%MESSAGE%", "XML root element must be <ViewModelRequest>."));
+                if (root.SelectSingleNode("Name") == null)
+                    return Content(badRequestResponse.Replace("%MESSAGE%", "XML must contain <Name> element."));
+                if (root.SelectSingleNode("Parameters") == null)
+                    return Content(badRequestResponse.Replace("%MESSAGE%", "XML must contain <Parameters> element."));
+            }
+            catch (XmlException ex)
+            {
+                return Content(badRequestResponse.Replace("%MESSAGE%", $"Invalid XML format: {ex.Message}"));
+            }
+
+            var model = viewModelRequestXml.SelectSingleNode("//ViewModelRequest/Name")?.InnerText;
+            if (string.IsNullOrEmpty(model))
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'Name'."));
+
+            // Get zip file part
+            var zipFile = form.Files.FirstOrDefault(f => f.Name == "file");
+            if (zipFile == null || zipFile.Length == 0)
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Missing or empty zip file."));
+
+            if (zipFile.ContentType != "application/zip")
+                return Content(badRequestResponse.Replace("%MESSAGE%", "Invalid file type. Expected application/zip."));
+
+            var viewerPath = _configuration["Paths:Viewer"];
+            if (string.IsNullOrEmpty(viewerPath))
+            {
+                return Content(serverErrorResponse.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+            }
+
+            var dataDir = Path.Combine(viewerPath, @"data");
+
+            // Save zip
+            var resultId = Guid.NewGuid().ToString();
+            var tempZipPath = Path.Combine(dataDir, $"{resultId}{Path.GetExtension(zipFile.FileName)}");
+            using (var fs = System.IO.File.Create(tempZipPath))
+            using (var zipStream = zipFile.OpenReadStream())
+            {
+                await zipStream.CopyToAsync(fs);
+            }
+
+            //# todo:check file extension and extract if needed
+            //var extractDir = Path.Combine(Path.GetTempPath(), resultId);
+            //Directory.CreateDirectory(extractDir);
+            //System.IO.Compression.ZipFile.ExtractToDirectory(tempZipPath, extractDir);
+            //System.IO.File.Delete(tempZipPath);
+
+            var serviceUrl = GetServiceRootUrl();
+            var response = successResponseWithParameters.Replace("%PARAMETERS%",
+                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}</URL>");
+
+            return Content(response, "application/xml");
+        }
+
+        private string GetServiceRootUrl()
+        {
+            var request = HttpContext.Request;
+            return $"{request.Scheme}://{request.Host}{request.PathBase}/";
         }
     }
 }

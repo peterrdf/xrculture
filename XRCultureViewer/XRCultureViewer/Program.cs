@@ -11,8 +11,17 @@ namespace XRCultureViewer
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var logsDir = Path.Combine(builder.Configuration["Paths:Viewer"], @"logs");
+            // Create folders for logs and viewer content
+            var viewerPath = builder.Configuration["Paths:Viewer"];
+            if (string.IsNullOrEmpty(viewerPath))
+            {
+                throw new InvalidOperationException("Viewer path is not configured.");
+            }
+
+            var logsDir = Path.Combine(viewerPath, @"logs");
             Directory.CreateDirectory(logsDir);
+            var dataDir = Path.Combine(viewerPath, @"data");
+            Directory.CreateDirectory(dataDir);
 
             // Add services to the container.
             builder.Services.AddRazorPages();
