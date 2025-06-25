@@ -45,10 +45,10 @@ namespace XRCultureViewer
 
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = "XRCultureCookieAuth";
-                options.DefaultChallengeScheme = "XRCultureCookieAuth";
+                options.DefaultScheme = "XRCultureViewerCookieAuth";
+                options.DefaultChallengeScheme = "XRCultureViewerCookieAuth";
             })
-            .AddCookie("XRCultureCookieAuth", options =>
+            .AddCookie("XRCultureViewerCookieAuth", options =>
             {
                 options.LoginPath = "/Login";
                 options.AccessDeniedPath = "/AccessDenied";

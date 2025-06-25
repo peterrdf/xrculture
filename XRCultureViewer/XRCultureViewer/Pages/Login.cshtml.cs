@@ -67,10 +67,10 @@ namespace XRCultureViewer.Pages
                 {
                     new Claim(ClaimTypes.Name, Username)
                 };
-                var identity = new ClaimsIdentity(claims, "XRCultureCookieAuth");
+                var identity = new ClaimsIdentity(claims, "XRCultureViewerCookieAuth");
                 var principal = new ClaimsPrincipal(identity);
 
-                await HttpContext.SignInAsync("XRCultureCookieAuth", principal);
+                await HttpContext.SignInAsync("XRCultureViewerCookieAuth", principal);
 
                 if (string.IsNullOrEmpty(ReturnUrl) || !Url.IsLocalUrl(ReturnUrl))
                 {

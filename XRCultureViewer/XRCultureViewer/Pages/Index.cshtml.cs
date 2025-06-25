@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.FileProviders;
@@ -5,6 +6,7 @@ using System.Xml;
 
 namespace XRCultureViewer.Pages
 {
+    [Authorize]
     [IgnoreAntiforgeryToken]
     public class IndexModel : PageModel
     {
@@ -53,7 +55,6 @@ namespace XRCultureViewer.Pages
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
-            Response.Headers["Content-Disposition"] = $"attachment; filename=\"{file}\"";
             return result;
         }
 
@@ -153,7 +154,7 @@ namespace XRCultureViewer.Pages
 
             var serviceUrl = GetServiceRootUrl();
             var response = successResponseWithParameters.Replace("%PARAMETERS%",
-                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}</URL>");
+                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}.binz</URL>");
 
             return Content(response, "application/xml");
         }
