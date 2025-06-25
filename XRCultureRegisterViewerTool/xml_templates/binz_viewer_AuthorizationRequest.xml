@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Protocol version="1.0">
+  <AuthorizationRequest>
+    <ServiceID>service-1234</ServiceID>
+    <SessionToken>%SESSION_TOKEN%</SessionToken>
+    <BackEnd>
+      <Access-Control-Allow-Origin>https://developer.mozilla.org</Access-Control-Allow-Origin> <!-- for CORS. The wildcard * can be used -->
+      <SupportedOptions>
+        <Architecture value="REST"> <!-- possible values: REST, WASM -->
+          <Access-Control-Allow-Method>GET</Access-Control-Allow-Method> <!-- exposed supported methods. The wildcard * can be used. Used only for REST architecture -->
+          <Access-Control-Allow-Method>POST</Access-Control-Allow-Method>
+          <Access-Control-Allow-Method>PUT</Access-Control-Allow-Method>
+          <Access-Control-Allow-Method>DELETE</Access-Control-Allow-Method>
+        </Architecture>
+        <MetadataRet> <!-- Metadata Retrieval -->
+          <Metadata name="height" type="Float" unit="cm" readonly="True" />
+          <Metadata name="XXX" type="Int32" unit="mm" readonly="True" />
+          <Metadata name="YYY" type="String" readonly="False" />
+        </MetadataRet>
+        <ProgressiveLoading value="True" />
+        <TimeMachine value="True" />
+        <FileFormats> <!-- Supported File Formats -->          
+          <Format extension=".binz" mimetype="application/octet-stream" native="False" />
+        </FileFormats>
+        <CloudStorages> <!-- Cloud Storages -->
+          <Storage name="AWS S3" storage-size="1024" /> <!-- in MBs -->
+          <Storage name="GitHub" storage-size="0" /> <!-- 0 means infinite -->
+        </CloudStorages>
+        <FullText> <!-- supported Full-text search engines -->
+          <Search name="ElasticSearch" />
+          <Search name="OpenSearch" />
+        </FullText>
+        <Protocols>
+          <Protocol value="oEmbed" />
+        </Protocols>
+        <Databases>
+          <Database name="SQLServer" type="SQL" language="T-SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="1433" public="False" /> <!-- in MBs -->
+          <Database name="MariaDB" type="SQL" language="SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="3306" public="False" />
+          <Database name="PostgreSQL" type="SQL" language="SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="5432" public="True" />
+          <Database name="Fuseki" type="RDF" language="SPARQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="3030" public="True" />
+        </Databases>
+        <Authentication> <!-- Authentication Protocols -->
+          <Protocol name="oAuth" />
+          <Protocol name="APIKey" />
+        </Authentication>
+      </SupportedOptions>
+    </BackEnd>
+    <FrontEnd>
+      <SupportedOptions>
+        <Scene> <!-- Scene Setup and Update -->
+          <Zoom value="True" />
+          <Pan value="True" />
+          <BackgroundColor value="000,FFF,DD2500,ALL" default="000" /> <!-- RGB -->
+          <View value="Top,Bottom,Front,Back,Left,Right" default="Front" />
+          <Lights value="True" /> <!-- changing lights is allowed or not -->
+          <VR value="True" /> <!-- supports for Virtual Reality -->
+        </Scene>
+        <MultipleModels>
+          <Format extension=".binz" mimetype="application/octet-stream" />
+       </MultipleModels>
+       <ElementSelection value="multiple"> <!-- none, single, multiple -->
+          <Color value="00FF00" />
+          <Color value="0000FF" default="True" />
+       </ElementSelection>
+       <Elements> <!-- Supported Elements -->
+          <Element name="Product" type="IfcProduct" />
+          <Element name="Annotation" type="IfcAnnotation" />
+          <Element name="Element" type="IfcElement" />
+          <Element name="Built Element" type="IfcBuiltElement" />
+          <Element name="Beam" type="IfcBeam" />
+          <Element name="Bearing" type="IfcBearing" />
+          <Element name="Building Element Proxy" type="IfcBuildingElementProxy" />
+          <Element name="Chimney" type="IfcChimney" />
+          <Element name="Column" type="IfcColumn" />
+          <Element name="Course" type="IfcCourse" />
+          <Element name="Covering" type="IfcCovering" />
+          <Element name="Curtain Wall" type="IfcCurtainWall" />
+          <Element name="Deep Foundation" type="IfcDeepFoundation" />
+          <Element name="Caisson Foundation" type="IfcCaissonFoundation" />
+          <Element name="Pile" type="IfcPile" />
+          <Element name="Door" type="IfcDoor" />
+          <Element name="Earthworks Element" type="IfcEarthworksElement" />
+          <Element name="Earthworks Fill" type="IfcEarthworksFill" />
+          <Element name="Reinforced Soil" type="IfcReinforcedSoil" />
+          <Element name="Footing" type="IfcFooting" />
+          <Element name="Kerb" type="IfcKerb" />
+          <Element name="Member" type="IfcMember" />
+          <Element name="Mooring Device" type="IfcMooringDevice" />
+          <Element name="Navigation Element" type="IfcNavigationElement" />
+          <Element name="Pavement" type="IfcPavement" />
+          <Element name="Plate" type="IfcPlate" />
+          <Element name="Rail" type="IfcRail" />
+          <Element name="Railing" type="IfcRailing" />
+          <Element name="Ramp" type="IfcRamp" />
+          <Element name="Ramp Flight" type="IfcRampFlight" />
+          <Element name="Roof" type="IfcRoof" />
+          <Element name="Shading Device" type="IfcShadingDevice" />
+          <Element name="Slab" type="IfcSlab" />
+          <Element name="Stair" type="IfcStair" />
+          <Element name="Stair Flight" type="IfcStairFlight" />
+          <Element name="Track Element" type="IfcTrackElement" />
+          <Element name="Wall" type="IfcWall" />
+          <Element name="Wall Standard Case" type="IfcWallStandardCase" />
+          <Element name="Window" type="IfcWindow" />
+          <Element name="Civil Element" type="IfcCivilElement" />
+          <Element name="Distribution Element" type="IfcDistributionElement" />
+          <Element name="Distribution Control Element" type="IfcDistributionControlElement" />
+          <Element name="Actuator" type="IfcActuator" />
+          <Element name="Alarm" type="IfcAlarm" />
+          <Element name="Controller" type="IfcController" />
+          <Element name="Flow Instrument" type="IfcFlowInstrument" />
+          <Element name="Protective Device TrippingUnit" type="IfcProtectiveDeviceTrippingUnit" />
+          <Element name="Sensor" type="IfcSensor" />
+          <Element name="Unitary Control Element" type="IfcUnitaryControlElement" />
+          <Element name="Distribution Flow Element" type="IfcDistributionFlowElement" />
+          <Element name="Distribution Chamber Element" type="IfcDistributionChamberElement" />
+          <Element name="Energy Conversion Device" type="IfcEnergyConversionDevice" />
+          <Element name="Flow Controller" type="IfcFlowController" />
+          <Element name="Flow Fitting" type="IfcFlowFitting" />
+          <Element name="Flow Moving Device" type="IfcFlowMovingDevice" />
+          <Element name="Flow Segment" type="IfcFlowSegment" />
+          <Element name="Flow Storage Device" type="IfcFlowStorageDevice" />
+          <Element name="Flow Terminal" type="IfcFlowTerminal" />
+          <Element name="Flow Treatment Device" type="IfcFlowTreatmentDevice" />
+          <Element name="Element Assembly" type="IfcElementAssembly" />
+          <Element name="Element Component" type="IfcElementComponent" />
+          <Element name="Building Element Part" type="IfcBuildingElementPart" />
+          <Element name="Discrete Accessory" type="IfcDiscreteAccessory" />
+          <Element name="Fastener" type="IfcFastener" />
+          <Element name="Impact Protection Device" type="IfcImpactProtectionDevice" />
+          <Element name="Mechanical Fastener" type="IfcMechanicalFastener" />
+          <Element name="Reinforcing Element" type="IfcReinforcingElement" />
+          <Element name="Sign" type="IfcSign" />
+          <Element name="Vibration Damper" type="IfcVibrationDamper" />
+          <Element name="Vibration Isolator" type="IfcVibrationIsolator" />
+          <Element name="Feature Element" type="IfcFeatureElement" />
+          <Element name="Feature Element Addition" type="IfcFeatureElementAddition" />
+          <Element name="Feature Element Subtraction" type="IfcFeatureElementSubtraction" />
+          <Element name="Surface Feature" type="IfcSurfaceFeature" />
+          <Element name="Furnishing Element " type="IfcFurnishingElement" />
+          <Element name="Furniture" type="IfcFurniture" />
+          <Element name="System Furniture Element" type="IfcSystemFurnitureElement" />
+          <Element name="Geographic Element" type="IfcGeographicElement" />
+          <Element name="Geotechnical Element" type="IfcGeotechnicalElement" />
+          <Element name="Geotechnical Assembly" type="IfcGeotechnicalAssembly" />
+          <Element name="Borehole" type="IfcBorehole" />
+          <Element name="Geomodel" type="IfcGeomodel" />
+          <Element name="Geoslice" type="IfcGeoslice" />
+          <Element name="Geotechnical Stratum" type="IfcGeotechnicalStratum" />
+          <Element name="Transportation Device" type="IfcTransportationDevice" />
+          <Element name="Transport Element" type="IfcTransportElement" />
+          <Element name="Vehicle" type="IfcVehicle" />
+          <Element name="Virtual Element" type="IfcVirtualElement" />
+          <Element name="Linear Element" type="IfcLinearElement" />
+          <Element name="Alignment Cant" type="IfcAlignmentCant" />
+          <Element name="Alignment Horizontal" type="IfcAlignmentHorizontal" />
+          <Element name="Alignment Segment" type="IfcAlignmentSegment" />
+          <Element name="Alignment Vertical" type="IfcAlignmentVertical" />
+          <Element name="Port" type="IfcPort" />
+          <Element name="Distribution Port" type="IfcDistributionPort" />
+          <Element name="Positioning Element" type="IfcPositioningElement" />
+          <Element name="Grid" type="IfcGrid" />
+          <Element name="Linear Positioning Element" type="IfcLinearPositioningElement" />
+          <Element name="Referent" type="IfcReferent" />
+          <Element name="Spatial Element" type="IfcSpatialElement" />
+          <Element name="External Spatial Structure Element" type="IfcExternalSpatialStructureElement" />
+          <Element name="Spatial Structure Element" type="IfcSpatialStructureElement" />
+          <Element name="Spatial Zone" type="IfcSpatialZone" />
+          <Element name="Structural Activity" type="IfcStructuralActivity" />
+          <Element name="Structural Action" type="IfcStructuralAction" />
+          <Element name="Structural Reaction" type="IfcStructuralReaction" />
+          <Element name="Structural Item" type="IfcStructuralItem" />
+          <Element name="Structural Connection" type="IfcStructuralConnection" />
+          <Element name="Structural Curve Connection" type="IfcStructuralCurveConnection" />
+          <Element name="Structural Point Connection" type="IfcStructuralPointConnection" />
+          <Element name="Structural Surface Connection" type="IfcStructuralSurfaceConnection" />
+          <Element name="Structural Member" type="IfcStructuralMember" />
+          <Element name="Structural Curve Member" type="IfcStructuralCurveMember" />
+          <Element name="Structural Surface Member" type="IfcStructuralSurfaceMember" />
+       </Elements>
+       <Materials>
+         <Material name="xxx" options="" />
+       </Materials>
+       <Measuring> <!-- Measuring Tools -->
+         <Tool name="xxx" />
+         <Tool name="yyy" />
+       </Measuring>
+       <Attachments>
+         <Format extension=".jpg" mimetype="image/jpeg" />
+         <Format extension=".jpeg" mimetype="image/jpeg" />
+         <Format extension=".png" mimetype="image/png" />
+         <Format extension=".bmp" mimetype="image/bmp" />
+         <Format extension=".pdf" mimetype="application/pdf" />
+       </Attachments>
+       <CustomBBox value="True" />
+      </SupportedOptions>
+    </FrontEnd>
+    <Timestamp>2025-05-20T14:00:00Z</Timestamp>
+  </AuthorizationRequest>  
+</Protocol>

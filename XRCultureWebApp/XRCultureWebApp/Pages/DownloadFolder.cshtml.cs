@@ -778,7 +778,7 @@ public class DownloadFolderModel : PageModel
         }
     }
 
-    // Add this retry method for the HTTP POST
+    // Retry method for the HTTP POST
     private async Task<HttpResponseMessage> RetryPostAsync(HttpClient client, string url, HttpContent content, int maxRetries = 3)
     {
         int retryCount = 0;

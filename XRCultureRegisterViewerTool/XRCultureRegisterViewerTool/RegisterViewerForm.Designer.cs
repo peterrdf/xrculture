@@ -34,6 +34,7 @@
             _buttonAuthorize = new Button();
             _textBoxLog = new TextBox();
             _buttonClose = new Button();
+            _buttonViewModel = new Button();
             SuspendLayout();
             // 
             // _textBoxMiddleware
@@ -92,6 +93,16 @@
             _buttonClose.UseVisualStyleBackColor = true;
             _buttonClose.Click += _buttonClose_Click;
             // 
+            // _buttonViewModel
+            // 
+            _buttonViewModel.Location = new Point(12, 415);
+            _buttonViewModel.Name = "_buttonViewModel";
+            _buttonViewModel.Size = new Size(120, 23);
+            _buttonViewModel.TabIndex = 6;
+            _buttonViewModel.Text = "View Model";
+            _buttonViewModel.UseVisualStyleBackColor = true;
+            _buttonViewModel.Click += _buttonViewModel_Click;
+            // 
             // RegisterViewerForm
             // 
             AcceptButton = _buttonClose;
@@ -99,6 +110,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(615, 447);
             ControlBox = false;
+            Controls.Add(_buttonViewModel);
             Controls.Add(_buttonClose);
             Controls.Add(_textBoxLog);
             Controls.Add(_buttonAuthorize);
@@ -122,5 +134,6 @@
         private Button _buttonAuthorize;
         private TextBox _textBoxLog;
         private Button _buttonClose;
+        private Button _buttonViewModel;
     }
 }

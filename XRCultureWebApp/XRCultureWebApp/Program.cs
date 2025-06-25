@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
@@ -55,6 +57,23 @@ namespace XRCultureWebApp
 
             builder.Services.AddRazorPages();
             builder.Services.AddDirectoryBrowser();
+
+            builder.Services.Configure<IISServerOptions>(options =>
+            {
+                options.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
+            });
+
+            builder.Services.Configure<KestrelServerOptions>(options =>
+            {
+                options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
+            });
+
+            // For form uploads specifically
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
+                options.ValueLengthLimit = 100 * 1024 * 1024;
+            });
 
             var app = builder.Build();
 
