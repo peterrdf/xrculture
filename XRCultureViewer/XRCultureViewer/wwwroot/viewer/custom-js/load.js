@@ -608,15 +608,21 @@ function loadFileByUri(file) {
     }
     else if (fileExtension === 'binz') {
         try {
-            JSZipUtils.getBinaryContent(file, function (err, data) {
-                if (err) {
-                    throw err
-                }
-                loadBINZ(file, data)
-            })
+            // Use fetch API to get the binary data
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file))
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    loadBINZ(file, new Uint8Array(data));
+                })
+                .catch(e => {
+                    console.error(e);
+                });
         }
         catch (e) {
-            console.error(e)
+            console.error(e);
         }
     } else if (fileExtension === 'objz') {
         try {

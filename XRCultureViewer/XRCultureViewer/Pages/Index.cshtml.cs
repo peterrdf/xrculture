@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.FileProviders;
 using System.Xml;
 
 namespace XRCultureViewer.Pages
@@ -29,6 +30,31 @@ namespace XRCultureViewer.Pages
 
         public void OnGet()
         {
+        }
+
+        public IActionResult OnGetFile(string file)
+        {
+            var viewerPath = _configuration["Paths:Viewer"];
+            if (string.IsNullOrEmpty(viewerPath))
+            {
+                return Content(serverErrorResponse.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+            }
+
+            if (string.IsNullOrEmpty(file))
+            {
+                return Content(badRequestResponse.Replace("%MESSAGE%", "File name is required."), "application/xml");
+            }
+            var provider = new PhysicalFileProvider(viewerPath);
+            var fileInfo = provider.GetFileInfo(file);
+            if (!fileInfo.Exists)
+                return Content(notFoundResponse.Replace("%MESSAGE%", $"File '{file}' not found."), "application/xml");
+
+            var result = PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
+            Response.Headers["Content-Disposition"] = $"attachment; filename=\"{file}\"";
+            return result;
         }
 
         /*
