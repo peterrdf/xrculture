@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace XRCultureWebApp.Pages
 {
-    [AllowAnonymous]
+    [Authorize]
     [IgnoreAntiforgeryToken]
     public class ViewerModel : PageModel
     {
