@@ -43,6 +43,28 @@ namespace XRCultureViewer
                 options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
             });
 
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "XRCultureCookieAuth";
+                options.DefaultChallengeScheme = "XRCultureCookieAuth";
+            })
+            .AddCookie("XRCultureCookieAuth", options =>
+            {
+                options.LoginPath = "/Login";
+                options.AccessDeniedPath = "/AccessDenied";
+                options.LogoutPath = "/Logout";
+                options.ReturnUrlParameter = "returnUrl";
+                options.ExpireTimeSpan = TimeSpan.FromDays(14);
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+            }).AddNegotiate();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                // By default, all incoming requests will be authorized according to the default policy.
+                options.FallbackPolicy = options.DefaultPolicy;
+            });
+
             var app = builder.Build();
 
             // Configure middleware

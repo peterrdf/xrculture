@@ -1,0 +1,27 @@
+﻿@page  
+@model XRCultureViewer.Pages.LoginModel
+
+@{  
+    ViewData["Title"] = "Login";  
+}  
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+    <div style="width: 320px;">
+        <h1 class="display-4 text-center">Welcome</h1>
+        <form method="post" style="display: grid; grid-template-columns: 100px 1fr; gap: 10px 10px;">
+            <label for="Username" class="form-label" style="grid-column: 1;">User</label>
+            <input name ="Username" asp-for="Username" class="form-control" id="Username" style="grid-column: 2;" />
+            <label for="Password" class="form-label" style="grid-column: 1;">Password</label>
+            <input name="Password" asp-for="Password" type="password" class="form-control" id="Password" style="grid-column: 2;" />
+            <div style="grid-column: 1 / span 2;">
+                <inputname ="ReturnUrl" type="hidden" asp-for="ReturnUrl" />
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+                @Html.AntiForgeryToken()
+            </div>
+        </form>
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))  
+        {  
+            <div class="alert alert-danger mt-3">@Model.ErrorMessage</div>  
+        }
+    </div>
+</div>
