@@ -1,0 +1,111 @@
+:root {
+    --header-height: calc(60px + 2 * 1rem);
+    --footer-height: calc(24px + 2 * 1rem);
+}
+
+.rdf-app {
+    margin-top: calc(60px + 2rem);
+}
+
+#mainNav .container-fluid {
+    background-color: var(--body-bgr-color);
+}
+
+#leftside,
+#rightside {
+    float: none;
+    position: absolute;
+    background-color: var(--body-bgr-color);
+}
+
+#leftside,
+#rightside {
+    /* min-height: calc(var(--header-height) - var(--footer-height));
+    max-height: calc(100% - var(--header-height) - var(--footer-height)); */
+    height: calc(100% - var(--header-height) - var(--footer-height));
+}
+
+#leftside > div {
+    height: 100%;
+}
+
+#select-container {
+    /* 40 + 2 + 2 + 96 */
+    height: calc(100% - 140px);
+    width: calc(100% - 7px);
+}
+
+@media screen and (min-width: 1350px){
+    #select-container {
+        /* 40 + 2 + 2 + 60 */
+        height: calc(100% - 104px);
+    }
+}
+
+.item-container {
+    /* For now do not move to LESS!!! */
+    white-space: nowrap;
+}
+
+/* SPLITTER */
+
+#flexible-content {
+    height: calc(100vh - var(--header-height) - var(--footer-height) - 40px);
+}
+
+#rule-details {
+    height: calc(100% - 79px);
+}
+
+#split-1 .app-controls {
+    height: 100% !important
+}
+
+/* END SPLITTER */
+
+#rightside {
+    max-height: calc(100vh - var(--header-height) - var(--footer-height));
+}
+
+.rdf-app .col-app-title .form-control li .data {
+    white-space: nowrap !important;
+}
+
+#ex1-tabs-1 .col-app-content.scrollable {
+    height: calc( 100vh - var(--header-height) - var(--footer-height) - 40px - 55px);
+}
+
+/* TODO: consider moving the styles below to common css file */
+
+#ex1-tabs-2 .app-bottom-bar .app-controls .app-controls-group {
+    float: none;
+}
+
+.modal-body-report-container p.failure {
+    margin: 5px 0;
+}
+
+#labels-container {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.floating-div {
+    position: absolute;
+    pointer-events: none;
+}
+
+.tooltip-div {
+    background-color: rgb(48, 47, 47);
+    color: white;
+    border-radius: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    pointer-events: none;
+}
