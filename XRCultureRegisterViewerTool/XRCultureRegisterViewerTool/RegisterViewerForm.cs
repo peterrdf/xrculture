@@ -159,36 +159,167 @@ namespace XRCultureRegisterViewerTool
                 Title = "Open BINZ file"
             };
 
+            //#todo Midlleware - get viewer endpoint and credentials
+            string username = "xrculture";
+            string password = "Q7!vRz2#pLw8@tXb";
+            string viewerBaseUrl = "http://xrculture:30026/";
+
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    //#todo Midlleware - get viewer endpoint
+                    // xml request for Viewer REST Service
+                    string viewModelRequest =
+@"<?xml version=""1.0"" encoding=""UTF-8""?>
+<ViewModelRequest>
+    <Name>%NAME%</Name>
+    <Parameters></Parameters>
+</ViewModelRequest>";
+                    viewModelRequest = viewModelRequest.Replace("%NAME%", Path.GetFileName(openFileDialog.FileName));
 
-                    //var streamReader = new StreamReader(openFileDialog.FileName);
-                    //var authorizeRequest = streamReader.ReadToEnd().Replace("%SESSION_TOKEN%", SessionToken);
+                    using (var handler = new HttpClientHandler())
+                    {
+                        handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+                        // Allow cookies to be stored and sent with requests
+                        handler.UseCookies = true;
+                        handler.CookieContainer = new System.Net.CookieContainer();
 
-                    //using (HttpClient client = new HttpClient())
-                    //{
-                    //    var url = _textBoxMiddleware.Text + "Registry?handler=Authorize";
-                    //    var content = new StringContent(JsonConvert.SerializeObject($"{authorizeRequest}"), Encoding.UTF8, "application/json");
+                        using (var client = new HttpClient(handler))
+                        {
+                            client.Timeout = TimeSpan.FromMinutes(10);
 
-                    //    HttpResponseMessage response = await client.PostAsync(url, content);
+                            // Step 1: First get the login page to extract the verification token
+                            var loginPageResponse = await client.GetAsync(viewerBaseUrl);
+                            var loginPageContent = await loginPageResponse.Content.ReadAsStringAsync();
 
-                    //    string responseString = await response.Content.ReadAsStringAsync();
-                    //    Console.WriteLine(responseString);
+                            // Extract the request verification token
+                            string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]*)\"";
+                            var match = System.Text.RegularExpressions.Regex.Match(loginPageContent, tokenPattern);
+                            string requestToken = match.Success ? match.Groups[1].Value : string.Empty;
 
-                    //    _textBoxLog.Text = responseString;
+                            if (string.IsNullOrEmpty(requestToken))
+                            {
+                                throw new Exception("Could not extract authentication token from login page.");
+                            }
 
-                    //    XmlDocument xmlDoc = new XmlDocument();
-                    //    xmlDoc.LoadXml(responseString);
+                            // Step 2: Submit the login form with complete parameters
+                            var loginData = new FormUrlEncodedContent(new[]
+                            {
+                                new KeyValuePair<string, string>("Username", username),
+                                new KeyValuePair<string, string>("Password", password),
+                                new KeyValuePair<string, string>("__RequestVerificationToken", requestToken),
+                                new KeyValuePair<string, string>("ReturnUrl", "/"),
+                                new KeyValuePair<string, string>("RememberMe", "true")  // Enable persistent cookies
+                            });
 
-                    //    var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
-                    //    if (status?.Trim() == "200")
-                    //    {
-                    //        MessageBox.Show($"Status:\n\n{status}");
-                    //    }
-                    //}
+                            // Some sites use /Account/Login instead
+                            var loginResponse = await client.PostAsync(viewerBaseUrl + "Login", loginData);
+                            // Check if login was successful by verifying redirection or content
+                            if (!loginResponse.IsSuccessStatusCode)
+                            {
+                                throw new Exception($"Login failed with status code: {loginResponse.StatusCode}");
+                            }
+
+                            // Verify login success by checking for authentication indicators
+                            var verificationResponse = await client.GetAsync(viewerBaseUrl);
+                            var verificationContent = await verificationResponse.Content.ReadAsStringAsync();
+
+                            // If verification page still contains login form, authentication failed
+                            if (verificationContent.Contains("<form") && verificationContent.Contains("Username") && 
+                                verificationContent.Contains("Password"))
+                            {
+                                throw new Exception("Login appears to have failed. Server still shows login form.");
+                            }
+
+                            // Optional: Log cookies for debugging
+                            //foreach (var cookie in handler.CookieContainer.GetCookies(new Uri(viewerBaseUrl)))
+                            //{
+                            //    Console.WriteLine($"Cookie: {cookie.Name}={cookie.Value}");
+                            //}
+
+                            // Get a new anti-forgery token for the ViewModel request if needed
+                            var antiForgeryToken = GetAntiForgeryTokenFromPage(verificationContent);
+                            if (!string.IsNullOrEmpty(antiForgeryToken))
+                            {
+                                client.DefaultRequestHeaders.Add("RequestVerificationToken", antiForgeryToken);
+                            }
+
+                            // Step 3: Now make the actual ViewModel request with the authenticated session
+                            var viewerUrl = viewerBaseUrl + "Viewer?handler=ViewModel";
+                            using (var form = new MultipartFormDataContent())
+                            {
+                                // Add XML request as a form part
+                                form.Add(new StringContent(viewModelRequest, Encoding.UTF8, "application/xml"), "request", "request.xml");
+
+                                // Add the zip file as a form part
+                                using (var fileStream = File.OpenRead(openFileDialog.FileName))
+                                {
+                                    if (fileStream == null || fileStream.Length == 0)
+                                        throw new Exception("File stream is null or empty. Please check the file path.");
+
+                                    var fileContent = new StreamContent(fileStream);
+                                    fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+                                    form.Add(fileContent, "file", Path.GetFileName(openFileDialog.FileName));
+
+                                    var response = await client.PostAsync(viewerUrl, form);
+                                    string responseString = await response.Content.ReadAsStringAsync();
+                                    Console.WriteLine(responseString);
+
+                                    _textBoxLog.Text = responseString;
+
+                                    // Process the response as before
+                                    if (responseString.Contains("<ViewModelResponse>"))
+                                    {
+                                        var xmlDoc = new XmlDocument();
+                                        xmlDoc.LoadXml(responseString);
+
+                                        var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
+                                        if (status?.Trim() != "200")
+                                        {
+                                            throw new Exception($"Viewer REST Service returned error: {status}");
+                                        }
+
+                                        var modelUrl = xmlDoc.SelectSingleNode("//Parameters/URL")?.InnerText;
+                                        if (string.IsNullOrEmpty(modelUrl))
+                                        {
+                                            throw new Exception("Viewer REST Service did not return a 'URL'.");
+                                        }
+
+                                        // Open the URL in the default browser
+                                        try
+                                        {
+                                            // Handle different OS platforms correctly
+                                            if (OperatingSystem.IsWindows())
+                                            {
+                                                Process.Start(new ProcessStartInfo(modelUrl) { UseShellExecute = true });
+                                            }
+                                            else if (OperatingSystem.IsLinux())
+                                            {
+                                                Process.Start("xdg-open", modelUrl);
+                                            }
+                                            else if (OperatingSystem.IsMacOS())
+                                            {
+                                                Process.Start("open", modelUrl);
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show($"URL is available but cannot be opened automatically on this platform: {modelUrl}");
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            MessageBox.Show($"Error opening browser: {ex.Message}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // If we still get HTML, authentication probably failed
+                                        MessageBox.Show($"Authentication failed. Server response: {responseString.Substring(0, Math.Min(responseString.Length, 500))}...");
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -201,89 +332,13 @@ namespace XRCultureRegisterViewerTool
                     _buttonAuthorize.Enabled = false;
                 }
             }
+        }
 
-        // xml request for Viewer REST Service
-        string viewModelRequest =
-@"<?xml version=""1.0"" encoding=""UTF-8""?>
-<ViewModelRequest>
-    <Name>%NAME%</Name>
-    <Parameters></Parameters>
-</ViewModelRequest>";
-            viewModelRequest = viewModelRequest.Replace("%NAME%", Path.GetFileName(openFileDialog.FileName));//#todo
-
-            using (var handler = new HttpClientHandler())
-            {
-                handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-                using (var client = new HttpClient(handler))
-                {
-                    client.Timeout = TimeSpan.FromMinutes(10);
-
-                    var viewerUrl = "http://xrculture:30026/" + "Viewer?handler=ViewModel"; // #todo get it from middleware
-                    using (var form = new MultipartFormDataContent())
-                    {
-                        // Add XML request as a form part
-                        form.Add(new StringContent(viewModelRequest, Encoding.UTF8, "application/xml"), "request", "request.xml");
-
-                        // Add the zip file as a form part
-                        using (var fileStream = File.OpenRead(openFileDialog.FileName))
-                        {
-                            if (fileStream == null || fileStream.Length == 0)
-                                throw new Exception("File stream is null or empty. Please check the file path.");
-
-                            var fileContent = new StreamContent(fileStream);
-                            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
-                            form.Add(fileContent, "file", Path.GetExtension(openFileDialog.FileName));
-
-                            HttpResponseMessage response = await client.PostAsync(viewerUrl, form);
-                            string responseString = await response.Content.ReadAsStringAsync();
-                            Console.WriteLine(responseString);
-
-                            _textBoxLog.Text = responseString;
-
-                            var xmlDoc = new XmlDocument();
-                            xmlDoc.LoadXml(responseString);
-
-                            var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
-                            if (status?.Trim() != "200")
-                            {
-                                throw new Exception($"Viewer REST Service returned error: {status}");
-                            }
-
-                            var modelUrl = xmlDoc.SelectSingleNode("//Parameters/URL")?.InnerText;
-                            if (string.IsNullOrEmpty(modelUrl))
-                            {
-                                throw new Exception("Viewer REST Service did not return a 'URL'.");
-                            }
-
-                            // Open the URL in the default browser
-                            try
-                            {
-                                // Handle different OS platforms correctly
-                                if (OperatingSystem.IsWindows())
-                                {
-                                    Process.Start(new ProcessStartInfo(modelUrl) { UseShellExecute = true });
-                                }
-                                else if (OperatingSystem.IsLinux())
-                                {
-                                    Process.Start("xdg-open", modelUrl);
-                                }
-                                else if (OperatingSystem.IsMacOS())
-                                {
-                                    Process.Start("open", modelUrl);
-                                }
-                                else
-                                {
-                                    MessageBox.Show($"URL is available but cannot be opened automatically on this platform: {modelUrl}");
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"Error opening browser: {ex.Message}");
-                            }
-                        }
-                    }
-                }
-            }
+        private string GetAntiForgeryTokenFromPage(string pageContent)
+        {
+            string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]*)\"";
+            var match = System.Text.RegularExpressions.Regex.Match(pageContent, tokenPattern);
+            return match.Success ? match.Groups[1].Value : string.Empty;
         }
 
         private string? SessionToken { get; set; }
