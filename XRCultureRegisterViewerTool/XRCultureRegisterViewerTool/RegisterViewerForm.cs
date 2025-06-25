@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Security;
+using System.Security.Policy;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -217,7 +218,7 @@ namespace XRCultureRegisterViewerTool
                 {
                     client.Timeout = TimeSpan.FromMinutes(10);
 
-                    var viewerUrl = "http://localhost:5178/" + "Viewer?handler=ViewModel"; // #todo get it from middleware
+                    var viewerUrl = "http://xrculture:30026/" + "Viewer?handler=ViewModel"; // #todo get it from middleware
                     using (var form = new MultipartFormDataContent())
                     {
                         // Add XML request as a form part
@@ -233,8 +234,11 @@ namespace XRCultureRegisterViewerTool
                             fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
                             form.Add(fileContent, "file", Path.GetExtension(openFileDialog.FileName));
 
-                            var response = await RetryPostAsync(client, viewerUrl, form);
+                            HttpResponseMessage response = await client.PostAsync(viewerUrl, form);
                             string responseString = await response.Content.ReadAsStringAsync();
+                            Console.WriteLine(responseString);
+
+                            _textBoxLog.Text = responseString;
 
                             var xmlDoc = new XmlDocument();
                             xmlDoc.LoadXml(responseString);
@@ -280,37 +284,6 @@ namespace XRCultureRegisterViewerTool
                     }
                 }
             }
-        }
-
-        // Retry method for the HTTP POST
-        private async Task<HttpResponseMessage?> RetryPostAsync(HttpClient client, string url, HttpContent content, int maxRetries = 3)
-        {
-            int retryCount = 0;
-            HttpResponseMessage? response = null;
-
-            while (retryCount < maxRetries)
-            {
-                try
-                {
-                    response = await client.PostAsync(url, content);
-                    return response;
-                }
-                catch (HttpRequestException ex)
-                {
-                    retryCount++;
-                    if (retryCount >= maxRetries)
-                        throw;
-
-                    int delayMs = (int)Math.Pow(2, retryCount) * 1000; // Exponential backoff
-                    await Task.Delay(delayMs);
-
-                    // Log retry attempt
-                    Debug.WriteLine("Retry {Count}/{Max} for {Url} after error: {Error}",
-                        retryCount, maxRetries, url, ex.Message);
-                }
-            }
-
-            return response;
         }
 
         private string? SessionToken { get; set; }
