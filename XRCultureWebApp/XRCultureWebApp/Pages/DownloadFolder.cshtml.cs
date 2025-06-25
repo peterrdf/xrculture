@@ -22,14 +22,19 @@ public class DownloadFolderModel : PageModel
 
     private readonly ILogger<DownloadFolderModel> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IOperationSingleton _singletonOperation;
     private string _inputGitHub;
 
-    public DownloadFolderModel(ILogger<DownloadFolderModel> logger, IConfiguration configuration, IOperationSingleton singletonOperation)
+    public DownloadFolderModel(ILogger<DownloadFolderModel> logger, IConfiguration configuration, IOperationSingleton singletonOperation, IHttpContextAccessor httpContextAccessor)
     {
         _logger = logger;
         _configuration = configuration;
         _singletonOperation = singletonOperation;
+        _httpContextAccessor = httpContextAccessor;
+
+        var request = _httpContextAccessor.HttpContext.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}{request.PathBase}/";
     }
 
     public async Task<IActionResult> OnGetAsync(string owner, string repo, string folder, string branch = "main", string workflowId = null)

@@ -75,6 +75,8 @@ namespace XRCultureWebApp
                 options.ValueLengthLimit = 100 * 1024 * 1024;
             });
 
+            builder.Services.AddHttpContextAccessor();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
