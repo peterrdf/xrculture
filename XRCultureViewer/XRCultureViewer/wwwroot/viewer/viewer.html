@@ -43,7 +43,25 @@
     <script type="text/javascript" src="js/js.cookie.js"></script>
     <script type='text/javascript' src='js/utils.js'></script>
     <script type="text/javascript" src="settings.js"></script>
-    <script type="text/javascript" src="geom.js"></script>
+
+    <script type="text/javascript">
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        var p = getParameterByName("path") || "";
+        if (p == "")
+            p = "geom.js";
+        else
+            p += "/geom.js";
+        document.write("<scr" + "ipt type='text/javascript' src='" + p + "'></scr" + "ipt>");
+    </script>
     <script type="text/javascript" src="js/spin.min.js"></script>
     <script type='text/javascript' src='js/viewer.js'></script>
 

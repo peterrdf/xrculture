@@ -33,29 +33,51 @@ namespace XRCultureViewer.Pages
         public void OnGet()
         {
         }
-
+        
         public IActionResult OnGetFile(string file)
         {
-            var viewerPath = _configuration["Paths:Viewer"];
-            if (string.IsNullOrEmpty(viewerPath))
+            try
             {
-                return Content(serverErrorResponse.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
-            }
+                _logger.LogInformation($"OnGetFile called with file: {file}");
 
-            if (string.IsNullOrEmpty(file))
+                var viewerPath = _configuration["Paths:Viewer"];
+                if (string.IsNullOrEmpty(viewerPath))
+                {
+                    _logger.LogError("Viewer path is not configured");
+                    return Content(serverErrorResponse.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+                }
+
+                _logger.LogInformation($"Using viewer path: {viewerPath}");
+
+                if (string.IsNullOrEmpty(file))
+                {
+                    _logger.LogError("File name is required");
+                    return Content(badRequestResponse.Replace("%MESSAGE%", "File name is required."), "application/xml");
+                }
+
+                var provider = new PhysicalFileProvider(Path.Combine(viewerPath, "data"));
+                var fileInfo = provider.GetFileInfo(file);
+
+                _logger.LogInformation($"Looking for file: {file}, exists: {fileInfo.Exists}, physical path: {fileInfo.PhysicalPath}");
+
+                if (!fileInfo.Exists)
+                {
+                    _logger.LogError($"File '{file}' not found at '{fileInfo.PhysicalPath}'");
+                    return Content(notFoundResponse.Replace("%MESSAGE%", $"File '{file}' not found."), "application/xml");
+                }
+
+                _logger.LogInformation($"Returning file: {fileInfo.PhysicalPath}, size: {fileInfo.Length} bytes");
+                Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                Response.Headers["Pragma"] = "no-cache";
+                Response.Headers["Expires"] = "0";
+
+                return File(System.IO.File.ReadAllBytes(fileInfo.PhysicalPath), "application/octet-stream", Path.GetFileName(file));
+            }
+            catch (Exception ex)
             {
-                return Content(badRequestResponse.Replace("%MESSAGE%", "File name is required."), "application/xml");
+                _logger.LogError(ex, "Error in OnGetFile");
+                return Content(serverErrorResponse.Replace("%MESSAGE%", $"Server error: {ex.Message}"), "application/xml");
             }
-            var provider = new PhysicalFileProvider(viewerPath);
-            var fileInfo = provider.GetFileInfo(file);
-            if (!fileInfo.Exists)
-                return Content(notFoundResponse.Replace("%MESSAGE%", $"File '{file}' not found."), "application/xml");
-
-            var result = PhysicalFile(fileInfo.PhysicalPath, "application/octet-stream", file);
-            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-            Response.Headers["Pragma"] = "no-cache";
-            Response.Headers["Expires"] = "0";
-            return result;
         }
 
         /*

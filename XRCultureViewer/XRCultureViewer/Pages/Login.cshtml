@@ -1,27 +1,48 @@
-﻿@page  
+﻿@page
 @model XRCultureViewer.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
 
-@{  
-    ViewData["Title"] = "Login";  
-}  
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Login</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <input type="hidden" asp-for="ReturnUrl" />
 
-<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-    <div style="width: 320px;">
-        <h1 class="display-4 text-center">Welcome</h1>
-        <form method="post" style="display: grid; grid-template-columns: 100px 1fr; gap: 10px 10px;">
-            <label for="Username" class="form-label" style="grid-column: 1;">User</label>
-            <input name ="Username" asp-for="Username" class="form-control" id="Username" style="grid-column: 2;" />
-            <label for="Password" class="form-label" style="grid-column: 1;">Password</label>
-            <input name="Password" asp-for="Password" type="password" class="form-control" id="Password" style="grid-column: 2;" />
-            <div style="grid-column: 1 / span 2;">
-                <inputname ="ReturnUrl" type="hidden" asp-for="ReturnUrl" />
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-                @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label asp-for="LoginInput.Username" class="form-label">Username</label>
+                            <input asp-for="LoginInput.Username" class="form-control" />
+                            <span asp-validation-for="LoginInput.Username" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LoginInput.Password" class="form-label">Password</label>
+                            <input asp-for="LoginInput.Password" class="form-control" type="password" />
+                            <span asp-validation-for="LoginInput.Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="LoginInput.RememberMe" class="form-check-input" />
+                            <label asp-for="LoginInput.RememberMe" class="form-check-label">Remember me</label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))  
-        {  
-            <div class="alert alert-danger mt-3">@Model.ErrorMessage</div>  
-        }
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
