@@ -115,7 +115,7 @@ function addContent(fileName, fileExtension, fileContent) {
         var textureCnt = Module.getTextureCnt()
         for (let t = 0; t < textureCnt; t++) {
             var textureName = Module.getTextureInfo(t + 1)
-            loadTexture(false, textureName)
+            loadTexture2(false, textureName, false)
         }
     }
 
@@ -504,7 +504,7 @@ function zipGetFileNameByExtension(zip, extension) {
     return null
 }
 
-function createTexture_WASM_FS(textureFile) {
+function createTexture_WASM_FS(textureFile, flipY) {
     try {
         var viewer = this;
         var texture = gl.createTexture();
@@ -542,7 +542,7 @@ function createTexture_WASM_FS(textureFile) {
         });
 
         image.addEventListener('load', function () {
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(
                 gl.TEXTURE_2D,
@@ -586,7 +586,7 @@ function loadTexture(zip, textureName) {
         })
     } else {
         // Load texture from WASM file system
-        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName);
+        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName, true);
     }
 }
 
@@ -598,7 +598,7 @@ function loadTexture2(zip, textureName, flipY) {
         })
     } else {
         // Load texture from WASM file system
-        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName);
+        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName, flipY);
     }
 }
 
