@@ -285,12 +285,9 @@ function loadInstances(updateViewer) {
                     indicesPoints: [],
                 }
 
-                if (textureIndex >= 0) {
-                    if (textureIndex >= texturesCount) {
-                        textureIndex = texturesCount - 1; // bug in WASM
-                    }
+                if (textureIndex > 0) {
                     conceptualFace.material.texture = {}
-                    conceptualFace.material.texture.name = Module.getTextureInfo(textureIndex + 1)
+                    conceptualFace.material.texture.name = Module.getTextureInfo(textureIndex)
                 }
 
                 let indices = Module.getFaceTriangleIndices(geometry.id, group)
