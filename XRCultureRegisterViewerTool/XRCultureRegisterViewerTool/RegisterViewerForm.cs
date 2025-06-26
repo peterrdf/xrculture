@@ -155,7 +155,7 @@ namespace XRCultureRegisterViewerTool
             var openFileDialog = new OpenFileDialog()
             {
                 FileName = "3D Model file",
-                Filter = "All Supported Files (*.binz;*.zae;*.objz;*.glb;*.gltf)|*.binz;*.zae;*.objz;*.glb;*.gltf|BINZ files (*.binz)|*.binz|DAE ZIP files (*.zae)|*.zae|OBJ ZIP files (*.objz)|*.objz|glTF Binary files (*.glb)|*.glb|glTF files (*.gltf)|*.gltf",
+                Filter = "All Supported Files (*.binz;*.zae;*.objz;*.glb;*.gltf)|*.binz;*.zae;*.objz;*.glb;*.gltf|BIN Compressed files (*.binz)|*.binz|COLLADA Compressed files (*.zae)|*.zae|OBJ Compressed files (*.objz)|*.objz|glTF Binary files (*.glb)|*.glb|glTF files (*.gltf)|*.gltf",
                 Title = "Open 3D Model file"
             };
 
