@@ -176,7 +176,7 @@ namespace XRCultureViewer.Pages
 
             var serviceUrl = GetServiceRootUrl();
             var response = successResponseWithParameters.Replace("%PARAMETERS%",
-                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}.binz</URL>");
+                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}{Path.GetExtension(zipFile.FileName)}</URL>");
 
             return Content(response, "application/xml");
         }

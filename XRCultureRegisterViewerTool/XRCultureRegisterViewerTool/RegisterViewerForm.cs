@@ -154,9 +154,9 @@ namespace XRCultureRegisterViewerTool
         {
             var openFileDialog = new OpenFileDialog()
             {
-                FileName = "BINZ file",
-                Filter = "BINZ files (*.binz)|*.binz",
-                Title = "Open BINZ file"
+                FileName = "3D Model file",
+                Filter = "All Supported Files (*.binz;*.zae;*.objz;*.glb;*.gltf)|*.binz;*.zae;*.objz;*.glb;*.gltf|BINZ files (*.binz)|*.binz|DAE ZIP files (*.zae)|*.zae|OBJ ZIP files (*.objz)|*.objz|glTF Binary files (*.glb)|*.glb|glTF files (*.gltf)|*.gltf",
+                Title = "Open 3D Model file"
             };
 
             //#todo Midlleware - get viewer endpoint and credentials
