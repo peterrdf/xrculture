@@ -162,7 +162,7 @@ function loadBINZ(fileName, data) {
                 var textureCnt = Module.getTextureCnt()
                 for (let t = 0; t < textureCnt; t++) {
                     var textureName = Module.getTextureInfo(t + 1)
-                    loadTexture(zip, textureName)
+                    loadTexture2(zip, textureName, true)
                 }
             })
         }
@@ -188,7 +188,7 @@ function loadOBJZ(fileName, data) {
                     var textureCnt = Module.getTextureCnt()
                     for (let t = 0; t < textureCnt; t++) {
                         var textureName = Module.getTextureInfo(t + 1)
-                        loadTexture(zip, textureName)
+                        loadTexture2(zip, textureName, true)
                     }
                 })
             }
@@ -582,7 +582,7 @@ function loadTexture(zip, textureName) {
     if (zip) {
         // Load texture from JSZip
         zip.file(textureName).async('blob').then(function (blob) {
-            g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob)
+            g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob, true)
         })
     } else {
         // Load texture from WASM file system
@@ -607,76 +607,152 @@ function loadFileByUri(file) {
 
     if (fileExtension === 'zae') {
         try {
+            console.log('Fetching file:', file);
+
             // Use fetch API to get the binary data
-            fetch('/Index?handler=File&file=' + encodeURIComponent(file))
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok.');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
                     return response.arrayBuffer();
                 })
                 .then(data => {
+                    console.log('Received data size:', data.byteLength);
                     loadZAE(file, new Uint8Array(data));
                 })
                 .catch(e => {
-                    console.error(e);
+                    console.error('Error loading file:', e);
                 });
         }
         catch (e) {
-            console.error(e);
+            console.error('Exception in file loading:', e);
         }
     }
     else if (fileExtension === 'binz') {
         try {
+            console.log('Fetching file:', file);
+
             // Use fetch API to get the binary data
-            fetch('/Index?handler=File&file=' + encodeURIComponent(file))
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok.');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
                     return response.arrayBuffer();
                 })
                 .then(data => {
+                    console.log('Received data size:', data.byteLength);
                     loadBINZ(file, new Uint8Array(data));
                 })
                 .catch(e => {
-                    console.error(e);
+                    console.error('Error loading file:', e);
                 });
         }
         catch (e) {
-            console.error(e);
+            console.error('Exception in file loading:', e);
         }
     } else if (fileExtension === 'objz') {
         try {
+            console.log('Fetching file:', file);
+
             // Use fetch API to get the binary data
-            fetch('/Index?handler=File&file=' + encodeURIComponent(file))
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok.');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
                     return response.arrayBuffer();
                 })
                 .then(data => {
+                    console.log('Received data size:', data.byteLength);
                     loadOBJZ(file, new Uint8Array(data));
                 })
                 .catch(e => {
-                    console.error(e);
+                    console.error('Error loading file:', e);
                 });
         }
         catch (e) {
-            console.error(e);
+            console.error('Exception in file loading:', e);
         }
     } else if ((fileExtension === 'glb') || (fileExtension === 'gltf')) {
         try {
+            console.log('Fetching file:', file);
+
             // Use fetch API to get the binary data
-            fetch('/Index?handler=File&file=' + encodeURIComponent(file))
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok.');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
                     return response.arrayBuffer();
                 })
                 .then(data => {
+                    console.log('Received data size:', data.byteLength);
                     loadContent(file, fileExtension, new Uint8Array(data))
                 })
                 .catch(e => {
-                    console.error(e);
+                    console.error('Error loading file:', e);
                 });
         }
         catch (e) {
-            console.error(e);
+            console.error('Exception in file loading:', e);
         }
     } else {
         readFileByUri(`${file}`, function (fileContent) {
