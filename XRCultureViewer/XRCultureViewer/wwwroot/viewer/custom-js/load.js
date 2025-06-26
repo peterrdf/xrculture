@@ -144,7 +144,7 @@ function loadZAE(fileName, data) {
                 var textureCnt = Module.getTextureCnt()
                 for (let t = 0; t < textureCnt; t++) {
                     var textureName = Module.getTextureInfo(t + 1)
-                    loadTexture(zip, textureName)
+                    loadTexture2(zip, textureName, false)
                 }
             })
         }
@@ -583,6 +583,18 @@ function loadTexture(zip, textureName) {
         // Load texture from JSZip
         zip.file(textureName).async('blob').then(function (blob) {
             g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob)
+        })
+    } else {
+        // Load texture from WASM file system
+        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName);
+    }
+}
+
+function loadTexture2(zip, textureName, flipY) {
+    if (zip) {
+        // Load texture from JSZip
+        zip.file(textureName).async('blob').then(function (blob) {
+            g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob, flipY)
         })
     } else {
         // Load texture from WASM file system
