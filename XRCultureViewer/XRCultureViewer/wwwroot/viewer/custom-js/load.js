@@ -648,6 +648,24 @@ function loadFileByUri(file) {
         catch (e) {
             console.error(e);
         }
+    } else if ((fileExtension === 'glb') || (fileExtension === 'gltf')) {
+        try {
+            // Use fetch API to get the binary data
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file))
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    loadContent(file, fileExtension, new Uint8Array(data))
+                })
+                .catch(e => {
+                    console.error(e);
+                });
+        }
+        catch (e) {
+            console.error(e);
+        }
     } else {
         readFileByUri(`${file}`, function (fileContent) {
             try {
