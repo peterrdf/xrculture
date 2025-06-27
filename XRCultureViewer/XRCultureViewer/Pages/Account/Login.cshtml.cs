@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace XRCultureViewer.Pages
+namespace XRCultureViewer.Pages.Account
 {
     [AllowAnonymous]
     public class LoginModel : PageModel
@@ -94,7 +94,7 @@ namespace XRCultureViewer.Pages
             var configUsername = _configuration["Authentication:AdminUser:Username"];
             var configPassword = _configuration["Authentication:AdminUser:Password"];
 
-            return (username == configUsername && password == configPassword);
+            return username == configUsername && password == configPassword;
         }
     }
 

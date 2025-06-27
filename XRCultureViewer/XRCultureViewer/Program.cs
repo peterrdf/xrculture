@@ -39,9 +39,9 @@ namespace XRCultureViewer
             })
             .AddCookie("XRCultureViewerCookieAuth", options =>
             {
-                options.LoginPath = "/Login";
-                options.AccessDeniedPath = "/AccessDenied";
-                options.LogoutPath = "/Logout";
+                options.LoginPath = "/Account/Login";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+                options.LogoutPath = "/Account/Logout";
                 options.ReturnUrlParameter = "returnUrl";
                 options.ExpireTimeSpan = TimeSpan.FromDays(14);
                 options.Cookie.SameSite = SameSiteMode.Lax;
@@ -56,9 +56,9 @@ namespace XRCultureViewer
 
             builder.Services.AddRazorPages(options =>
             {
-                options.Conventions.AllowAnonymousToPage("/Login");
-                options.Conventions.AllowAnonymousToPage("/AccessDenied");
-                options.Conventions.AllowAnonymousToPage("/Logout");
+                options.Conventions.AllowAnonymousToPage("/Account/Login");
+                options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
+                options.Conventions.AllowAnonymousToPage("/Account/Logout");
             });
 
             builder.Services.Configure<IISServerOptions>(options =>
