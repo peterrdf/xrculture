@@ -154,7 +154,7 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     const model = urlParams.get('model');
                     if (model) {
-                        loadFileByUri(model + '.binz');
+                        loadFileByUri(model);
                     }
                 }, 500)
             } catch (ex) {

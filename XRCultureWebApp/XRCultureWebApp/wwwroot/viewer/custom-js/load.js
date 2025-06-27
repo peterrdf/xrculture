@@ -6,6 +6,7 @@ var Module = {
 
 var g_fileName = null;
 var g_logCache = [];
+var g_extraInputFiles = [];
 
 function jsLogCallback(event) {
     g_logCache.push(event + '\n');
@@ -50,7 +51,16 @@ function addContent(fileName, fileExtension, fileContent) {
     g_geometries = []
 
     Module.unload()
-    Module['FS_createDataFile']('/data/', 'input.ifc', fileContent, true, true)
+
+    let wasmFileName = (fileExtension == 'gltf') ||
+        (fileExtension == 'glb') ||
+        (fileExtension == 'obj') ? fileName : 'input.ifc'
+    Module['FS_createDataFile']('/data/', wasmFileName, fileContent, true, true)
+
+    for (let i = 0; i < g_extraInputFiles.length; i++) {
+        let extraFile = g_extraInputFiles[i]
+        Module['FS_createDataFile']('/data/', extraFile.fileName, extraFile.fileContent, true, true)
+    }
 
     if (fileExtension === 'dxf') {
         Module.loadDXF(true, !embeddedMode())
@@ -62,9 +72,10 @@ function addContent(fileName, fileExtension, fileContent) {
         Module.loadDAE(true, !embeddedMode())
     }
     else if (fileExtension == 'obj') {
-        Module.loadOBJ(true, !embeddedMode())
-    }
-    else if ((fileExtension == 'gml') ||
+        Module.loadOBJ('/data/' + wasmFileName)
+    } else if ((fileExtension == 'gltf') || (fileExtension == 'glb')) {
+        Module.loadGLB('/data/' + wasmFileName)
+    } else if ((fileExtension == 'gml') ||
         (fileExtension == 'citygml') ||
         (fileExtension == 'xml') ||
         (fileExtension == 'json')) {
@@ -74,7 +85,7 @@ function addContent(fileName, fileExtension, fileContent) {
         Module.loadSTEP(true, !embeddedMode(), false) // SCALE_AND_CENTER; Patch for Multiple IFC Model - World Coordinates
     }
 
-    FS.unlink('/data/' + 'input.ifc')
+    FS.unlink('/data/' + wasmFileName)
 
     loadInstances(false)
 
@@ -100,6 +111,14 @@ function addContent(fileName, fileExtension, fileContent) {
     g_viewer._scaleFactor = SCALE_AND_CENTER ? Module.getScale() : 1.0
     g_viewer.loadInstances()
 
+    if ((fileExtension === 'gltf') || (fileExtension === 'glb')) {
+        var textureCnt = Module.getTextureCnt()
+        for (let t = 0; t < textureCnt; t++) {
+            var textureName = Module.getTextureInfo(t + 1)
+            loadTexture2(false, textureName, false)
+        }
+    }
+
     console.log('addContent END: ' + fileName)
 }
 
@@ -117,7 +136,7 @@ function loadContent(fileName, fileExtension, fileContent) {
 function loadZAE(fileName, data) {
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
-        let daeFile = getDAEFile(zip)
+        let daeFile = zipGetFileNameByExtension(zip, 'dae')
         if (daeFile) {
             zip.file(daeFile).async('string').then(function (fileContent) {
                 loadContent(fileName, 'dae', fileContent)
@@ -125,7 +144,7 @@ function loadZAE(fileName, data) {
                 var textureCnt = Module.getTextureCnt()
                 for (let t = 0; t < textureCnt; t++) {
                     var textureName = Module.getTextureInfo(t + 1)
-                    loadTexture(zip, textureName)
+                    loadTexture2(zip, textureName, false)
                 }
             })
         }
@@ -135,7 +154,7 @@ function loadZAE(fileName, data) {
 function loadBINZ(fileName, data) {
     var jsZip = new JSZip()
     jsZip.loadAsync(data).then(function (zip) {
-        let binFile = getBINFile(zip)
+        let binFile = zipGetFileNameByExtension(zip, 'bin')
         if (binFile) {
             zip.file(binFile).async('Uint8Array').then(function (fileContent) {
                 loadContent(fileName, 'bin', fileContent)
@@ -143,10 +162,41 @@ function loadBINZ(fileName, data) {
                 var textureCnt = Module.getTextureCnt()
                 for (let t = 0; t < textureCnt; t++) {
                     var textureName = Module.getTextureInfo(t + 1)
-                    loadTexture(zip, textureName)
+                    loadTexture2(zip, textureName, true)
                 }
             })
         }
+    })
+}
+
+function loadOBJZ(fileName, data) {
+    var jsZip = new JSZip()
+    jsZip.loadAsync(data).then(function (zip) {
+        try {
+            let mtlFile = zipGetFileNameByExtension(zip, 'mtl')
+            if (mtlFile) {
+                zip.file(mtlFile).async('Uint8Array').then(function (fileContent) {
+                    g_extraInputFiles.push({ fileName: mtlFile, fileContent: fileContent })
+                })
+            }
+
+            let objFile = zipGetFileNameByExtension(zip, 'obj')
+            if (objFile) {
+                zip.file(objFile).async('Uint8Array').then(function (fileContent) {
+                    loadContent(fileName, 'obj', fileContent)
+
+                    var textureCnt = Module.getTextureCnt()
+                    for (let t = 0; t < textureCnt; t++) {
+                        var textureName = Module.getTextureInfo(t + 1)
+                        loadTexture2(zip, textureName, true)
+                    }
+                })
+            }
+        } catch (e) {
+            console.error(e)
+        }
+
+        g_extraInputFiles = []
     })
 }
 
@@ -169,6 +219,13 @@ function loadFile(file) {
         else if (fileExtension === 'binz') {
             try {
                 loadBINZ(file.name, fileContent)
+            }
+            catch (e) {
+                console.error(e)
+            }
+        } else if (fileExtension === 'objz') {
+            try {
+                loadOBJZ(file.name, fileContent)
             }
             catch (e) {
                 console.error(e)
@@ -228,12 +285,9 @@ function loadInstances(updateViewer) {
                     indicesPoints: [],
                 }
 
-                if (textureIndex >= 0) {
-                    if (textureIndex >= texturesCount) {
-                        textureIndex = texturesCount - 1; // bug in WASM
-                    }
+                if (textureIndex > 0) {
                     conceptualFace.material.texture = {}
-                    conceptualFace.material.texture.name = Module.getTextureInfo(textureIndex + 1)
+                    conceptualFace.material.texture.name = Module.getTextureInfo(textureIndex)
                 }
 
                 let indices = Module.getFaceTriangleIndices(geometry.id, group)
@@ -401,7 +455,8 @@ function loadFileByPath(file) {
     });
 }
 
-function readFileByUri(file, callback) {
+// .NET Core File service (Docker)
+function readFileByUriFileService(file, callback) {
     try {
         var rawFile = new XMLHttpRequest()
         rawFile.open('GET', "http://localhost:8088/fileservice/byUri?fileUri=" + encodeURIComponent(file))
@@ -418,10 +473,27 @@ function readFileByUri(file, callback) {
     }
 }
 
-function getDAEFile(zip) {
+function readFileByUri(file, callback) {
+    try {
+        var rawFile = new XMLHttpRequest()
+        rawFile.open('GET', encodeURIComponent(file))
+        rawFile.responseType = "arraybuffer";
+        rawFile.onreadystatechange = function () {
+            if (rawFile.readyState === 4 && rawFile.status === 200) {
+                callback(new Uint8Array(rawFile.response))
+            }
+        }
+        rawFile.send()
+    }
+    catch (ex) {
+        console.error(ex)
+    }
+}
+
+function zipGetFileNameByExtension(zip, extension) {
     if (zip) {
         for (let [fileName] of Object.entries(zip.files)) {
-            if (getFileExtension(fileName) === 'dae') {
+            if (getFileExtension(fileName) === extension) {
                 return fileName
             }
         }
@@ -429,22 +501,101 @@ function getDAEFile(zip) {
     return null
 }
 
-function getBINFile(zip) {
-    if (zip) {
-        for (let [fileName] of Object.entries(zip.files)) {
-            if (getFileExtension(fileName) === 'bin') {
-                return fileName
-            }
+function createTexture_WASM_FS(textureFile, flipY) {
+    try {
+        var viewer = this;
+        var texture = gl.createTexture();
+
+        // Temp texture until the image is loaded
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            1,
+            1,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            new Uint8Array([0, 0, 0, 255]));
+
+        // Read the file from the WASM file system (synchronous)
+        var fileData;
+        try {
+            fileData = Module.FS.readFile(textureFile, { encoding: 'binary' });
+        } catch (err) {
+            console.error("Can't load '" + textureFile + "' from WASM file system:", err);
+            return texture;
         }
+
+        // Convert the binary data to a blob
+        var blob = new Blob([fileData], { type: 'image/png' });
+        var blobUrl = URL.createObjectURL(blob);
+
+        var image = new Image();
+        image.addEventListener('error', function () {
+            console.error("Can't load image from blob URL.");
+            URL.revokeObjectURL(blobUrl); // Clean up
+        });
+
+        image.addEventListener('load', function () {
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(
+                gl.TEXTURE_2D,
+                0,
+                gl.RGBA,
+                gl.RGBA,
+                gl.UNSIGNED_BYTE,
+                image);
+
+            if (viewer.isPowerOf2(image.width) && viewer.isPowerOf2(image.height)) {
+                gl.generateMipmap(gl.TEXTURE_2D);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            } else {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            }
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            URL.revokeObjectURL(blobUrl); // Clean up
+            PENDING_DRAW_SCENE = true;
+        });
+
+        image.src = blobUrl;
+        return texture;
+    } catch (ex) {
+        console.error(ex);
     }
-    return null
+
+    return null;
 }
 
 function loadTexture(zip, textureName) {
     if (zip) {
+        // Load texture from JSZip
         zip.file(textureName).async('blob').then(function (blob) {
-            g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob)
+            g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob, true)
         })
+    } else {
+        // Load texture from WASM file system
+        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName, true);
+    }
+}
+
+function loadTexture2(zip, textureName, flipY) {
+    if (zip) {
+        // Load texture from JSZip
+        zip.file(textureName).async('blob').then(function (blob) {
+            g_viewer._textures[textureName] = g_viewer.createTextureBLOB(blob, flipY)
+        })
+    } else {
+        // Load texture from WASM file system
+        g_viewer._textures[textureName] = createTexture_WASM_FS.call(g_viewer, '/data/' + textureName, flipY);
     }
 }
 
@@ -453,34 +604,152 @@ function loadFileByUri(file) {
 
     if (fileExtension === 'zae') {
         try {
-            JSZipUtils.getBinaryContent(file, function (err, data) {
-                if (err) {
-                    throw err
+            console.log('Fetching file:', file);
+
+            // Use fetch API to get the binary data
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-                loadZAE(file, data)
             })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    console.log('Received data size:', data.byteLength);
+                    loadZAE(file, new Uint8Array(data));
+                })
+                .catch(e => {
+                    console.error('Error loading file:', e);
+                });
         }
         catch (e) {
-            console.error(e)
+            console.error('Exception in file loading:', e);
         }
     }
     else if (fileExtension === 'binz') {
         try {
+            console.log('Fetching file:', file);
+
             // Use fetch API to get the binary data
-            fetch('/DownloadFolder?handler=File&file=' + encodeURIComponent(file))
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
                     return response.arrayBuffer();
                 })
                 .then(data => {
+                    console.log('Received data size:', data.byteLength);
                     loadBINZ(file, new Uint8Array(data));
-            })
+                })
                 .catch(e => {
-                    console.error(e);
+                    console.error('Error loading file:', e);
                 });
         }
         catch (e) {
-            console.error(e);
+            console.error('Exception in file loading:', e);
+        }
+    } else if (fileExtension === 'objz') {
+        try {
+            console.log('Fetching file:', file);
+
+            // Use fetch API to get the binary data
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    console.log('Received data size:', data.byteLength);
+                    loadOBJZ(file, new Uint8Array(data));
+                })
+                .catch(e => {
+                    console.error('Error loading file:', e);
+                });
+        }
+        catch (e) {
+            console.error('Exception in file loading:', e);
+        }
+    } else if ((fileExtension === 'glb') || (fileExtension === 'gltf')) {
+        try {
+            console.log('Fetching file:', file);
+
+            // Use fetch API to get the binary data
+            fetch('/Index?handler=File&file=' + encodeURIComponent(file), {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/octet-stream',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    const contentType = response.headers.get('Content-Type');
+                    console.log('Content-Type:', contentType);
+
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Received HTML instead of binary data');
+                    }
+
+                    return response.arrayBuffer();
+                })
+                .then(data => {
+                    console.log('Received data size:', data.byteLength);
+                    loadContent(file, fileExtension, new Uint8Array(data))
+                })
+                .catch(e => {
+                    console.error('Error loading file:', e);
+                });
+        }
+        catch (e) {
+            console.error('Exception in file loading:', e);
         }
     } else {
         readFileByUri(`${file}`, function (fileContent) {

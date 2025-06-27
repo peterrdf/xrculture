@@ -116,6 +116,7 @@ function loadFileByPath(file) {
   });
 }
 
+// .NET Core File service (Docker)
 function readFileByUri(file, callback) {
   try {
     var rawFile = new XMLHttpRequest()
