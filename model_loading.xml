@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Protocol xmlns="http://example.com/service-protocol" version="1.0">
+
+  <!-- Request Model List for Cloud Loading (Middleware to Viewer)-->
+  <ModelRequest>
+    <ServiceID>service-1234</ServiceID>
+    <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
+    <Pagination value="True" start="0" length="20" /> <!-- if True set the start and the length of returned model list (base 0), otherwise request all available models -->
+    <Filters>
+      <Filter>
+        <FileExtension>.ifc</FileExtension> <!-- if provided request only models with specific file extension -->
+        <ModelName>Museo degli Innocenti</ModelName> <!-- if provided request only models with specific name -->
+      </Filter>
+      <Filter>
+        <FileExtension>.obj</FileExtension>
+      </Filter>
+    </Filters>
+  <ModelRequest>
+
+  <!-- Response to Model List Request for Cloud Loading (Viewer to Middleware) -->
+  <ModelResponse>
+    <ServiceID>service-1234</ServiceID>
+    <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
+    <Models>
+      <Model id="9f8d4a7be2c1743d76a1d39a6fc45ea56c63db6a763a0e944f88a1ffac7d39d2" name="Museo degli Innocenti"
+        filename="<filename of the model on the cloud storage>" dimension="34567" lastUpdate="2025-06-27T14:45:32Z"
+        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit" />
+    </Models>
+  </ModelResponse>
+
+  <!-- Contacting Viewer for Model Loading -->
+  <ModelLoadingRequest>
+    <ServiceID>service-1234</ServiceID>
+    <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
+    <Source> <!-- if both provided, local overrides cloud -->
+      <LocalSource>
+        <FileContent dimension="34567" extension=".ifc"> <!-- file dimension in kB -->
+          /9j/4AAQSkZJRgABAQEAYABgAAD/4QBiRXhpZgAATU0AKgAAAAgABwESA.. <!-- file blob coded in Base64 -->
+        </FileContent>
+      </LocalSource>
+      <CloudSource>
+        <ModelId>9f8d4a7be2c1743d76a1d39a6fc45ea56c63db6a763a0e944f88a1ffac7d39d2</ModelId>
+      <CloudSource>
+    </Source>
+    <SceneInit>
+      <Zoom default="False">1.5</Zoom> <!-- Initial zoom value as float. The Default attribute overrides the value if set to True -->
+      <Pan default="False">3.2,1.5,0.0</Pan> <!-- Initial pan value as a triple of floats. The Default attribute overrides the value if set to True -->
+      <BackgroundColor default="False">DD2500</BackgroundColor> <!-- Initial background color value as a RGB. The Default attribute overrides the value if set to True -->
+      <View default="False">Top</View> <!-- Initial view value as a string. The Default attribute overrides the value if set to True -->
+      <Lights default="False"></Lights> <!-- Initial lights value as a ??? (if supported by the viewer). The Default attribute overrides the value if set to True -->
+    </SceneInit>
+  </ModelLoadingRequest>
+
+  <!-- Viewer Response -->
+  <ModelLoadingResponse>
+      <Status>206</Status>  <!-- PARTIAL CONTENT / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
+      <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
+      <Message>Loading...</Message>
+      <LoadedContent>1256</LoadedContent> <!-- loaded content so far in kB -->
+      <Endpoint>https://viewer/models?id=kdsjbfkdjsbgldnsfldsnkfn</Endpoint> <!-- full link to the model inside the viewer -->
+  </ModelLoadingResponse>
+
+
+  <ModelLoadingResponse>
+      <Status>200</Status>  <!-- SUCCESS / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
+      <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
+      <Message>Loading successful.</Message>
+      <LoadedContent>34567</LoadedContent>
+      <Endpoint>https://viewer/models?id=kdsjbfkdjsbgldnsfldsnkfn</Endpoint> <!-- full link to the model inside the viewer -->
+  </ModelLoadingResponse>
+
+</Protocol>
