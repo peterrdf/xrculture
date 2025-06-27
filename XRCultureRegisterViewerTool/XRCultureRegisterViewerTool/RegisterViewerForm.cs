@@ -212,7 +212,7 @@ namespace XRCultureRegisterViewerTool
                                 new KeyValuePair<string, string>("ReturnUrl", "/"),
                                 new KeyValuePair<string, string>("RememberMe", "true")  // Enable persistent cookies
                             });
-                            var loginResponse = await client.PostAsync(viewerBaseUrl + "Login", loginData);
+                            var loginResponse = await client.PostAsync(viewerBaseUrl + "Account/Login", loginData);
                             if (!loginResponse.IsSuccessStatusCode)
                             {
                                 throw new Exception($"Login failed with status code: {loginResponse.StatusCode}");
