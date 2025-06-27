@@ -127,7 +127,7 @@ namespace XRCultureWebApp.Pages
 
             var serviceUrl = GetServiceRootUrl();
             var response = successResponseWithParameters.Replace("%PARAMETERS%",
-                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}</URL>");
+                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}.binz</URL>");
 
             return Content(response, "application/xml");
         }
