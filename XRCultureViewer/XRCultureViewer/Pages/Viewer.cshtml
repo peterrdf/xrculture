@@ -1,4 +1,7 @@
 ﻿@page
 @model XRCultureViewer.Pages.ViewerModel
 @{
+    ViewData["Title"] = "Viewer";
 }
+
+<iframe src="~/viewer/viewer.html?model=@Model.Model" style="width: 100%; height: 100vh; border: none;"></iframe>

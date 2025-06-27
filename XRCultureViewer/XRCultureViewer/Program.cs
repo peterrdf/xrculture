@@ -59,7 +59,6 @@ namespace XRCultureViewer
                 options.Conventions.AllowAnonymousToPage("/Login");
                 options.Conventions.AllowAnonymousToPage("/AccessDenied");
                 options.Conventions.AllowAnonymousToPage("/Logout");
-                options.Conventions.AllowAnonymousToPage("/Index"); //#todo
             });
 
             builder.Services.Configure<IISServerOptions>(options =>
