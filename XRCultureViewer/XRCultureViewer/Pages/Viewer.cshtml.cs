@@ -193,12 +193,6 @@ namespace XRCultureViewer.Pages
             return Content(response, "application/xml");
         }
 
-        private void AppendApplyFilterLog(string message)
-        {
-            var formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
-            _logger.LogInformation(formattedMessage);
-        }
-
         private string GetServiceRootUrl()
         {
             var request = HttpContext.Request;
