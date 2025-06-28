@@ -83,8 +83,8 @@ else
         document.getElementById('divExecute').style.display = 'block';
         const resultDiv = document.getElementById('resultLinks');
         const cacheBuster = Date.now();
-        const binzUrl = `/DownloadFolder?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
-        const viewerUrl = `/viewer/viewer.html?model=${workflowId}.binz&v=${cacheBuster}`;
+        const binzUrl = `/Storage?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
+        const viewerUrl = `/Viewer?model=${workflowId}.binz&v=${cacheBuster}`;
         resultDiv.innerHTML = `
             <h5>
                 <a href="${viewerUrl}" target="_blank">View 3D Model in WebGL Viewer</a>

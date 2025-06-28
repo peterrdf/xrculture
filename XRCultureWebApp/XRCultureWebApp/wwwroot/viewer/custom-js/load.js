@@ -607,7 +607,7 @@ function loadFileByUri(file) {
             console.log('Fetching file:', file);
 
             // Use fetch API to get the binary data
-            fetch('/DownloadFolder?handler=File&file=' + encodeURIComponent(file), {
+            fetch('/Storage?handler=File&file=' + encodeURIComponent(file), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/octet-stream',
@@ -645,7 +645,7 @@ function loadFileByUri(file) {
             console.log('Fetching file:', file);
 
             // Use fetch API to get the binary data
-            fetch('/DownloadFolder?handler=File&file=' + encodeURIComponent(file), {
+            fetch('/Storage?handler=File&file=' + encodeURIComponent(file), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/octet-stream',
@@ -682,7 +682,7 @@ function loadFileByUri(file) {
             console.log('Fetching file:', file);
 
             // Use fetch API to get the binary data
-            fetch('/DownloadFolder?handler=File&file=' + encodeURIComponent(file), {
+            fetch('/Storage?handler=File&file=' + encodeURIComponent(file), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/octet-stream',
@@ -719,7 +719,7 @@ function loadFileByUri(file) {
             console.log('Fetching file:', file);
 
             // Use fetch API to get the binary data
-            fetch('/DownloadFolder?handler=File&file=' + encodeURIComponent(file), {
+            fetch('/Storage?handler=File&file=' + encodeURIComponent(file), {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/octet-stream',

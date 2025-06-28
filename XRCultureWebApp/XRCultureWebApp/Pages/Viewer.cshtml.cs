@@ -12,29 +12,26 @@ namespace XRCultureWebApp.Pages
     [IgnoreAntiforgeryToken]
     public class ViewerModel : PageModel
     {
-        private readonly string successResponse =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>200</Status></ViewModelResponse>";
-        private readonly string successResponseWithParameters =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>200</Status><Parameters>%PARAMETERS%</Parameters></ViewModelResponse>";
-        private readonly string badRequestResponse =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>400</Status><Message>%MESSAGE%</Message></ViewModelResponse>";
-        private readonly string serverErrorResponse =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>500</Status><Message>%MESSAGE%</Message></ViewModelResponse>";
-        private readonly string notFoundResponse =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ViewModelResponse><Status>404</Status><Message>%MESSAGE%</Message></ViewModelResponse>";
-
         private readonly ILogger<ViewerModel> _logger;
         private readonly IConfiguration _configuration;
         private static readonly ConcurrentDictionary<string, System.Text.StringBuilder> ServerLogs = new();
-        
+
         public ViewerModel(ILogger<ViewerModel> logger, IConfiguration configuration)
         {
             _logger = logger;
             _configuration = configuration;
         }
 
+        [BindProperty(SupportsGet = true)]
+        public string Model { get; set; }
+
         public void OnGet()
         {
+            // Default model if none is provided #todo: set default model
+            //if (string.IsNullOrEmpty(Model))
+            //{
+            //    Model = "f7aa9163-2d18-404c-a2ef-65693a5960d6.binz";
+            //}
         }
 
         /*
@@ -47,7 +44,7 @@ namespace XRCultureWebApp.Pages
         public async Task<IActionResult> OnPostViewModelAsync()
         {
             if (!Request.HasFormContentType)
-                return BadRequest("Content-Type must be multipart/form-data");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Content-Type must be multipart/form-data."));
 
             var form = await Request.ReadFormAsync();
 
@@ -64,20 +61,20 @@ namespace XRCultureWebApp.Pages
                 xmlString = xmlField.ToString();
             }
             if (string.IsNullOrEmpty(xmlString))
-                return BadRequest("Missing XML request part.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Missing XML request part."));
 
             // Validate XML
             if (!xmlString.Trim().StartsWith("<?xml", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("Invalid XML format.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid XML format."));
             if (!xmlString.Contains("<ViewModelRequest", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("XML does not contain <ViewModelRequest> element.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML does not contain <ViewModelRequest> element."));
             if (!xmlString.Contains("<Name", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("XML does not contain <Name> element.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML does not contain <Name> element."));
             if (!xmlString.Contains("<Parameters", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("XML does not contain <Parameters> element.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML does not contain <Parameters> element."));
             // Validate XML structure
             if (xmlString.Length > 1000000) // 1 MB limit
-                return BadRequest("XML request is too large. Maximum size is 1 MB.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML request is too large. Maximum size is 1 MB."));
 
             XmlDocument viewModelRequestXml = new();
             try
@@ -85,30 +82,36 @@ namespace XRCultureWebApp.Pages
                 viewModelRequestXml.LoadXml(xmlString);
                 var root = viewModelRequestXml.DocumentElement;
                 if (root == null || root.Name != "ViewModelRequest")
-                    return BadRequest("XML root element must be <ViewModelRequest>.");
+                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML root element must be <ViewModelRequest>."));
                 if (root.SelectSingleNode("Name") == null)
-                    return BadRequest("XML must contain <Name> element.");
+                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML must contain <Name> element."));
                 if (root.SelectSingleNode("Parameters") == null)
-                    return BadRequest("XML must contain <Parameters> element.");
+                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML must contain <Parameters> element."));
             }
             catch (XmlException ex)
             {
-                return BadRequest($"Invalid XML format: {ex.Message}");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", $"Invalid XML format: {ex.Message}"));
             }
 
             var model = viewModelRequestXml.SelectSingleNode("//ViewModelRequest/Name")?.InnerText;
             if (string.IsNullOrEmpty(model))
-                return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'Name'."));
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Bad request: 'Name'."));
 
             // Get zip file part
             var zipFile = form.Files.FirstOrDefault(f => f.Name == "file");
             if (zipFile == null || zipFile.Length == 0)
-                return BadRequest("Missing or empty zip file.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Missing or empty zip file."));
 
-            if (zipFile.ContentType != "application/zip")   
-                return BadRequest("Invalid file type. Expected application/zip.");
+            if (zipFile.ContentType != "application/zip")
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid file type. Expected application/zip."));
 
-            string dataDir = _configuration["ToolPaths:OpenMVG-OpenMVS-Output"];
+            var viewerPath = _configuration["Paths:Viewer"];
+            if (string.IsNullOrEmpty(viewerPath))
+            {
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+            }
+
+            var dataDir = Path.Combine(viewerPath, @"data");
 
             // Save zip
             var resultId = Guid.NewGuid().ToString();
@@ -126,16 +129,10 @@ namespace XRCultureWebApp.Pages
             //System.IO.File.Delete(tempZipPath);
 
             var serviceUrl = GetServiceRootUrl();
-            var response = successResponseWithParameters.Replace("%PARAMETERS%",
-                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}viewer/viewer.html?model={resultId}.binz</URL>");
+            var response = HTTPResponse.SuccessWithParameters.Replace("%PARAMETERS%",
+                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}Viewer?model={resultId}{Path.GetExtension(zipFile.FileName)}</URL>");
 
             return Content(response, "application/xml");
-        }
-
-        private void AppendApplyFilterLog(string message)
-        {
-            var formattedMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
-            _logger.LogInformation(formattedMessage);
         }
 
         private string GetServiceRootUrl()
