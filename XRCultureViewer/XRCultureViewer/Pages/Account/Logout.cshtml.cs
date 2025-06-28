@@ -9,13 +9,13 @@ namespace XRCultureViewer.Pages.Account
     {
         public async Task<IActionResult> OnGetAsync()
         {
-            // Sign out the user
+            // Sign out the user with the correct scheme
             await HttpContext.SignOutAsync("XRCultureViewerCookieAuth");
 
             // Redirect to home page after logout
             return RedirectToPage("/Index");
         }
-        
+
         public async Task<IActionResult> OnPostAsync()
         {
             // Also handle POST requests for logout

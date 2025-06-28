@@ -104,18 +104,19 @@ namespace XRCultureViewer
                 ServeUnknownFileTypes = true,
                 OnPrepareResponse = ctx =>
                 {
-                    //#todo Only protect the viewer content, not CSS/JS
+                    //#todo
+                    //Only protect the viewer content, not CSS/JS
                     //if (ctx.Context.Request.Path.StartsWithSegments("/viewer"))
                     //{
                     //    if (!ctx.Context.User.Identity.IsAuthenticated)
                     //    {
-                    //        string redirectUrl = "/Login?returnUrl=" +
+                    //        string redirectUrl = "/Account/AccessDenied" +
                     //            Uri.EscapeDataString(ctx.Context.Request.Path + ctx.Context.Request.QueryString);
 
                     //        ctx.Context.Response.Clear();
                     //        ctx.Context.Response.StatusCode = 302;
                     //        ctx.Context.Response.Headers["Location"] = redirectUrl;
-                            
+
                     //        // Prevent further processing
                     //        ctx.Context.Response.Body = Stream.Null;
                     //        return;
