@@ -189,48 +189,52 @@ namespace XRCultureRegisterViewerTool
                         {
                             client.Timeout = TimeSpan.FromMinutes(10);
 
+                            // ----------------------------------------------------------------------------------------------------------------
                             // #todo Get the login page to extract the verification token
-                            var loginPageResponse = await client.GetAsync(viewerBaseUrl);
-                            var loginPageContent = await loginPageResponse.Content.ReadAsStringAsync();
+                            //var loginPageResponse = await client.GetAsync(viewerBaseUrl);
+                            //var loginPageContent = await loginPageResponse.Content.ReadAsStringAsync();
 
-                            // Extract the request verification token
-                            string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]*)\"";
-                            var match = System.Text.RegularExpressions.Regex.Match(loginPageContent, tokenPattern);
-                            string requestToken = match.Success ? match.Groups[1].Value : string.Empty;
+                            //// Extract the request verification token
+                            //string tokenPattern = "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]*)\"";
+                            //var match = System.Text.RegularExpressions.Regex.Match(loginPageContent, tokenPattern);
+                            //string requestToken = match.Success ? match.Groups[1].Value : string.Empty;
 
-                            if (string.IsNullOrEmpty(requestToken))
-                            {
-                                throw new Exception("Could not extract authentication token from login page.");
-                            }
+                            //if (string.IsNullOrEmpty(requestToken))
+                            //{
+                            //    throw new Exception("Could not extract authentication token from login page.");
+                            //}
 
-                            // Submit the login form with complete parameters
-                            var loginData = new FormUrlEncodedContent(new[]
-                            {
-                                new KeyValuePair<string, string>("Username", username),
-                                new KeyValuePair<string, string>("Password", password),
-                                new KeyValuePair<string, string>("__RequestVerificationToken", requestToken),
-                                new KeyValuePair<string, string>("ReturnUrl", "/"),
-                                new KeyValuePair<string, string>("RememberMe", "true")  // Enable persistent cookies
-                            });
-                            var loginResponse = await client.PostAsync(viewerBaseUrl + "Account/Login", loginData);
-                            if (!loginResponse.IsSuccessStatusCode)
-                            {
-                                throw new Exception($"Login failed with status code: {loginResponse.StatusCode}");
-                            }
+                            //// Submit the login form with complete parameters
+                            //var loginData = new FormUrlEncodedContent(new[]
+                            //{
+                            //    new KeyValuePair<string, string>("Username", username),
+                            //    new KeyValuePair<string, string>("Password", password),
+                            //    new KeyValuePair<string, string>("__RequestVerificationToken", requestToken),
+                            //    new KeyValuePair<string, string>("ReturnUrl", "/"),
+                            //    new KeyValuePair<string, string>("RememberMe", "true")  // Enable persistent cookies
+                            //});
+                            //var loginResponse = await client.PostAsync(viewerBaseUrl + "Account/Login", loginData);
+                            //if (!loginResponse.IsSuccessStatusCode)
+                            //{
+                            //    throw new Exception($"Login failed with status code: {loginResponse.StatusCode}");
+                            //}
 
-                            // Verify login success by checking for authentication indicators
-                            var verificationResponse = await client.GetAsync(viewerBaseUrl);
-                            var verificationContent = await verificationResponse.Content.ReadAsStringAsync();
+                            //// Verify login success by checking for authentication indicators
+                            //var verificationResponse = await client.GetAsync(viewerBaseUrl);
+                            //var verificationContent = await verificationResponse.Content.ReadAsStringAsync();
 
-                            // If verification page still contains login form, authentication failed
-                            if (verificationContent.Contains("<form") && verificationContent.Contains("Username") &&
-                                verificationContent.Contains("Password"))
-                            {
-                                throw new Exception("Login appears to have failed. Server still shows login form.");
-                            }
+                            //// If verification page still contains login form, authentication failed
+                            //if (verificationContent.Contains("<form") && verificationContent.Contains("Username") &&
+                            //    verificationContent.Contains("Password"))
+                            //{
+                            //    throw new Exception("Login appears to have failed. Server still shows login form.");
+                            //}
 
                             // Make the actual ViewModel request with the authenticated session
-                            var viewerUrl = viewerBaseUrl + "Viewer?handler=ViewModel";
+                            //var viewerUrl = viewerBaseUrl + "Viewer?handler=ViewModel";
+                            // ----------------------------------------------------------------------------------------------------------------
+
+                            var viewerUrl = viewerBaseUrl + "Index?handler=ViewModel";
                             using (var form = new MultipartFormDataContent())
                             {
                                 // Add XML request as a form part
