@@ -56,8 +56,9 @@ namespace XRCultureViewer
 
             builder.Services.AddRazorPages(options =>
             {
-                //#todo Authentication and Authorization
+                //#todo Remove when Authentication is fully implemented
                 options.Conventions.AllowAnonymousToPage("/Index");
+                options.Conventions.AllowAnonymousToPage("/Storage");
 
                 options.Conventions.AllowAnonymousToPage("/Account/Login");
                 options.Conventions.AllowAnonymousToPage("/Account/Logout");
