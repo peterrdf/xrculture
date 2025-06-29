@@ -58,6 +58,7 @@ namespace XRCultureViewer
             {
                 //#todo Remove when Authentication is fully implemented
                 options.Conventions.AllowAnonymousToPage("/Index");
+                options.Conventions.AllowAnonymousToPage("/Viewer");
                 options.Conventions.AllowAnonymousToPage("/Storage");
 
                 options.Conventions.AllowAnonymousToPage("/Account/Login");

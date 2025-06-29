@@ -234,7 +234,7 @@ namespace XRCultureRegisterViewerTool
                             //var viewerUrl = viewerBaseUrl + "Viewer?handler=ViewModel";
                             // ----------------------------------------------------------------------------------------------------------------
 
-                            var viewerUrl = viewerBaseUrl + "Index?handler=ViewModel";
+                            var viewerUrl = viewerBaseUrl + "Viewer";
                             using (var form = new MultipartFormDataContent())
                             {
                                 // Add XML request as a form part
