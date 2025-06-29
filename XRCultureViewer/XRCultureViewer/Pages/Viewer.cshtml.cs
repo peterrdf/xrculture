@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using System.Text;
 using System.Xml;
 using XRCultureViewer.Pages.Shared;
 
@@ -120,6 +121,16 @@ namespace XRCultureViewer.Pages
             //Directory.CreateDirectory(extractDir);
             //System.IO.Compression.ZipFile.ExtractToDirectory(tempZipPath, extractDir);
             //System.IO.File.Delete(tempZipPath);
+
+            StringBuilder xml = new();
+            xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            xml.AppendLine("<model>");
+            xml.AppendLine($"\t<name>{model}</name>");
+            xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
+            xml.AppendLine("</model>");
+
+            // Add XML file
+            System.IO.File.WriteAllText(Path.Combine(modelsDir, $"{resultId}.xml"), xml.ToString());
 
             var serviceUrl = GetServiceRootUrl();
             var response = HTTPResponse.SuccessWithParameters.Replace("%PARAMETERS%",
