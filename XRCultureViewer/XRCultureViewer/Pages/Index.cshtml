@@ -4,7 +4,22 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1 class="display-4">Library</h1>
+
+@{
+    foreach (var modelDescriptor in Model.GetModels())
+    {
+        var viewerUrl = $"/Viewer?model={@modelDescriptor.Id}{modelDescriptor.Extension}";
+        var downloadUrl = $"/Storage?handler=File&file={@modelDescriptor.Id}{modelDescriptor.Extension}";
+        <div class="card mb-3">
+            <h5 class="card-header">@modelDescriptor.Name</h5>
+            <div class="card-body">
+                <p class="card-text"><strong>Name:</strong> @modelDescriptor.Name</p>
+                <p class="card-text"><strong>Description:</strong> @modelDescriptor.Description</p>
+                <p class="card-text"><strong>Created:</strong> @modelDescriptor.TimeStamp</p>
+                <a href="@viewerUrl" target="_blank" class="btn btn-secondary">View</a>
+                <a href="@downloadUrl" target="_blank" class="btn btn-secondary">Download</a>
+            </div>
+        </div>
+    }
+}

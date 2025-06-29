@@ -125,6 +125,8 @@ namespace XRCultureViewer.Pages
             StringBuilder xml = new();
             xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             xml.AppendLine("<model>");
+            xml.AppendLine($"\t<id>{resultId}</id>");
+            xml.AppendLine($"\t<extension>{Path.GetExtension(zipFile.FileName)}</extension>");
             xml.AppendLine($"\t<name>{model}</name>");
             xml.AppendLine($"\t<description>{model}</description>"); //#todo: set description
             xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
