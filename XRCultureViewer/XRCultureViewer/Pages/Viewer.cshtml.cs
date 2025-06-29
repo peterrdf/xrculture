@@ -100,17 +100,15 @@ namespace XRCultureViewer.Pages
             if (zipFile.ContentType != "application/zip")
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid file type. Expected application/zip."));
 
-            var viewerPath = _configuration["Paths:Viewer"];
-            if (string.IsNullOrEmpty(viewerPath))
+            var modelsDir = _configuration["FileStorage:Models"];
+            if (string.IsNullOrEmpty(modelsDir))
             {
-                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
             }
-
-            var dataDir = Path.Combine(viewerPath, @"data");
 
             // Save zip
             var resultId = Guid.NewGuid().ToString();
-            var tempZipPath = Path.Combine(dataDir, $"{resultId}{Path.GetExtension(zipFile.FileName)}");
+            var tempZipPath = Path.Combine(modelsDir, $"{resultId}{Path.GetExtension(zipFile.FileName)}");
             using (var fs = System.IO.File.Create(tempZipPath))
             using (var zipStream = zipFile.OpenReadStream())
             {
@@ -204,7 +202,7 @@ namespace XRCultureViewer.Pages
             var viewerPath = _configuration["Paths:Viewer"];
             if (string.IsNullOrEmpty(viewerPath))
             {
-                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
             }
 
             var dataDir = Path.Combine(viewerPath, @"data");

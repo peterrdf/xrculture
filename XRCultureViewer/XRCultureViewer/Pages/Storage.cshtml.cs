@@ -28,14 +28,14 @@ namespace XRCultureViewer.Pages
             {
                 _logger.LogInformation($"OnGetFile called with file: {file}");
 
-                var viewerPath = _configuration["Paths:Viewer"];
-                if (string.IsNullOrEmpty(viewerPath))
+                var modelsDir = _configuration["FileStorage:Models"];
+                if (string.IsNullOrEmpty(modelsDir))
                 {
-                    _logger.LogError("Viewer path is not configured");
-                    return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+                    _logger.LogError("Models path is not configured");
+                    return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
                 }
 
-                _logger.LogInformation($"Using viewer path: {viewerPath}");
+                _logger.LogInformation($"Using viewer path: {modelsDir}");
 
                 if (string.IsNullOrEmpty(file))
                 {
@@ -43,7 +43,7 @@ namespace XRCultureViewer.Pages
                     return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "File name is required."), "application/xml");
                 }
 
-                var provider = new PhysicalFileProvider(Path.Combine(viewerPath, "data"));
+                var provider = new PhysicalFileProvider(modelsDir);
                 var fileInfo = provider.GetFileInfo(file);
 
                 _logger.LogInformation($"Looking for file: {file}, exists: {fileInfo.Exists}, physical path: {fileInfo.PhysicalPath}");

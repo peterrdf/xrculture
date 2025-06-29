@@ -13,16 +13,19 @@ namespace XRCultureViewer
             var builder = WebApplication.CreateBuilder(args);
 
             // Create folders for logs and viewer content
-            var viewerPath = builder.Configuration["Paths:Viewer"];
-            if (string.IsNullOrEmpty(viewerPath))
+            var modelsDir = builder.Configuration["FileStorage:Models"];
+            if (string.IsNullOrEmpty(modelsDir))
             {
-                throw new InvalidOperationException("Viewer path is not configured.");
+                throw new InvalidOperationException("Models path is not configured.");
             }
+            Directory.CreateDirectory(modelsDir);
 
-            var logsDir = Path.Combine(viewerPath, @"logs");
-            Directory.CreateDirectory(logsDir);
-            var dataDir = Path.Combine(viewerPath, @"data");
-            Directory.CreateDirectory(dataDir);
+            var logsDir = builder.Configuration["FileStorage:Logs"];
+            if (string.IsNullOrEmpty(logsDir))
+            {
+                throw new InvalidOperationException("Logs path is not configured.");
+            }
+            Directory.CreateDirectory(logsDir);            
 
             // Serilog
             builder.Host.UseSerilog((context, services, configuration) => configuration
