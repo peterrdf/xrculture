@@ -12,7 +12,7 @@ namespace XRCultureViewer
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Create folders for logs and viewer content
+            // Create folders for models and logs
             var modelsDir = builder.Configuration["FileStorage:ModelsDir"];
             if (string.IsNullOrEmpty(modelsDir))
             {
