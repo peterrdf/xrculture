@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Xml;
-using XRCultureViewer.Pages.Shared;
 
 namespace XRCultureViewer.Pages
 {
@@ -144,13 +143,13 @@ namespace XRCultureViewer.Pages
 
             StringBuilder xml = new();
             xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            xml.AppendLine("<model>");
-            xml.AppendLine($"\t<id>{resultId}</id>");
-            xml.AppendLine($"\t<extension>{Path.GetExtension(zipFile.FileName)}</extension>");
-            xml.AppendLine($"\t<name>{model}</name>");
-            xml.AppendLine($"\t<description>{model}</description>"); //#todo: set description
-            xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
-            xml.AppendLine("</model>");
+            xml.AppendLine("<Model>");
+            xml.AppendLine($"\t<Id>{resultId}</Id>");
+            xml.AppendLine($"\t<Extension>{Path.GetExtension(zipFile.FileName)}</Extension>");
+            xml.AppendLine($"\t<Name>{model}</Name>");
+            xml.AppendLine($"\t<Description>{model}</Description>"); //#todo: set description
+            xml.AppendLine($"\t<TimeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</TimeStamp>");
+            xml.AppendLine("</Model>");
             System.IO.File.WriteAllText(Path.Combine(modelsDir, $"{resultId}.xml"), xml.ToString());
 
             var serviceUrl = GetServiceRootUrl();

@@ -67,11 +67,11 @@ namespace XRCultureViewer.Pages
 
                 lsModelDescriptors.Add(new ()
                 {
-                    Id = xmlDoc.SelectSingleNode("//model/id")?.InnerText ?? "NA",
-                    Extension = xmlDoc.SelectSingleNode("//model/extension")?.InnerText ?? "NA",
-                    Name = xmlDoc.SelectSingleNode("//model/name")?.InnerText ?? "NA",
-                    Description = xmlDoc.SelectSingleNode("//model/description")?.InnerText ?? "NA",
-                    TimeStamp = xmlDoc.SelectSingleNode("//model/timeStamp")?.InnerText ?? "NA",
+                    Id = xmlDoc.SelectSingleNode("//Model/Id")?.InnerText ?? "NA",
+                    Extension = xmlDoc.SelectSingleNode("//Model/Extension")?.InnerText ?? "NA",
+                    Name = xmlDoc.SelectSingleNode("//Model/Name")?.InnerText ?? "NA",
+                    Description = xmlDoc.SelectSingleNode("//Model/description")?.InnerText ?? "NA",
+                    TimeStamp = xmlDoc.SelectSingleNode("//Model/TimeStamp")?.InnerText ?? "NA",
                 });
             }
 
