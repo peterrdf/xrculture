@@ -96,13 +96,13 @@ namespace XRCultureMiddleware.Pages
             var registrationRequest = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest");
             if (registrationRequest != null)
             {
-                return await RegisterViewer(xmlDoc);
+                return RegisterViewer(xmlDoc);
             }
 
             var authorizationRequest = xmlDoc.SelectSingleNode("/Protocol/AuthorizationRequest");
             if (authorizationRequest != null)
             {
-                return await AuthorizeViewer(xmlDoc);
+                return AuthorizeViewer(xmlDoc);
             }
 
             _logger.LogError("Unknown request.");
@@ -141,10 +141,10 @@ namespace XRCultureMiddleware.Pages
                 return Content(registrationResponseError.Replace("%MESSAGE%", "XML parsing error."));
             }
 
-            return await RegisterViewer(xmlDoc);
+            return RegisterViewer(xmlDoc);
         }
 
-        private async Task<IActionResult> RegisterViewer(XmlDocument xmlDoc)
+        private IActionResult RegisterViewer(XmlDocument xmlDoc)
         {
             if (xmlDoc == null)
             {
@@ -216,10 +216,10 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "XML parsing error."));
             }
 
-            return await AuthorizeViewer(xmlDoc);
+            return AuthorizeViewer(xmlDoc);
         }
 
-        private async Task<IActionResult> AuthorizeViewer(XmlDocument xmlDoc)
+        private IActionResult AuthorizeViewer(XmlDocument xmlDoc)
         {
             if (xmlDoc == null)
             {
