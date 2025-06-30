@@ -34,6 +34,12 @@ namespace XRCultureMiddleware
 
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddTransient<IOperationTransient, Operation>();
+            builder.Services.AddScoped<IOperationScoped, Operation>();
+            builder.Services.AddSingleton<IOperationSingleton, Operation>();
+            builder.Services.AddSingleton<IOperationSingletonInstance>(new Operation(Guid.Empty));
+            builder.Services.AddTransient<OperationService, OperationService>();
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = "XRCultureMiddlewareCookieAuth";
@@ -60,6 +66,7 @@ namespace XRCultureMiddleware
             {
                 //#todo Remove when Authentication is fully implemented
                 options.Conventions.AllowAnonymousToPage("/Index");
+                options.Conventions.AllowAnonymousToPage("/Registry");
                 options.Conventions.AllowAnonymousToPage("/Storage");
 
                 options.Conventions.AllowAnonymousToPage("/Account/Login");

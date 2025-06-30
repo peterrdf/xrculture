@@ -18,7 +18,7 @@ namespace XRCultureRegisterViewerTool
 
         private void RegisterViewerForm_Load(object sender, EventArgs e)
         {
-            _textBoxMiddleware.Text = "http://localhost:5253/";
+            _textBoxMiddleware.Text = "http://localhost:5130/";
         }
 
         async private void _buttonRegister_Click(object sender, EventArgs e)

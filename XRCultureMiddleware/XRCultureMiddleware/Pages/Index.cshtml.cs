@@ -14,7 +14,6 @@ namespace XRCultureMiddleware.Pages
 
         public void OnGet()
         {
-
         }
     }
 }
