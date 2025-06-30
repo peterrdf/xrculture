@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Concurrent;
+using System.IO.Compression;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Xml;
@@ -51,7 +53,7 @@ namespace XRCultureMiddleware.Pages
         private readonly IOperationSingletonInstance _singletonOperationInstance;
         private static readonly ConcurrentDictionary<string, RegisterViewerRequest> RegisterViewerRequests = new();
 
-        public RegistryModel(ILogger<RegistryModel> logger, IConfiguration configuration, IOperationSingletonInstance singletonOperationInstance    )
+        public RegistryModel(ILogger<RegistryModel> logger, IConfiguration configuration, IOperationSingletonInstance singletonOperationInstance)
         {
             _logger = logger;
             _configuration = configuration;
@@ -247,6 +249,23 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Internal error: 'Endpoint'."));
             }
 
+            var backEnd = xmlDoc.SelectSingleNode("/Protocol/AuthorizationRequest/BackEnd")?.InnerXml;
+            if (string.IsNullOrEmpty(backEnd))
+            {
+                _logger.LogError("Bad request: 'BackEnd'.");
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'BackEnd'."));
+            }
+
+            var frontEnd = xmlDoc.SelectSingleNode("/Protocol/AuthorizationRequest/FrontEnd")?.InnerXml;
+            if (string.IsNullOrEmpty(frontEnd))
+            {
+                _logger.LogError("Bad request: 'FrontEnd'.");
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'FrontEnd'."));
+            }
+
+
+
+
             if (_singletonOperationInstance.Viewers.Keys.Contains(registerRequest.EndPoint))
             {
                 _logger.LogError($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
@@ -262,6 +281,32 @@ namespace XRCultureMiddleware.Pages
                 EndPoint = registerRequest.EndPoint,
                 XmlDefinition = xmlDoc.ToString(),
             });
+
+
+
+
+            var viewersDir = _configuration["FileStorage:ViewersDir"];
+            if (string.IsNullOrEmpty(viewersDir))
+            {
+                _logger.LogError("Models path is not configured.");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
+            }
+
+            var viewerId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"Viewer registered with ID: {viewerId}");
+
+            StringBuilder xml = new();
+            xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            xml.AppendLine("<viewer>");
+            xml.AppendLine($"\t<id>{viewerId}</id>");
+            xml.AppendLine($"\t<endpoint>{registerRequest.EndPoint}</endpoint>");
+            xml.AppendLine($"\t<backend>{backEnd}</backend>");
+            xml.AppendLine($"\t<frontend>{frontEnd}</frontend>");
+            xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
+            xml.AppendLine("</viewer>");
+
+            // Add XML file
+            System.IO.File.WriteAllText(Path.Combine(viewersDir, $"{viewerId}.xml"), xml.ToString());
 
             RegisterViewerRequests.Remove(registerRequest.EndPoint, out _);
 
