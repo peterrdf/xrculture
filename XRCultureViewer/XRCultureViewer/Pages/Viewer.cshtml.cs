@@ -17,7 +17,6 @@ namespace XRCultureViewer.Pages
     {
         private readonly ILogger<ViewerModel> _logger;
         private readonly IConfiguration _configuration;
-        private static readonly ConcurrentDictionary<string, System.Text.StringBuilder> ServerLogs = new();
         
         public ViewerModel(ILogger<ViewerModel> logger, IConfiguration configuration)
         {
@@ -39,8 +38,15 @@ namespace XRCultureViewer.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
+            _logger.BeginScope("ViewerModel.OnPostAsync");
+            _logger.LogInformation("Processing model upload request.");
+
+            // Check if the request is multipart/form-data
             if (!Request.HasFormContentType)
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Content-Type must be multipart/form-data."));
+            {
+                _logger.LogWarning("Invalid request content type: {ContentType}", Request.ContentType);
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Content-Type must be multipart/form-data."));  
+            }
 
             var form = await Request.ReadFormAsync();
 
@@ -57,7 +63,10 @@ namespace XRCultureViewer.Pages
                 xmlString = xmlField.ToString();
             }
             if (string.IsNullOrEmpty(xmlString))
+            {
+                _logger.LogWarning("Missing XML request part.");
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Missing XML request part."));
+            }
 
             // Validate XML
             if (!xmlString.Trim().StartsWith("<?xml", StringComparison.OrdinalIgnoreCase))
@@ -86,24 +95,35 @@ namespace XRCultureViewer.Pages
             }
             catch (XmlException ex)
             {
+                _logger.LogError(ex, "Invalid XML format.");
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", $"Invalid XML format: {ex.Message}"));
             }
 
             var model = viewModelRequestXml.SelectSingleNode("//ViewModelRequest/Name")?.InnerText;
             if (string.IsNullOrEmpty(model))
+            {
+                _logger.LogError("Bad request: 'Name'.");
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Bad request: 'Name'."));
+            }                
 
             // Get zip file part
             var zipFile = form.Files.FirstOrDefault(f => f.Name == "file");
             if (zipFile == null || zipFile.Length == 0)
+            {
+                _logger.LogWarning("Missing or empty zip file.");
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Missing or empty zip file."));
+            }
 
             if (zipFile.ContentType != "application/zip")
+            {
+                _logger.LogWarning("Invalid file type: {ContentType}. Expected application/zip.", zipFile.ContentType);
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid file type. Expected application/zip."));
+            }
 
             var modelsDir = _configuration["FileStorage:ModelsDir"];
             if (string.IsNullOrEmpty(modelsDir))
             {
+                _logger.LogError("Models path is not configured.");
                 return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
             }
 
@@ -138,7 +158,7 @@ namespace XRCultureViewer.Pages
             var serviceUrl = GetServiceRootUrl();
             var response = HTTPResponse.SuccessWithParameters.Replace("%PARAMETERS%",
                 $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}Viewer?model={resultId}{Path.GetExtension(zipFile.FileName)}</URL>");
-
+            _logger.LogInformation("Model uploaded successfully with ID: {ResultId}", resultId);
             return Content(response, "application/xml");
         }
 
