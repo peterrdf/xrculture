@@ -10,7 +10,6 @@ using System.Text;
 using System.Text.Json;
 using System.Xml;
 using XRCultureMiddleware.Pages.Shared;
-using XRCultureViewer.Pages.Shared;
 
 namespace XRCultureMiddleware.Pages
 {
@@ -62,60 +61,6 @@ namespace XRCultureMiddleware.Pages
 
         public void OnGet()
         {
-        }
-
-        public List<ViewerDescriptor> GetViewers()
-        {
-            List<ViewerDescriptor> lsViewerDescriptors = new();
-            if (_configuration == null)
-            {
-                _logger.LogError("Configuration is not set.");
-                return lsViewerDescriptors;
-            }
-
-            var viewersDir = _configuration["FileStorage:ViewersDir"];
-            if (string.IsNullOrEmpty(viewersDir))
-            {
-                _logger.LogError("Viewers path is not configured.");
-                return lsViewerDescriptors;
-            }
-
-            if (!Directory.Exists(viewersDir))
-            {
-                _logger.LogError($"Viewers directory does not exist: {viewersDir}");
-                return lsViewerDescriptors;
-            }
-
-            var provider = new PhysicalFileProvider(viewersDir);
-            var xmlViewers = provider.GetDirectoryContents("/").Where((fileInfo) =>
-            {
-                if (fileInfo.IsDirectory)
-                    return false;
-
-                if (!fileInfo.Name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
-                    return false;
-
-                return true;
-            });
-
-            foreach (var fileInfo in xmlViewers)
-            {   
-                _logger.LogInformation($"Found viewer: {fileInfo.Name} at {fileInfo.PhysicalPath}");
-
-                XmlDocument xmlDoc = new();
-                xmlDoc.Load(fileInfo.PhysicalPath!);
-
-                lsViewerDescriptors.Add(new()
-                {
-                    Id = xmlDoc.SelectSingleNode("//Viewer/Id")?.InnerText ?? "NA",
-                    EndPoint = xmlDoc.SelectSingleNode("//Viewer/EndPoint")?.InnerText ?? "NA",
-                    BackEnd = xmlDoc.SelectSingleNode("//Viewer/BackEnd")?.InnerText ?? "NA",
-                    FrontEnd = xmlDoc.SelectSingleNode("//Viewer/FrontEnd")?.InnerText ?? "NA",
-                    TimeStamp = xmlDoc.SelectSingleNode("//Viewer/TimeStamp")?.InnerText ?? "NA",
-                });
-            }
-
-            return lsViewerDescriptors;
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -188,7 +133,7 @@ namespace XRCultureMiddleware.Pages
 
             XmlDocument xmlDoc = new XmlDocument();
             try
-            {                
+            {
                 xmlDoc.LoadXml(xmlRequest);
             }
             catch (XmlException ex)
@@ -221,7 +166,7 @@ namespace XRCultureMiddleware.Pages
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
-            if (IsViewerRegistered(endPoint))
+            if (ViewerDescriptor.IsViewerRegistered(_logger, _configuration, endPoint))
             {
                 _logger.LogError($"Viewer is already registered 'Endpoint': {endPoint}");
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
@@ -304,7 +249,7 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Internal error: 'Endpoint'."));
             }
 
-            if (IsViewerRegistered(registerRequest.EndPoint))
+            if (ViewerDescriptor.IsViewerRegistered(_logger, _configuration, registerRequest.EndPoint))
             {
                 _logger.LogError($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
@@ -355,19 +300,6 @@ namespace XRCultureMiddleware.Pages
 
             return Content(authorizationResponse.Replace("%SESSION_TOKEN%", sessionToken));
         }
-
-        private bool IsViewerRegistered(string endPoint)
-        {
-            var viewers = GetViewers(); 
-            foreach ( var viewer in viewers) 
-            {
-                if (viewer.EndPoint == endPoint)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
     }
 
     public class RegisterViewerRequest
@@ -375,14 +307,5 @@ namespace XRCultureMiddleware.Pages
         public string? EndPoint { get; set; }
         public string? ServiceToken { get; set; }
         public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
-    }
-
-    public class ViewerDescriptor
-    {
-        public string? Id { get; set; } = string.Empty;
-        public string? EndPoint { get; set; }
-        public string? BackEnd { get; set; } = string.Empty;
-        public string? FrontEnd { get; set; } = string.Empty;
-        public string? TimeStamp { get; set; } = string.Empty;
     }
 }

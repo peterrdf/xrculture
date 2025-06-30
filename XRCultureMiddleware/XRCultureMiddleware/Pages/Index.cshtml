@@ -4,7 +4,17 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1 class="display-4">Viewers</h1>
+
+@{
+    foreach (var viewerDescriptor in Model.GetViewers())
+    {
+        <div class="card mb-3">
+            <h5 class="card-header">@viewerDescriptor.EndPoint</h5>
+            <div class="card-body">
+                <p class="card-text"><strong>Id:</strong> @viewerDescriptor.Id</p>
+                <p class="card-text"><strong>Created:</strong> @viewerDescriptor.TimeStamp</p>
+            </div>
+        </div>
+    }
+}

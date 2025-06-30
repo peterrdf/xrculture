@@ -1,4 +1,4 @@
-﻿namespace XRCultureViewer.Pages.Shared
+﻿namespace XRCultureMiddleware
 {
     public class HTTPResponse
     {
