@@ -166,7 +166,7 @@ namespace XRCultureMiddleware.Pages
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
-            if (ViewerDescriptor.IsViewerRegistered(_logger, _configuration, endPoint))
+            if (ViewersRegistry.IsViewerRegistered(_logger, _configuration, endPoint))
             {
                 _logger.LogError($"Viewer is already registered 'Endpoint': {endPoint}");
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
@@ -249,7 +249,7 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Internal error: 'Endpoint'."));
             }
 
-            if (ViewerDescriptor.IsViewerRegistered(_logger, _configuration, registerRequest.EndPoint))
+            if (ViewersRegistry.IsViewerRegistered(_logger, _configuration, registerRequest.EndPoint))
             {
                 _logger.LogError($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));

@@ -23,7 +23,7 @@ namespace XRCultureMiddleware.Pages
 
         public List<ViewerDescriptor> GetViewers()
         {
-            return ViewerDescriptor.GetViewers(_logger, _configuration);
+            return ViewersRegistry.GetViewers(_logger, _configuration);
         }
     }
 }

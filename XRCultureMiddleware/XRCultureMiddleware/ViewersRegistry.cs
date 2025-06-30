@@ -4,14 +4,8 @@ using System.Xml;
 
 namespace XRCultureMiddleware
 {
-    public class ViewerDescriptor
+    public class ViewersRegistry
     {
-        public string? Id { get; set; } = string.Empty;
-        public string? EndPoint { get; set; }
-        public string? BackEnd { get; set; } = string.Empty;
-        public string? FrontEnd { get; set; } = string.Empty;
-        public string? TimeStamp { get; set; } = string.Empty;
-
         public static List<ViewerDescriptor> GetViewers(ILogger logger, IConfiguration configuration)
         {
             List<ViewerDescriptor> lsViewerDescriptors = new();
@@ -23,7 +17,7 @@ namespace XRCultureMiddleware
             {
                 logger.LogError("Configuration is not set.");
                 return lsViewerDescriptors;
-            }            
+            }
 
             var viewersDir = configuration["FileStorage:ViewersDir"];
             if (string.IsNullOrEmpty(viewersDir))
@@ -72,7 +66,7 @@ namespace XRCultureMiddleware
 
         public static bool IsViewerRegistered(ILogger logger, IConfiguration configuration, string endPoint)
         {
-            var viewers = ViewerDescriptor.GetViewers(logger, configuration);
+            var viewers = GetViewers(logger, configuration);
             foreach (var viewer in viewers)
             {
                 if (viewer.EndPoint == endPoint)
@@ -82,5 +76,14 @@ namespace XRCultureMiddleware
             }
             return false;
         }
+    }
+
+    public class ViewerDescriptor
+    {
+        public string? Id { get; set; } = string.Empty;
+        public string? EndPoint { get; set; }
+        public string? BackEnd { get; set; } = string.Empty;
+        public string? FrontEnd { get; set; } = string.Empty;
+        public string? TimeStamp { get; set; } = string.Empty;
     }
 }
