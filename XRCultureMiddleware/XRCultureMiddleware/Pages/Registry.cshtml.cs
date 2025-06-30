@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.FileProviders;
 using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Reflection;
@@ -50,18 +52,70 @@ namespace XRCultureMiddleware.Pages
 
         private readonly ILogger<RegistryModel> _logger;
         private readonly IConfiguration _configuration;
-        private readonly IOperationSingletonInstance _singletonOperationInstance;
         private static readonly ConcurrentDictionary<string, RegisterViewerRequest> RegisterViewerRequests = new();
 
-        public RegistryModel(ILogger<RegistryModel> logger, IConfiguration configuration, IOperationSingletonInstance singletonOperationInstance)
+        public RegistryModel(ILogger<RegistryModel> logger, IConfiguration configuration)
         {
             _logger = logger;
             _configuration = configuration;
-            _singletonOperationInstance = singletonOperationInstance;
         }
 
         public void OnGet()
         {
+        }
+
+        public List<ViewerDescriptor> GetViewers()
+        {
+            List<ViewerDescriptor> lsViewerDescriptors = new();
+            if (_configuration == null)
+            {
+                _logger.LogError("Configuration is not set.");
+                return lsViewerDescriptors;
+            }
+
+            var viewersDir = _configuration["FileStorage:ViewersDir"];
+            if (string.IsNullOrEmpty(viewersDir))
+            {
+                _logger.LogError("Viewers path is not configured.");
+                return lsViewerDescriptors;
+            }
+
+            if (!Directory.Exists(viewersDir))
+            {
+                _logger.LogError($"Viewers directory does not exist: {viewersDir}");
+                return lsViewerDescriptors;
+            }
+
+            var provider = new PhysicalFileProvider(viewersDir);
+            var xmlViewers = provider.GetDirectoryContents("/").Where((fileInfo) =>
+            {
+                if (fileInfo.IsDirectory)
+                    return false;
+
+                if (!fileInfo.Name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                return true;
+            });
+
+            foreach (var fileInfo in xmlViewers)
+            {   
+                _logger.LogInformation($"Found viewer: {fileInfo.Name} at {fileInfo.PhysicalPath}");
+
+                XmlDocument xmlDoc = new();
+                xmlDoc.Load(fileInfo.PhysicalPath!);
+
+                lsViewerDescriptors.Add(new()
+                {
+                    Id = xmlDoc.SelectSingleNode("//Viewer/Id")?.InnerText ?? "NA",
+                    EndPoint = xmlDoc.SelectSingleNode("//Viewer/EndPoint")?.InnerText ?? "NA",
+                    BackEnd = xmlDoc.SelectSingleNode("//Viewer/BackEnd")?.InnerText ?? "NA",
+                    FrontEnd = xmlDoc.SelectSingleNode("//Viewer/FrontEnd")?.InnerText ?? "NA",
+                    TimeStamp = xmlDoc.SelectSingleNode("//Viewer/TimeStamp")?.InnerText ?? "NA",
+                });
+            }
+
+            return lsViewerDescriptors;
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -154,34 +208,35 @@ namespace XRCultureMiddleware.Pages
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Received null XML document."));
             }
 
-            var endpoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
-            if (string.IsNullOrEmpty(endpoint))
+            var endPoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
+            if (string.IsNullOrEmpty(endPoint))
             {
                 _logger.LogError("Bad request: 'Endpoint'.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'Endpoint'."));
             }
 
-            if (RegisterViewerRequests.Keys.Contains(endpoint))
+            if (RegisterViewerRequests.Keys.Contains(endPoint))
             {
-                _logger.LogError($"Viewer registration is in progress for 'Endpoint': {endpoint}");
+                _logger.LogError($"Viewer registration is in progress for 'Endpoint': {endPoint}");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
             }
 
-            if (_singletonOperationInstance.Viewers.Keys.Contains(endpoint))
+            if (IsViewerRegistered(endPoint))
             {
-                _logger.LogError($"Viewer is already registered 'Endpoint': {endpoint}");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
+                _logger.LogError($"Viewer is already registered 'Endpoint': {endPoint}");
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
             }
 
             var serviceToken = Guid.NewGuid().ToString();
+            _logger.LogInformation($"Generated service token: {serviceToken} for endpoint: {endPoint}");
 
-            RegisterViewerRequests.AddOrUpdate(endpoint, new RegisterViewerRequest
+            RegisterViewerRequests.AddOrUpdate(endPoint, new RegisterViewerRequest
             {
-                EndPoint = endpoint,
+                EndPoint = endPoint,
                 ServiceToken = serviceToken
             }, (key, oldValue) => new RegisterViewerRequest
             {
-                EndPoint = endpoint,
+                EndPoint = endPoint,
                 ServiceToken = serviceToken
             });
 
@@ -249,6 +304,12 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Internal error: 'Endpoint'."));
             }
 
+            if (IsViewerRegistered(registerRequest.EndPoint))
+            {
+                _logger.LogError($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
+                return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
+            }
+
             var backEnd = xmlDoc.SelectSingleNode("/Protocol/AuthorizationRequest/BackEnd")?.InnerXml;
             if (string.IsNullOrEmpty(backEnd))
             {
@@ -263,33 +324,17 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'FrontEnd'."));
             }
 
-
-
-
-            if (_singletonOperationInstance.Viewers.Keys.Contains(registerRequest.EndPoint))
-            {
-                _logger.LogError($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
-                return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
-            }
-
-            _singletonOperationInstance.Viewers.AddOrUpdate(registerRequest.EndPoint, new Viewer
-            {
-                EndPoint = registerRequest.EndPoint,
-                XmlDefinition = xmlDoc.ToString(),
-            }, (key, oldValue) => new Viewer
-            {
-                EndPoint = registerRequest.EndPoint,
-                XmlDefinition = xmlDoc.ToString(),
-            });
-
-
-
-
             var viewersDir = _configuration["FileStorage:ViewersDir"];
             if (string.IsNullOrEmpty(viewersDir))
             {
-                _logger.LogError("Models path is not configured.");
-                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
+                _logger.LogError("Viewers path is not configured.");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewers path is not configured."), "application/xml");
+            }
+
+            if (!Directory.Exists(viewersDir))
+            {
+                _logger.LogError($"Viewers directory does not exist: {viewersDir}");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewers directory does not exist."), "application/xml");
             }
 
             var viewerId = Guid.NewGuid().ToString();
@@ -297,20 +342,31 @@ namespace XRCultureMiddleware.Pages
 
             StringBuilder xml = new();
             xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            xml.AppendLine("<viewer>");
-            xml.AppendLine($"\t<id>{viewerId}</id>");
-            xml.AppendLine($"\t<endpoint>{registerRequest.EndPoint}</endpoint>");
-            xml.AppendLine($"\t<backend>{backEnd}</backend>");
-            xml.AppendLine($"\t<frontend>{frontEnd}</frontend>");
-            xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
-            xml.AppendLine("</viewer>");
-
-            // Add XML file
+            xml.AppendLine("<Viewer>");
+            xml.AppendLine($"\t<Id>{viewerId}</Id>");
+            xml.AppendLine($"\t<EndPoint>{registerRequest.EndPoint}</EndPoint>");
+            xml.AppendLine($"\t<BackEnd>{backEnd}</BackEnd>");
+            xml.AppendLine($"\t<FrontEnd>{frontEnd}</FrontEnd>");
+            xml.AppendLine($"\t<TimeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</TimeStamp>");
+            xml.AppendLine("</Viewer>");
             System.IO.File.WriteAllText(Path.Combine(viewersDir, $"{viewerId}.xml"), xml.ToString());
 
             RegisterViewerRequests.Remove(registerRequest.EndPoint, out _);
 
             return Content(authorizationResponse.Replace("%SESSION_TOKEN%", sessionToken));
+        }
+
+        private bool IsViewerRegistered(string endPoint)
+        {
+            var viewers = GetViewers(); 
+            foreach ( var viewer in viewers) 
+            {
+                if (viewer.EndPoint == endPoint)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -319,5 +375,14 @@ namespace XRCultureMiddleware.Pages
         public string? EndPoint { get; set; }
         public string? ServiceToken { get; set; }
         public DateTime TimeStamp { get; set; } = DateTime.UtcNow;
+    }
+
+    public class ViewerDescriptor
+    {
+        public string? Id { get; set; } = string.Empty;
+        public string? EndPoint { get; set; }
+        public string? BackEnd { get; set; } = string.Empty;
+        public string? FrontEnd { get; set; } = string.Empty;
+        public string? TimeStamp { get; set; } = string.Empty;
     }
 }

@@ -151,8 +151,6 @@ namespace XRCultureViewer.Pages
             xml.AppendLine($"\t<description>{model}</description>"); //#todo: set description
             xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");
             xml.AppendLine("</model>");
-
-            // Add XML file
             System.IO.File.WriteAllText(Path.Combine(modelsDir, $"{resultId}.xml"), xml.ToString());
 
             var serviceUrl = GetServiceRootUrl();
