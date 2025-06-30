@@ -16,7 +16,7 @@ namespace XRCultureViewer.Pages
     {
         private readonly ILogger<ViewerModel> _logger;
         private readonly IConfiguration _configuration;
-        
+
         public ViewerModel(ILogger<ViewerModel> logger, IConfiguration configuration)
         {
             _logger = logger;
@@ -35,62 +35,42 @@ namespace XRCultureViewer.Pages
             //}
         }
 
+        /*
+         * <?xml version=""1.0"" encoding=""UTF-8""?>
+        <ModelLoadingRequest>
+            <Source>
+              <LocalSource>
+                <Name>%NAME%</Name>
+                <Description>3D Model file</Description>
+                <FileContent dimension=""%SIZE%"" extension=""%EXTENSION%"">%BASE64_CONTENT%</FileContent>
+              </LocalSource>
+            </Source>
+        </ModelLoadingRequest>
+        */
         public async Task<IActionResult> OnPostAsync()
         {
-            _logger.BeginScope("ViewerModel.OnPostAsync");
-            _logger.LogInformation("Processing model upload request.");
+            _logger.LogInformation("Received request.");
 
-            // Check if the request is multipart/form-data
-            if (!Request.HasFormContentType)
+            using var reader = new StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+            if (string.IsNullOrEmpty(body))
             {
-                _logger.LogWarning("Invalid request content type: {ContentType}", Request.ContentType);
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Content-Type must be multipart/form-data."));  
+                _logger.LogInformation("Received empty request.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Received empty request."));
             }
 
-            var form = await Request.ReadFormAsync();
-
-            // Get XML request part
-            var xmlRequest = form.Files.FirstOrDefault(f => f.Name == "request");
-            string? xmlString = null;
-            if (xmlRequest != null)
+            var xmlRequest = JsonConvert.DeserializeObject<string>(body);
+            if (string.IsNullOrEmpty(xmlRequest))
             {
-                using var reader = new StreamReader(xmlRequest.OpenReadStream());
-                xmlString = await reader.ReadToEndAsync();
+                _logger.LogInformation("Received empty request.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Received empty request."));
             }
-            else if (form.TryGetValue("request", out var xmlField))
-            {
-                xmlString = xmlField.ToString();
-            }
-            if (string.IsNullOrEmpty(xmlString))
-            {
-                _logger.LogWarning("Missing XML request part.");
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Missing XML request part."));
-            }
-
-            // Validate XML
-            if (!xmlString.Trim().StartsWith("<?xml", StringComparison.OrdinalIgnoreCase))
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid XML format."));
-            if (!xmlString.Contains("<ViewModelRequest", StringComparison.OrdinalIgnoreCase))
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML does not contain <ViewModelRequest> element."));
-            if (!xmlString.Contains("<Name", StringComparison.OrdinalIgnoreCase))
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML does not contain <Name> element."));
-            if (!xmlString.Contains("<Parameters", StringComparison.OrdinalIgnoreCase))
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML does not contain <Parameters> element."));
-            // Validate XML structure
-            if (xmlString.Length > 1000000) // 1 MB limit
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML request is too large. Maximum size is 1 MB."));
+            _logger.LogInformation($"****** XML Request ******\n{xmlRequest}");
 
             XmlDocument viewModelRequestXml = new();
             try
             {
-                viewModelRequestXml.LoadXml(xmlString);
-                var root = viewModelRequestXml.DocumentElement;
-                if (root == null || root.Name != "ViewModelRequest")
-                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML root element must be <ViewModelRequest>."));
-                if (root.SelectSingleNode("Name") == null)
-                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML must contain <Name> element."));
-                if (root.SelectSingleNode("Parameters") == null)
-                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "XML must contain <Parameters> element."));
+                viewModelRequestXml.LoadXml(xmlRequest);
             }
             catch (XmlException ex)
             {
@@ -98,25 +78,18 @@ namespace XRCultureViewer.Pages
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", $"Invalid XML format: {ex.Message}"));
             }
 
-            var model = viewModelRequestXml.SelectSingleNode("//ViewModelRequest/Name")?.InnerText;
-            if (string.IsNullOrEmpty(model))
+            var modelName = viewModelRequestXml.SelectSingleNode("/ModelLoadingRequest/Source/LocalSource/Name")?.InnerText;
+            if (string.IsNullOrEmpty(modelName))
             {
                 _logger.LogError("Bad request: 'Name'.");
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Bad request: 'Name'."));
-            }                
-
-            // Get zip file part
-            var zipFile = form.Files.FirstOrDefault(f => f.Name == "file");
-            if (zipFile == null || zipFile.Length == 0)
-            {
-                _logger.LogWarning("Missing or empty zip file.");
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Missing or empty zip file."));
             }
 
-            if (zipFile.ContentType != "application/zip")
+            var base64Content = viewModelRequestXml.SelectSingleNode("/ModelLoadingRequest/Source/LocalSource/FileContent")?.InnerText;
+            if (string.IsNullOrEmpty(base64Content))
             {
-                _logger.LogWarning("Invalid file type: {ContentType}. Expected application/zip.", zipFile.ContentType);
-                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid file type. Expected application/zip."));
+                _logger.LogError("Bad request: 'FileContent'.");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Bad request: 'FileContent'."));
             }
 
             var modelsDir = _configuration["FileStorage:ModelsDir"];
@@ -126,35 +99,46 @@ namespace XRCultureViewer.Pages
                 return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
             }
 
-            // Save zip
+            // Save
             var resultId = Guid.NewGuid().ToString();
-            var tempZipPath = Path.Combine(modelsDir, $"{resultId}{Path.GetExtension(zipFile.FileName)}");
-            using (var fs = System.IO.File.Create(tempZipPath))
-            using (var zipStream = zipFile.OpenReadStream())
-            {
-                await zipStream.CopyToAsync(fs);
-            }
+            _logger.LogInformation("Generated new model ID: {ResultId}", resultId);
 
-            //# todo:check file extension and extract if needed
-            //var extractDir = Path.Combine(Path.GetTempPath(), resultId);
-            //Directory.CreateDirectory(extractDir);
-            //System.IO.Compression.ZipFile.ExtractToDirectory(tempZipPath, extractDir);
-            //System.IO.File.Delete(tempZipPath);
+            var modelPath = Path.Combine(modelsDir, $"{resultId}{Path.GetExtension(modelName)}");
+            try
+            {
+                byte[] fileBytes = Convert.FromBase64String(base64Content);
+                using (var fs = System.IO.File.Create(modelPath))
+                {
+                    await fs.WriteAsync(fileBytes, 0, fileBytes.Length);
+                }
+
+                _logger.LogInformation("Successfully saved file from base64 content to {FilePath}", modelPath);
+            }
+            catch (FormatException ex)
+            {
+                _logger.LogError(ex, "Invalid base64 string format");
+                return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid base64 content format"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving file");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", $"Error saving file: {ex.Message}"));
+            }
 
             StringBuilder xml = new();
             xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             xml.AppendLine("<Model>");
             xml.AppendLine($"\t<Id>{resultId}</Id>");
-            xml.AppendLine($"\t<Extension>{Path.GetExtension(zipFile.FileName)}</Extension>");
-            xml.AppendLine($"\t<Name>{model}</Name>");
-            xml.AppendLine($"\t<Description>{model}</Description>"); //#todo: set description
+            xml.AppendLine($"\t<Extension>{Path.GetExtension(modelName)}</Extension>");
+            xml.AppendLine($"\t<Name>{modelName}</Name>");
+            xml.AppendLine($"\t<Description>{modelName}</Description>"); //#todo: set description
             xml.AppendLine($"\t<TimeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</TimeStamp>");
             xml.AppendLine("</Model>");
             System.IO.File.WriteAllText(Path.Combine(modelsDir, $"{resultId}.xml"), xml.ToString());
 
             var serviceUrl = GetServiceRootUrl();
             var response = HTTPResponse.SuccessWithParameters.Replace("%PARAMETERS%",
-                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}Viewer?model={resultId}{Path.GetExtension(zipFile.FileName)}</URL>");
+                $"<ResultId>{resultId}</ResultId><URL>{serviceUrl}Viewer?model={resultId}{Path.GetExtension(modelName)}</URL>");
             _logger.LogInformation("Model uploaded successfully with ID: {ResultId}", resultId);
             return Content(response, "application/xml");
         }

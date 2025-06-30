@@ -1,5 +1,7 @@
 using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Security;
 using System.Security.Policy;
@@ -150,7 +152,15 @@ namespace XRCultureRegisterViewerTool
             Close();
         }
 
-        private async void _buttonViewModel_Click(object sender, EventArgs e)
+        private void _buttonViewModel_Click(object sender, EventArgs e)
+        {
+            ViewModelRequest();
+
+            //#todo Multi-part request
+            //ViewModelMultiPartRequest();
+        }
+
+        private async void ViewModelRequest()
         {
             var openFileDialog = new OpenFileDialog()
             {
@@ -159,10 +169,138 @@ namespace XRCultureRegisterViewerTool
                 Title = "Open 3D Model file"
             };
 
-            //#todo Midlleware - get viewer endpoint and credentials
-            string username = "xrculture";
-            string password = "Q7!vRz2#pLw8@tXb";
             string viewerBaseUrl = "https://xrculture:5131/";
+            var viewerUrl = viewerBaseUrl + "Viewer";
+
+            //#todo Midlleware - get viewer endpoint and credentials
+            //string username = "xrculture";
+            //string password = "Q7!vRz2#pLw8@tXb";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var fileInfo = new FileInfo(openFileDialog.FileName);
+                    byte[] fileBytes = File.ReadAllBytes(openFileDialog.FileName);
+                    string base64Content = Convert.ToBase64String(fileBytes);
+
+                    // xml request for Viewer REST Service
+                    string modelLoadingRequest =
+@"<?xml version=""1.0"" encoding=""UTF-8""?>
+<ModelLoadingRequest>
+    <Source>
+      <LocalSource>
+        <Name>%NAME%</Name>
+        <Description>3D Model file</Description>
+        <FileContent dimension=""%SIZE%"" extension=""%EXTENSION%"">%BASE64_CONTENT%</FileContent>
+      </LocalSource>
+    </Source>
+</ModelLoadingRequest>";
+                    modelLoadingRequest = modelLoadingRequest
+                        .Replace("%NAME%", fileInfo.Name)
+                        .Replace("%SIZE%", fileInfo.Length.ToString())
+                        .Replace("%EXTENSION%", Path.GetExtension(openFileDialog.FileName))
+                        .Replace("%BASE64_CONTENT%", base64Content);
+
+                    using (var handler = new HttpClientHandler())
+                    {
+                        handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+
+                        // Allow cookies to be stored and sent with requests
+                        handler.UseCookies = true;
+                        handler.CookieContainer = new System.Net.CookieContainer();
+
+                        using (var client = new HttpClient(handler))
+                        {
+                            client.Timeout = TimeSpan.FromMinutes(10);
+
+                            var content = new StringContent(JsonConvert.SerializeObject($"{modelLoadingRequest}"), Encoding.UTF8, "application/json");
+
+                            HttpResponseMessage response = await client.PostAsync(viewerUrl, content);
+                            string responseString = await response.Content.ReadAsStringAsync();
+                            Console.WriteLine(responseString);
+
+                            _textBoxLog.Text = responseString;
+
+                            // Process the response as before
+                            if (responseString.Contains("<ViewModelResponse>"))
+                            {
+                                var xmlDoc = new XmlDocument();
+                                xmlDoc.LoadXml(responseString);
+
+                                var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
+                                if (status?.Trim() != "200")
+                                {
+                                    throw new Exception($"Viewer REST Service returned error: {status}");
+                                }
+
+                                var modelUrl = xmlDoc.SelectSingleNode("//Parameters/URL")?.InnerText;
+                                if (string.IsNullOrEmpty(modelUrl))
+                                {
+                                    throw new Exception("Viewer REST Service did not return a 'URL'.");
+                                }
+
+                                // Open the URL in the default browser
+                                try
+                                {
+                                    // Handle different OS platforms correctly
+                                    if (OperatingSystem.IsWindows())
+                                    {
+                                        Process.Start(new ProcessStartInfo(modelUrl) { UseShellExecute = true });
+                                    }
+                                    else if (OperatingSystem.IsLinux())
+                                    {
+                                        Process.Start("xdg-open", modelUrl);
+                                    }
+                                    else if (OperatingSystem.IsMacOS())
+                                    {
+                                        Process.Start("open", modelUrl);
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show($"URL is available but cannot be opened automatically on this platform: {modelUrl}");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"Error opening browser: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                // If we still get HTML, authentication probably failed
+                                MessageBox.Show($"Authentication failed. Server response: {responseString.Substring(0, Math.Min(responseString.Length, 500))}...");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error:\n\n{ex.Message}\n\n" +
+                        $"Details:\n\n{ex.StackTrace}");
+                }
+                finally
+                {
+                    SessionToken = null;
+                    _buttonAuthorize.Enabled = false;
+                }
+            }
+        }
+
+        private async void ViewModelMultiPartRequest()
+        {
+            var openFileDialog = new OpenFileDialog()
+            {
+                FileName = "3D Model file",
+                Filter = "All Supported Files (*.binz;*.zae;*.objz;*.glb;*.gltf)|*.binz;*.zae;*.objz;*.glb;*.gltf|BIN Compressed files (*.binz)|*.binz|COLLADA Compressed files (*.zae)|*.zae|OBJ Compressed files (*.objz)|*.objz|glTF Binary files (*.glb)|*.glb|glTF files (*.gltf)|*.gltf",
+                Title = "Open 3D Model file"
+            };
+
+            string viewerBaseUrl = "https://xrculture:5131/";
+
+            //#todo Midlleware - get viewer endpoint and credentials
+            //string username = "xrculture";
+            //string password = "Q7!vRz2#pLw8@tXb";
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
