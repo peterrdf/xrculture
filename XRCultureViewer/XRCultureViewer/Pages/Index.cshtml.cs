@@ -33,7 +33,7 @@ namespace XRCultureViewer.Pages
                 return lsModelDescriptors;
             }
 
-            var modelsDir = _configuration["FileStorage:Models"];
+            var modelsDir = _configuration["FileStorage:ModelsDir"];
             if (string.IsNullOrEmpty(modelsDir))
             {
                 _logger.LogError("Models path is not configured.");

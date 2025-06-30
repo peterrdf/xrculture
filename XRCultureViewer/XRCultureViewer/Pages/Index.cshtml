@@ -10,7 +10,7 @@
     foreach (var modelDescriptor in Model.GetModels())
     {
         var viewerUrl = $"/Viewer?model={@modelDescriptor.Id}{modelDescriptor.Extension}";
-        var downloadUrl = $"/Storage?handler=File&file={@modelDescriptor.Id}{modelDescriptor.Extension}";
+        var downloadUrl = $"/Storage?handler=Model&id={@modelDescriptor.Id}{modelDescriptor.Extension}";
         <div class="card mb-3">
             <h5 class="card-header">@modelDescriptor.Name</h5>
             <div class="card-body">

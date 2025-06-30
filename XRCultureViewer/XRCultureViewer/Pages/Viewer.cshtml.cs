@@ -101,7 +101,7 @@ namespace XRCultureViewer.Pages
             if (zipFile.ContentType != "application/zip")
                 return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "Invalid file type. Expected application/zip."));
 
-            var modelsDir = _configuration["FileStorage:Models"];
+            var modelsDir = _configuration["FileStorage:ModelsDir"];
             if (string.IsNullOrEmpty(modelsDir))
             {
                 return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");

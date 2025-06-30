@@ -13,14 +13,14 @@ namespace XRCultureViewer
             var builder = WebApplication.CreateBuilder(args);
 
             // Create folders for logs and viewer content
-            var modelsDir = builder.Configuration["FileStorage:Models"];
+            var modelsDir = builder.Configuration["FileStorage:ModelsDir"];
             if (string.IsNullOrEmpty(modelsDir))
             {
                 throw new InvalidOperationException("Models path is not configured.");
             }
             Directory.CreateDirectory(modelsDir);
 
-            var logsDir = builder.Configuration["FileStorage:Logs"];
+            var logsDir = builder.Configuration["FileStorage:LogsDir"];
             if (string.IsNullOrEmpty(logsDir))
             {
                 throw new InvalidOperationException("Logs path is not configured.");
