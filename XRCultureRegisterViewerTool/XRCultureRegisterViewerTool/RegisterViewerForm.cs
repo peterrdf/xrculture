@@ -65,7 +65,7 @@ namespace XRCultureRegisterViewerTool
 
                     using (HttpClient client = new HttpClient())
                     {
-                        var url = _textBoxMiddleware.Text + "Registry?handler=Register";
+                        var url = _textBoxMiddleware.Text + "Registry";
                         var content = new StringContent(JsonConvert.SerializeObject($"{registerRequest}"), Encoding.UTF8, "application/json");
 
                         HttpResponseMessage response = await client.PostAsync(url, content);
