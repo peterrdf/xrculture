@@ -26,7 +26,7 @@ namespace XRCultureViewer.Pages
         }
 
         [BindProperty(SupportsGet = true)]
-        public string Model { get; set; }
+        public string? Model { get; set; }
 
         public void OnGet()
         {

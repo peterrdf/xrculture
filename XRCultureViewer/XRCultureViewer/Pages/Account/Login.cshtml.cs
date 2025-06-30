@@ -25,9 +25,9 @@ namespace XRCultureViewer.Pages.Account
         [BindProperty(SupportsGet = true)]
         public string ReturnUrl { get; set; } = "/";
 
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
-        public void OnGet(string returnUrl = null)
+        public void OnGet(string returnUrl = "")
         {
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
@@ -39,7 +39,7 @@ namespace XRCultureViewer.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && !string.IsNullOrEmpty(LoginInput.Username) && !string.IsNullOrEmpty(LoginInput.Password))
             {
                 // Replace this with your actual authentication logic
                 if (IsValidUser(LoginInput.Username, LoginInput.Password))
@@ -83,9 +83,9 @@ namespace XRCultureViewer.Pages.Account
         }
 
         // Replace this with your actual user validation logic
-        private bool IsValidUser(string username, string password)
+        private bool IsValidUser(string? username, string? password)
         {
-            // For demo purposes - replace with your actual authentication logic
+            // For demo purposes #todo: Implement your user validation logic here.
             // Options:
             // 1. Check against users in a database
             // 2. Use ASP.NET Core Identity
@@ -101,11 +101,11 @@ namespace XRCultureViewer.Pages.Account
     public class LoginInputModel
     {
         [Required]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
         [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }

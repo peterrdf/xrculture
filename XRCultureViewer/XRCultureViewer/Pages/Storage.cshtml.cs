@@ -48,7 +48,7 @@ namespace XRCultureViewer.Pages
 
                 _logger.LogInformation($"Looking for file: {id}, exists: {fileInfo.Exists}, physical path: {fileInfo.PhysicalPath}");
 
-                if (!fileInfo.Exists)
+                if (!fileInfo.Exists || string.IsNullOrEmpty(fileInfo.PhysicalPath))
                 {
                     _logger.LogError($"File '{id}' not found at '{fileInfo.PhysicalPath}'");
                     return Content(HTTPResponse.NotFound.Replace("%MESSAGE%", $"File '{id}' not found."), "application/xml");
