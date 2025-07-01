@@ -101,7 +101,10 @@ namespace MeshLabServer.Pages
                 return Content(badRequestResponse.Replace("%MESSAGE%", "Bad request: 'OutputMesh'."));
             }
 
-            var exePath = _configuration["ToolPaths:Python"] + @"\python.exe";
+            var pythonPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                _configuration["ToolPaths:Python"]);
+            var exePath = pythonPath + @"\python.exe";
             string pythonScript = Path.Combine(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
                 @"python\meshing_decimation_quadric_edge_collapse_with_texture.py");
@@ -288,7 +291,10 @@ namespace MeshLabServer.Pages
             var outputMeshPath = Path.Combine(outDir, outputMesh);
 
             // Run your process
-            var exePath = _configuration["ToolPaths:Python"] + @"\python.exe";
+            var pythonPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                _configuration["ToolPaths:Python"]);
+            var exePath = pythonPath + @"\python.exe";
             string pythonScript = Path.Combine(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"),
                 @"python\meshing_decimation_quadric_edge_collapse_with_texture.py");
