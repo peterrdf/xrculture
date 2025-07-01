@@ -169,7 +169,7 @@ namespace XRCultureRegisterViewerTool
                 Title = "Open 3D Model file"
             };
 
-            string viewerBaseUrl = "https://xrculture:5131/";
+            string viewerBaseUrl = "https://xrculture:6131/";
             var viewerUrl = viewerBaseUrl + "Viewer";
 
             //#todo Midlleware - get viewer endpoint and credentials
