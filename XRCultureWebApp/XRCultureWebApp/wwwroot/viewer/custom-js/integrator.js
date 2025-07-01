@@ -15,59 +15,59 @@ if (embeddedMode()) {
   hideUI();
 
   window.onmessage = function (e) {
-    try {
-      let event = null;
+    //try {
+    //  let event = null;
 
-      try {
-        event = JSON.parse(e.data);
-      }
-      catch (ex) {
-        console.error(ex);
-      }
+    //  try {
+    //    event = JSON.parse(e.data);
+    //  }
+    //  catch (ex) {
+    //    console.error(ex);
+    //  }
 
-      if (event) {
-        switch (event.type) {
-          case 'loadFile': {
-            loadFile(event.file);
-          }
-            break;
+    //  if (event) {
+    //    switch (event.type) {
+    //      case 'loadFile': {
+    //        loadFile(event.file);
+    //      }
+    //        break;
 
-          case 'loadFileByPath': {
-            loadFileByPath(event.file);
-          }
-            break;
+    //      case 'loadFileByPath': {
+    //        loadFileByPath(event.file);
+    //      }
+    //        break;
 
-          case 'loadFileByUri': {
-            loadFileByUri(event.file);
-          }
-            break;
+    //      case 'loadFileByUri': {
+    //        loadFileByUri(event.file);
+    //      }
+    //        break;
 
-          case 'loadFileContent': {
-            loadContent(event.name, event.fileExtension, event.content);
+    //      case 'loadFileContent': {
+    //        loadContent(event.name, event.fileExtension, event.content);
 
-            let completedEvent = {
-              'type': 'loadContent',
-              'name': event.name
-            };
-            e.source.postMessage(JSON.stringify(completedEvent), '*');
-          }
-            break;
+    //        let completedEvent = {
+    //          'type': 'loadContent',
+    //          'name': event.name
+    //        };
+    //        e.source.postMessage(JSON.stringify(completedEvent), '*');
+    //      }
+    //        break;
 
-          case 'addFileContent': {
-            addContent(event.name, event.fileExtension, event.content);
+    //      case 'addFileContent': {
+    //        addContent(event.name, event.fileExtension, event.content);
 
-            let completedEvent = {
-              'type': 'loadContent',
-              'name': event.name
-            };
-            e.source.postMessage(JSON.stringify(completedEvent), '*');
-          }
-            break;
-        }
-      }
-    }
-    catch (ex) {
-      console.error(ex);
-    }
+    //        let completedEvent = {
+    //          'type': 'loadContent',
+    //          'name': event.name
+    //        };
+    //        e.source.postMessage(JSON.stringify(completedEvent), '*');
+    //      }
+    //        break;
+    //    }
+    //  }
+    //}
+    //catch (ex) {
+    //  console.error(ex);
+    //}
   };
 }

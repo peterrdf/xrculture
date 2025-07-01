@@ -11,7 +11,7 @@
     foreach (var modelInfo in Model.GetModelInfos())
     {
         var viewerUrl = $"/Viewer?model={@modelInfo.Id}.binz";
-        var downloadUrl = $"/Storage?handler=File&file={@modelInfo.Id}.binz";
+        var downloadUrl = $"/Storage?handler=Model&id={@modelInfo.Id}.binz";
         <div class="card mb-3">
             <h5 class="card-header">@modelInfo.Input</h5>
             <div class="card-body">

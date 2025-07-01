@@ -160,7 +160,7 @@ public class DownloadFolderModel : PageModel
 
     public IActionResult OnGetFile(string file)
     {
-        var provider = new PhysicalFileProvider(_configuration["ToolPaths:OpenMVG-OpenMVS-Output"]);
+        var provider = new PhysicalFileProvider(_configuration["FileStorage:ModelsDir"]);
         var fileInfo = provider.GetFileInfo(file);
         if (!fileInfo.Exists)
             return NotFound();
@@ -722,7 +722,7 @@ public class DownloadFolderModel : PageModel
 
     private void CreateBinzArchive(string sourceDir, string destDir, string archiveName, string workflowId)
     {        
-        string dataDir = _configuration["ToolPaths:OpenMVG-OpenMVS-Output"];
+        string dataDir = _configuration["FileStorage:ModelsDir"];
         Directory.CreateDirectory(dataDir); // Ensure destination directory exists
         string archivePath = Path.Combine(dataDir, archiveName);
 

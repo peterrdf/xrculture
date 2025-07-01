@@ -14,7 +14,7 @@ namespace XRCultureWebApp
         {
             var builder = WebApplication.CreateBuilder(args);
             
-            var logDir = Path.Combine(builder.Configuration["ToolPaths:OpenMVG-OpenMVS-Output"], @"logs");
+            var logDir = Path.Combine(builder.Configuration["FileStorage:ModelsDir"], @"logs");
             Directory.CreateDirectory(logDir);
 
             // Add Serilog

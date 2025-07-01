@@ -83,7 +83,7 @@ else
         document.getElementById('divExecute').style.display = 'block';
         const resultDiv = document.getElementById('resultLinks');
         const cacheBuster = Date.now();
-        const binzUrl = `/Storage?handler=File&file=${workflowId}.binz&v=${cacheBuster}`;
+        const binzUrl = `/Storage?handler=Model&id=${workflowId}.binz&v=${cacheBuster}`;
         const viewerUrl = `/Viewer?model=${workflowId}.binz&v=${cacheBuster}`;
         resultDiv.innerHTML = `
             <h5>

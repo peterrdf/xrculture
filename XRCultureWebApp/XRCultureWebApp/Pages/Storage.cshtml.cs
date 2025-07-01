@@ -21,36 +21,36 @@ namespace XRCultureWebApp.Pages
         {
         }
 
-        public IActionResult OnGetFile(string file)
+        public IActionResult OnGetModel(string id)
         {
             try
             {
-                _logger.LogInformation($"OnGetFile called with file: {file}");
+                _logger.LogInformation($"OnGetModel called with id: {id}");
 
-                var dataPath = _configuration["ToolPaths:OpenMVG-OpenMVS-Output"];
-                if (string.IsNullOrEmpty(dataPath))
+                var modelsDir = _configuration["FileStorage:ModelsDir"];
+                if (string.IsNullOrEmpty(modelsDir))
                 {
-                    _logger.LogError("Viewer path is not configured");
-                    return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewer path is not configured."), "application/xml");
+                    _logger.LogError("Models path is not configured");
+                    return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Models path is not configured."), "application/xml");
                 }
 
-                _logger.LogInformation($"Using viewer path: {dataPath}");
+                _logger.LogInformation($"Using viewer path: {modelsDir}");
 
-                if (string.IsNullOrEmpty(file))
+                if (string.IsNullOrEmpty(id))
                 {
-                    _logger.LogError("File name is required");
-                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "File name is required."), "application/xml");
+                    _logger.LogError("id is required");
+                    return Content(HTTPResponse.BadRequest.Replace("%MESSAGE%", "id is required."), "application/xml");
                 }
 
-                var provider = new PhysicalFileProvider(dataPath);
-                var fileInfo = provider.GetFileInfo(file);
+                var provider = new PhysicalFileProvider(modelsDir);
+                var fileInfo = provider.GetFileInfo(id);
 
-                _logger.LogInformation($"Looking for file: {file}, exists: {fileInfo.Exists}, physical path: {fileInfo.PhysicalPath}");
+                _logger.LogInformation($"Looking for file: {id}, exists: {fileInfo.Exists}, physical path: {fileInfo.PhysicalPath}");
 
-                if (!fileInfo.Exists)
+                if (!fileInfo.Exists || string.IsNullOrEmpty(fileInfo.PhysicalPath))
                 {
-                    _logger.LogError($"File '{file}' not found at '{fileInfo.PhysicalPath}'");
-                    return Content(HTTPResponse.NotFound.Replace("%MESSAGE%", $"File '{file}' not found."), "application/xml");
+                    _logger.LogError($"File '{id}' not found at '{fileInfo.PhysicalPath}'");
+                    return Content(HTTPResponse.NotFound.Replace("%MESSAGE%", $"File '{id}' not found."), "application/xml");
                 }
 
                 _logger.LogInformation($"Returning file: {fileInfo.PhysicalPath}, size: {fileInfo.Length} bytes");
@@ -58,11 +58,11 @@ namespace XRCultureWebApp.Pages
                 Response.Headers["Pragma"] = "no-cache";
                 Response.Headers["Expires"] = "0";
 
-                return File(System.IO.File.ReadAllBytes(fileInfo.PhysicalPath), "application/octet-stream", Path.GetFileName(file));
+                return File(System.IO.File.ReadAllBytes(fileInfo.PhysicalPath), "application/octet-stream", Path.GetFileName(id));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in OnGetFile");
+                _logger.LogError(ex, "Error in OnGetModel");
                 return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", $"Server error: {ex.Message}"), "application/xml");
             }
         }

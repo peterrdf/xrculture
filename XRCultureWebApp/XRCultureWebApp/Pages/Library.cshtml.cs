@@ -27,7 +27,7 @@ namespace XRCultureWebApp.Pages
 
         public List<ModelInfo> GetModelInfos()
         {
-            var provider = new PhysicalFileProvider(_configuration["ToolPaths:OpenMVG-OpenMVS-Output"]);
+            var provider = new PhysicalFileProvider(_configuration["FileStorage:ModelsDir"]);
             var xmlModels = provider.GetDirectoryContents("/").Where((fileInfo) =>
             {
                 if (fileInfo.IsDirectory)
