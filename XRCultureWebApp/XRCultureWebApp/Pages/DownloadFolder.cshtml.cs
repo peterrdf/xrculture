@@ -9,6 +9,7 @@ using System.Collections.Concurrent; // Add this at the top if not present
 using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.Intrinsics.Arm;
 using System.Text;
@@ -53,6 +54,7 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
+                    client.Timeout = TimeSpan.FromMinutes(30);
                     client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AppName", "1.0"));
 
                     var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
@@ -435,9 +437,8 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
-                    // Set a longer timeout (e.g., 10 minutes instead of default 100 seconds)
-                    client.Timeout = TimeSpan.FromMinutes(10);
-                    
+                    client.Timeout = TimeSpan.FromMinutes(30);
+
                     var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply2";
                     using (var form = new MultipartFormDataContent())
                     {
@@ -614,6 +615,7 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
+                    client.Timeout = TimeSpan.FromMinutes(30);
                     client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));
 
                     var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
