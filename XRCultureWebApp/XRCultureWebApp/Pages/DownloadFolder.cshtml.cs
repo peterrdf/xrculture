@@ -54,7 +54,7 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
-                    client.Timeout = TimeSpan.FromMinutes(30);
+                    client.Timeout = TimeSpan.FromMinutes(60);
                     client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AppName", "1.0"));
 
                     var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
@@ -437,7 +437,7 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
-                    client.Timeout = TimeSpan.FromMinutes(30);
+                    client.Timeout = TimeSpan.FromMinutes(60);
 
                     var url = _configuration["Services:MeshLabServer"] + "Filters?handler=Apply2";
                     using (var form = new MultipartFormDataContent())
@@ -615,8 +615,8 @@ public class DownloadFolderModel : PageModel
                 handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
                 using (var client = new HttpClient(handler))
                 {
-                    client.Timeout = TimeSpan.FromMinutes(30);
-                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));
+                    client.Timeout = TimeSpan.FromMinutes(60);
+                    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("XRCulture", "1.0"));                    
 
                     var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{folder}?ref={branch}";
                     //https://github.com/[owner]/[repository]/tree/[branch]/[folder]
@@ -632,7 +632,27 @@ public class DownloadFolderModel : PageModel
                     var files = System.Text.Json.JsonSerializer.Deserialize<List<GitHubFile>>(
                         await response.Content.ReadAsStringAsync(),
                         new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    AppendLog(workflowId, $"Downloaded file list in {sw.ElapsedMilliseconds} ms.");
 
+                    // File-by-File Direct Download (No ZIP)
+                    AppendLog(workflowId, "Downloading files...");
+                    var tempPath = Path.GetTempPath();
+                    extractPath = Path.Combine(tempPath, folder);
+                    string destinationFolder = Path.Combine(extractPath, "images");
+                    Directory.CreateDirectory(destinationFolder);
+                    
+                    foreach (var file in files.Where(f => f.Type == "file"))
+                    {
+                        string filePath = Path.Combine(destinationFolder, file.Name);
+                        using var response2 = await client.GetAsync(file.Download_Url, HttpCompletionOption.ResponseHeadersRead);
+                        using var fileStream = new FileStream(filePath, FileMode.Create);
+                        await response2.Content.CopyToAsync(fileStream);
+                    }
+                    AppendLog(workflowId, $"All files downloaded in {sw.ElapsedMilliseconds} ms.");
+                    /**/
+
+                    // Zip Download
+                    /*
                     AppendLog(workflowId, $"Downloaded file list in {sw.ElapsedMilliseconds} ms.");
 
                     // 1. Create ZIP in memory
@@ -646,6 +666,14 @@ public class DownloadFolderModel : PageModel
                             var entry = archive.CreateEntry(file.Name);
                             using var entryStream = entry.Open();
                             await entryStream.WriteAsync(fileBytes, 0, fileBytes.Length);
+
+                            // Streaming Large Files - NOT TESTED!
+                            //var entry = archive.CreateEntry(file.Name);
+                            //using var entryStream = entry.Open();
+
+                            //// Stream the file instead of loading it all into memory
+                            //using var response2 = await client.GetAsync(file.Download_Url, HttpCompletionOption.ResponseHeadersRead);
+                            //await response2.Content.CopyToAsync(entryStream);
                         }
                     }
 
@@ -666,6 +694,7 @@ public class DownloadFolderModel : PageModel
                     ZipFile.ExtractToDirectory(zipFilePath, extractPath + @"\images");
 
                     AppendLog(workflowId, $"ZIP extracted in {sw.ElapsedMilliseconds} ms.");
+                    */
 
                     AppendLog(workflowId, "Running workflow...");
                     openMVG_openMVS_Workflow(extractPath, workflowId);
