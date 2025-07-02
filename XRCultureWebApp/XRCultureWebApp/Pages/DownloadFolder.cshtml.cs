@@ -779,7 +779,7 @@ public class DownloadFolderModel : PageModel
             xml.AppendLine($"\t<input>{_inputGitHub}</input>");
             xml.AppendLine($"\t<workflow>");
             xml.AppendLine("\t\t<id>OpenMVG-OpenMVS</id>"); //#todo
-            xml.AppendLine("\t\t<name><![CDATA[openMVG & OpenMVS]]></name>"); //#todo
+            xml.AppendLine("\t\t<name><![CDATA[OpenMVG & OpenMVS]]></name>"); //#todo
             xml.AppendLine($"\t\t<parameters></parameters>");
             xml.AppendLine($"\t</workflow>");
             xml.AppendLine($"\t<timeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</timeStamp>");

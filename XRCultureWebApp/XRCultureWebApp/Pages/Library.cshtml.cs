@@ -39,8 +39,7 @@ namespace XRCultureWebApp.Pages
                 return true;
             });
 
-            List<ModelInfo> xmlModelInfos = new List<ModelInfo>();
-
+            List<ModelInfo> xmlModelInfos = new();
             foreach (var fileInfo in xmlModels)
             {
                 _logger.LogInformation($"Found model: {fileInfo.Name} at {fileInfo.PhysicalPath}");
@@ -57,7 +56,13 @@ namespace XRCultureWebApp.Pages
                 });
             }
 
-            return xmlModelInfos;
+            return xmlModelInfos = xmlModelInfos
+                .OrderByDescending(m => {
+                    if (string.IsNullOrEmpty(m.TimeStamp) || m.TimeStamp == "Unknown")
+                        return DateTime.MinValue;
+                    return DateTime.TryParse(m.TimeStamp, out var date) ? date : DateTime.MinValue;
+                })
+                .ToList();
         }
     }
 
