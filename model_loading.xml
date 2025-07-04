@@ -9,7 +9,7 @@
     <Filters>
       <Filter>
         <FileExtension>.ifc</FileExtension> <!-- if provided request only models with specific file extension -->
-        <ModelName>Museo degli Innocenti</ModelName> <!-- if provided request only models with specific name -->
+        <ModelName>Museo degl*</ModelName> <!-- if provided request only models with specific name (special chars are admitted) -->
       </Filter>
       <Filter>
         <FileExtension>.obj</FileExtension>
@@ -34,10 +34,16 @@
     <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
     <Source> <!-- if both provided, local overrides cloud -->
       <LocalSource>
-        <FileContent dimension="34567" extension=".ifc"> <!-- file dimension in kB -->
+        <FileContent dimension="34567" extension=".ifc" filename="<filename of the model>" name="Museo degli Innocenti"
+          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit"> <!-- file dimension in kB -->
           /9j/4AAQSkZJRgABAQEAYABgAAD/4QBiRXhpZgAATU0AKgAAAAgABwESA.. <!-- file blob coded in Base64 -->
         </FileContent>
       </LocalSource>
+      <UrlSource>
+        <FileExtension>.ifc</FileExtension>
+        <FileDimension>35656</FileDimension>
+        <Url>https://repository.com/modelXXX</Url>
+      </UrlSource>
       <CloudSource>
         <ModelId>9f8d4a7be2c1743d76a1d39a6fc45ea56c63db6a763a0e944f88a1ffac7d39d2</ModelId>
       <CloudSource>
