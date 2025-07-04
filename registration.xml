@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Protocol xmlns="http://example.com/service-protocol" version="1.0">
 
-  <!-- Service Registration Request -->
-  <RegistrationRequest>
-      <ServiceID>service-1234</ServiceID>
-      <ServiceName>Middleware</ServiceName>
+  <!-- Service Authorization Request -->
+  <AuthorizationRequest>
+      <ProviderID>provider-1234</ProviderID>
+      <ServiceName>Viewer</ServiceName>
       <Endpoint>https://example.com/api</Endpoint> <!-- only HTTPS connections are supported -->
       <PublicKey>MIIBIjANBgkqh...</PublicKey>
       <ContactEmail>admin@example.com</ContactEmail>
       <Timestamp>2025-05-20T14:00:00Z</Timestamp>
-  </RegistrationRequest>
+  </AuthorizationRequest>
 
-  <!-- Platform Response to Registration -->
-  <RegistrationResponse>
+  <!-- Platform Response to Authorization -->
+  <AuthorizationResponse>
       <Status>202</Status> <!-- ACCEPTED / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
       <SessionToken>eyJhbGciOi...</SessionToken>
       <ExpiresIn>3600</ExpiresIn> <!-- in seconds -->
-      <Message>Service successfully registered.</Message>
-  </RegistrationResponse>
+      <Message>Service successfully authorized.</Message>
+  </AuthorizationResponse>
 
 
  <!-- viewer back to middleware -->
-  <AuthorizationRequest>
-    <ServiceID>service-1234</ServiceID>
+  <RegistrationRequest>
+    <ProviderID>provider-1234</ProviderID>
     <SessionToken>eyJ0eXAiOi...</SessionToken>
     <BackEnd>
       <Access-Control-Allow-Origin>https://developer.mozilla.org</Access-Control-Allow-Origin> <!-- for CORS. The wildcard * can be used -->
@@ -235,14 +235,14 @@
       </SupportedOptions>
     </FrontEnd>
     <Timestamp>2025-05-20T14:00:00Z</Timestamp>
-  </AuthorizationRequest>
+  </RegistrationRequest>
 
-  <!-- Platform Response to Authorization -->
-  <AuthorizationResponse>
+  <!-- Platform Response to Registration -->
+  <RegistrationResponse>
       <Status>200</Status>  <!-- SUCCESS / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
       <ServiceKey>MIIBIjANBgkqh....</ServiceKey> <!-- private key for any further communications between services and middleware -->
-      <Message>Authorization successful.</Message>
-  </AuthorizationResponse>
+      <Message>Registration successful.</Message>
+  </RegistrationResponse>
 
 
 </Protocol>
