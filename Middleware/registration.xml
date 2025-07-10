@@ -33,10 +33,63 @@
           <Access-Control-Allow-Method>PUT</Access-Control-Allow-Method>
           <Access-Control-Allow-Method>DELETE</Access-Control-Allow-Method>
         </Architecture>
-        <MetadataRet> <!-- Metadata Retrieval -->
-          <Metadata name="height" type="Float" unit="cm" readonly="True" />
-          <Metadata name="XXX" type="Int32" unit="mm" readonly="True" />
-          <Metadata name="YYY" type="String" readonly="False" />
+        <Analytics>
+          <UsageTracking enabled="True" />
+          <PerformanceMetrics>
+            <Metric name="RenderTime" />
+            <Metric name="LoadTime" />
+            <Metric name="MemoryUsage" />
+          </PerformanceMetrics>
+        </Analytics>
+        <MetadataRet> <!-- Metadata Retrieval (Vangelis) -->
+          <!-- identity -->
+          <MetadataElement name="identifier" type="String" readonly="True" />    <!-- dc:identifier e.g. (share3d:715) -->
+          <MetadataElement name="title" type="String" readonly="True" />         <!-- dc:title -->
+          <MetadataElement name="description" type="String" readonly="True" />   <!-- dc:description -->
+          <MetadataElement name="subjects" type="String[]" readonly="True" />    <!-- dc:subject -->
+          <MetadataElement name="language" type="String" readonly="True" />      <!-- dc:language -->
+          <MetadataElement name="creator" type="String" readonly="True" />       <!-- dc:creator -->
+          <MetadataElement name="createdAt" type="date" readonly="True" />       <!-- dcterms:created e.g. 1950) -->
+          <MetadataElement name="contributor" type="String[]" readonly="True" /> <!-- dc:contributor -->
+          <MetadataElement name="publisher" type="String" readonly="True" />     <!-- dc:publisher -->
+
+          <!-- Creation Context -->
+          <MetadataElement name="creationProcess" type="String" readonly="True" />
+          <MetadataElement name="creationDescription" type="String" readonly="True" />
+          <MetadataElement name="provenance" type="String" readonly="True" />    <!-- dc:provenance -->
+
+          <!-- Relationships -->
+          <MetadataElement name="isPartOf" type="String" readonly="True" />       <!-- dcterms:isPartOf -->
+          <MetadataElement name="hasPart" type="String" readonly="True" />        <!-- dcterms:hasPart -->
+          <MetadataElement name="isReferencedBy" type="String" readonly="True" /> <!-- dcterms:isReferencedBy -->
+          <MetadataElement name="links" type="String[]" readonly="True" />
+          <MetadataElement name="tags" type="String[]" readonly="True" />
+
+          <!-- Media / Format -->
+          <MetadataElement name="format" type="String" readonly="True" />         <!-- dc:format (e.g. glTF) -->
+          <MetadataElement name="type" type="String" readonly="True" />           <!-- dc:type / edm:type (e.g. 3D) -->
+          <MetadataElement name="isDownloadable" type="Boolean" readonly="True" />
+          <MetadataElement name="rights" type="String" readonly="True" />        <!-- dc:rights / copyright -->
+          <MetadataElement name="accessRights" type="String" readonly="True" />  <!-- dc:accessRights -->
+
+          <!-- Location / Time -->
+          <MetadataElement name="place" type="String" readonly="True" />         <!-- dcterms:spatial -->
+          <MetadataElement name="geolocation" type="String" readonly="True" />    <!-- optional: GeoJSON -->
+          <MetadataElement name="temporal" type="String" readonly="True" />      <!-- dcterms:temporal -->
+          <MetadataElement name="periods" type="String[]" readonly="True" />     <!-- PeriodO support or Getty AAT -->
+
+          <!-- Technical -->
+          <MetadataElement name="faceCount" type="Integer" readonly="True" />
+          <MetadataElement name="vertexCount" type="Integer" readonly="True" />
+          <MetadataElement name="textureCount" type="Integer" readonly="True" />
+          <MetadataElement name="materialCount" type="Integer" readonly="True" />
+          <MetadataElement name="polygonType" type="String" readonly="True" />   <!-- e.g. triangles, quads -->
+          <MetadataElement name="dimension" type="String" readonly="True" />     <!-- e.g. XxYxZ or bounding box -->
+          <MetadataElement name="units" type="String" readonly="True" />         <!-- e.g. cm, mm, inches -->
+
+          <!-- Web/Display Info -->
+          <MetadataElement name="isShownAt" type="String" readonly="True" />     <!-- edm:isShownAt -->
+          <MetadataElement name="previewImage" type="String" readonly="True" />  <!-- edm:preview -->
         </MetadataRet>
         <ProgressiveLoading value="True" />
         <TimeMachine value="True" />
@@ -52,10 +105,18 @@
           <Format extension=".json" mimetype="application/json" native="True" />
           <Format extension=".dae" mimetype="model/vnd.collada+xml" native="True" />
         </FileFormats>
-        <CloudStorages> <!-- Cloud Storages -->
-          <Storage name="AWS S3" storage-size="1024" /> <!-- in MBs -->
-          <Storage name="GitHub" storage-size="0" /> <!-- 0 means infinite -->
-        </CloudStorages>
+        <DataProviders>
+          <CloudStorages> <!-- Cloud Storages -->
+            <Storage name="AWS S3" storage-size="1024" /> <!-- in MBs -->
+            <Storage name="GitHub" storage-size="0" /> <!-- 0 means infinite -->
+          </CloudStorages>
+          <Databases>
+            <Database name="SQLServer" type="SQL" language="T-SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="1433" public="False" /> <!-- in MBs -->
+            <Database name="MariaDB" type="SQL" language="SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="3306" public="False" />
+            <Database name="PostgreSQL" type="SQL" language="SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="5432" public="True" />
+            <Database name="Fuseki" type="RDF" language="SPARQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="3030" public="True" />
+          </Databases>
+        </DataProviders>
         <FullText> <!-- supported Full-text search engines -->
           <Search name="ElasticSearch" />
           <Search name="OpenSearch" />
@@ -63,12 +124,6 @@
         <Protocols>
           <Protocol value="oEmbed" />
         </Protocols>
-        <Databases>
-          <Database name="SQLServer" type="SQL" language="T-SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="1433" public="False" /> <!-- in MBs -->
-          <Database name="MariaDB" type="SQL" language="SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="3306" public="False" />
-          <Database name="PostgreSQL" type="SQL" language="SQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="5432" public="True" />
-          <Database name="Fuseki" type="RDF" language="SPARQL" db-size="1024" endpoint="xxx.xxx.xxx.xxx" tcp-port="3030" public="True" />
-        </Databases>
         <Authentication> <!-- Authentication Protocols -->
           <Protocol name="oAuth" />
           <Protocol name="APIKey" />
@@ -76,8 +131,21 @@
       </SupportedOptions>
     </BackEnd>
     <FrontEnd>
+      <GUI>
+        <ViewType value="True" /> <!-- type of viewer gui mask, 'light' or 'full', default is 'light' (Rene (Arctur)) -->
+        <Languages>
+          <Language default="True">en-US</Language> <!-- language code ISO 639-1 (example: 'en', 'sl', ...), default is 'en' (Rene (Arctur)) + ISO 3166-1 alpha-2 country code (UK, US, IT, ES)-->
+          <Language>en-UK</Language>
+          <Language>it-IT</Language>
+          <Language>es-ES</Language>
+        </Languages>
+        <MobileOptimization value="True" />
+        <MaxPolygonCount>1000000</MaxPolygonCount>
+        <MaxTextureSize>4096</MaxTextureSize>
+      </GUI>
       <SupportedOptions>
         <Scene> <!-- Scene Setup and Update -->
+          <Autoload value="True" /> <!-- autoload asset on initialization, default is false (Rene (Arctur)) -->
           <Zoom value="True" />
           <Pan value="True" />
           <BackgroundColor value="000,FFF,DD2500,ALL" default="000" /> <!-- RGB -->
@@ -217,12 +285,11 @@
           <Element name="Structural Curve Member" type="IfcStructuralCurveMember" />
           <Element name="Structural Surface Member" type="IfcStructuralSurfaceMember" />
        </Elements>
-       <Materials>
-         <Material name="xxx" options="" />
-       </Materials>
-       <Measuring> <!-- Measuring Tools -->
-         <Tool name="xxx" />
-         <Tool name="yyy" />
+       <Measuring> <!-- Measuring Tools (Rene (Arctur)) -->
+         <Tool name="Distance" unit="m" precision="0.00" />
+         <Tool name="Height" unit="cm" precision="0.0" />
+         <Tool name="Angle" unit="rad" precision="0.0" />
+         <Tool name="Area" unit="sqm" precision="0.00" />
        </Measuring>
        <Attachments>
          <Format extension=".jpg" mimetype="image/jpeg" />
