@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -54,13 +55,27 @@ namespace XRCultureMiddleware.Pages.Account
                         ["User"]
                     );
 
-                    // Store the JWT token in a cookie for API calls
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwtToken = handler.ReadJwtToken(token);
+                    var jwtId = jwtToken.Id;
+
+                    var refreshToken = _tokenService.GenerateRefreshToken("user123", jwtId);
+
+                    // Store both tokens
                     Response.Cookies.Append("jwt_token", token, new CookieOptions
                     {
                         HttpOnly = true,
                         Secure = true,
                         SameSite = SameSiteMode.Strict,
                         Expires = DateTime.UtcNow.AddMinutes(60) // Match your token expiry
+                    });
+
+                    Response.Cookies.Append("refresh_token", refreshToken.Token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddDays(7)
                     });
 
                     var claims = new List<Claim>

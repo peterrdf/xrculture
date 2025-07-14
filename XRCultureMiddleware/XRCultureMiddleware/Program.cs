@@ -42,8 +42,9 @@ namespace XRCultureMiddleware
             builder.Services.AddSingleton<IOperationSingleton, Operation>();
             builder.Services.AddSingleton<IOperationSingletonInstance>(new Operation(Guid.Empty));
             builder.Services.AddTransient<OperationService, OperationService>();
-            builder.Services.AddScoped<ITokenService, TokenService>();
 
+            builder.Services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
             builder.Services.AddAuthentication(options =>
