@@ -158,6 +158,8 @@ namespace XRCultureMiddleware.Pages
                 return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'ProviderID'."));
             }
 
+            //#todo: validate providerId or move it to the OnPost method
+
             if (!AuthorizationRequests.TryGetValue(providerId, out var authorizationRequest))
             {
                 authorizationRequest = new AuthorizationRequest
@@ -227,6 +229,8 @@ namespace XRCultureMiddleware.Pages
                 _logger.LogError("Bad request: 'ProviderID'.");
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'ProviderID'."));
             }
+
+            //#todo: validate providerId or move it to the OnPost method
 
             var sessionToken = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest/SessionToken")?.InnerText;
             if (string.IsNullOrEmpty(sessionToken))

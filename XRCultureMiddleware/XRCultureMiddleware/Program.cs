@@ -29,6 +29,12 @@ namespace XRCultureMiddleware
             }
             Directory.CreateDirectory(logsDir);
 
+            var jwtSecretKey = builder.Configuration["JwtSettings:SecretKey"];
+            if (string.IsNullOrEmpty(jwtSecretKey))
+            {
+                throw new InvalidOperationException("JWT Secret Key is not configured.");
+            }
+
             // Serilog
             builder.Host.UseSerilog((context, services, configuration) => configuration
                 .ReadFrom.Configuration(context.Configuration)
@@ -77,8 +83,7 @@ namespace XRCultureMiddleware
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
                     ValidAudience = builder.Configuration["JwtSettings:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
                 };
             }).AddNegotiate();
 
