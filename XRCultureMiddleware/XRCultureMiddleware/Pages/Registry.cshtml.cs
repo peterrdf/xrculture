@@ -21,9 +21,7 @@ namespace XRCultureMiddleware.Pages
         const string registrationResponse =
 @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <RegistrationResponse>
-      <Status>202</Status> <!-- ACCEPTED / use standard HTML response status codes https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status -->
-      <SessionToken>%SESSION_TOKEN%</SessionToken>
-      <ExpiresIn>3600</ExpiresIn> <!-- in seconds -->
+      <Status>200</Status>
       <Message>Service successfully registered.</Message>
   </RegistrationResponse>";
 
@@ -101,6 +99,7 @@ namespace XRCultureMiddleware.Pages
                 return Authorize(xmlDoc);
             }
 
+            //#todo: Service Type?
             var registrationRequest = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest");
             if (registrationRequest != null)
             {
@@ -130,7 +129,7 @@ namespace XRCultureMiddleware.Pages
 
             _logger.LogInformation($"****** AuthorizationRequest ******\n{xmlRequest}");
 
-            XmlDocument xmlDoc = new XmlDocument();
+            XmlDocument xmlDoc = new XmlDocument(); 
             try
             {
                 xmlDoc.LoadXml(xmlRequest);
@@ -177,77 +176,6 @@ namespace XRCultureMiddleware.Pages
             });
 
             return Content(authorizationResponse.Replace("%SESSION_TOKEN%", authorizationRequest.SessionToken));
-
-            //var sessionToken = xmlDoc.SelectSingleNode("//SessionToken")?.InnerText;
-            //if (string.IsNullOrEmpty(sessionToken))
-            //{
-            //    _logger.LogError("Bad request: 'SessionToken'.");
-            //    return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
-            //}
-
-            //var registerRequest = RegisterViewerRequests.Values.FirstOrDefault(r => r.SessionToken == sessionToken);
-            //if (registerRequest == null)
-            //{
-            //    _logger.LogError($"Invalid 'SessionToken': {sessionToken}");
-            //    return Content(authorizationResponseError.Replace("%MESSAGE%", "Invalid 'SessionToken'."));
-            //}
-
-            //if (string.IsNullOrEmpty(registerRequest.EndPoint))
-            //{
-            //    _logger.LogError("Bad request: 'Endpoint'.");
-            //    return Content(authorizationResponseError.Replace("%MESSAGE%", "Internal error: 'Endpoint'."));
-            //}
-
-            //if (ViewersRegistry.IsViewerRegistered(_logger, _configuration, registerRequest.EndPoint))
-            //{
-            //    _logger.LogError($"Viewer is already registered 'Endpoint': {registerRequest.EndPoint}");
-            //    return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
-            //}
-
-            //var backEnd = xmlDoc.SelectSingleNode("/Protocol/AuthorizationRequest/BackEnd")?.InnerXml;
-            //if (string.IsNullOrEmpty(backEnd))
-            //{
-            //    _logger.LogError("Bad request: 'BackEnd'.");
-            //    return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'BackEnd'."));
-            //}
-
-            //var frontEnd = xmlDoc.SelectSingleNode("/Protocol/AuthorizationRequest/FrontEnd")?.InnerXml;
-            //if (string.IsNullOrEmpty(frontEnd))
-            //{
-            //    _logger.LogError("Bad request: 'FrontEnd'.");
-            //    return Content(authorizationResponseError.Replace("%MESSAGE%", "Bad request: 'FrontEnd'."));
-            //}
-
-            //var viewersDir = _configuration["FileStorage:ViewersDir"];
-            //if (string.IsNullOrEmpty(viewersDir))
-            //{
-            //    _logger.LogError("Viewers path is not configured.");
-            //    return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewers path is not configured."), "application/xml");
-            //}
-
-            //if (!Directory.Exists(viewersDir))
-            //{
-            //    _logger.LogError($"Viewers directory does not exist: {viewersDir}");
-            //    return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewers directory does not exist."), "application/xml");
-            //}
-
-            //var viewerId = Guid.NewGuid().ToString();
-            //_logger.LogInformation($"Viewer registered with ID: {viewerId}");
-
-            //StringBuilder xml = new();
-            //xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            //xml.AppendLine("<Viewer>");
-            //xml.AppendLine($"\t<Id>{viewerId}</Id>");
-            //xml.AppendLine($"\t<EndPoint>{registerRequest.EndPoint}</EndPoint>");
-            //xml.AppendLine($"\t<BackEnd>{backEnd}</BackEnd>");
-            //xml.AppendLine($"\t<FrontEnd>{frontEnd}</FrontEnd>");
-            //xml.AppendLine($"\t<TimeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</TimeStamp>");
-            //xml.AppendLine("</Viewer>");
-            //System.IO.File.WriteAllText(Path.Combine(viewersDir, $"{viewerId}.xml"), xml.ToString());
-
-            //RegisterViewerRequests.Remove(registerRequest.EndPoint, out _);
-
-            //return Content(authorizationResponse.Replace("%SESSION_TOKEN%", sessionToken));
         }
 
         public async Task<IActionResult> OnPostRegisterAsync()
@@ -293,37 +221,73 @@ namespace XRCultureMiddleware.Pages
                 return Content(registrationResponseError.Replace("%MESSAGE%", "Received null XML document."));
             }
 
-            var endPoint = xmlDoc.SelectSingleNode("//Endpoint")?.InnerText;
-            if (string.IsNullOrEmpty(endPoint))
+            var providerId = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest/ProviderID")?.InnerText;
+            if (string.IsNullOrEmpty(providerId))
             {
-                _logger.LogError("Bad request: 'Endpoint'.");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'Endpoint'."));
+                _logger.LogError("Bad request: 'ProviderID'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'ProviderID'."));
             }
 
-            if (AuthorizationRequests.Keys.Contains(endPoint))
+            var sessionToken = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest/SessionToken")?.InnerText;
+            if (string.IsNullOrEmpty(sessionToken))
             {
-                _logger.LogError($"Viewer registration is in progress for 'Endpoint': {endPoint}");
-                return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer registration is in progress."));
+                _logger.LogError("Bad request: 'SessionToken'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'SessionToken'."));
             }
+
+            var endPoint = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest/EndPoint")?.InnerText;
+            if (string.IsNullOrEmpty(endPoint))
+            {
+                _logger.LogError("Bad request: 'EndPoint'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'EndPoint'."));
+            }            
 
             if (ViewersRegistry.IsViewerRegistered(_logger, _configuration, endPoint))
             {
                 _logger.LogError($"Viewer is already registered 'Endpoint': {endPoint}");
-                return Content(authorizationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Viewer is already registered."));
             }
 
-            var sessionToken = Guid.NewGuid().ToString();
-            _logger.LogInformation($"Generated service token: {sessionToken} for endpoint: {endPoint}");
+            var backEnd = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest/BackEnd")?.InnerXml;
+            if (string.IsNullOrEmpty(backEnd))
+            {
+                _logger.LogError("Bad request: 'BackEnd'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'BackEnd'."));
+            }
 
-            //AuthorizationRequests.AddOrUpdate(endPoint, new AuthorizeRequest
-            //{
-            //    EndPoint = endPoint,
-            //    SessionToken = sessionToken
-            //}, (key, oldValue) => new AuthorizeRequest
-            //{
-            //    EndPoint = endPoint,
-            //    SessionToken = sessionToken
-            //});
+            var frontEnd = xmlDoc.SelectSingleNode("/Protocol/RegistrationRequest/FrontEnd")?.InnerXml;
+            if (string.IsNullOrEmpty(frontEnd))
+            {
+                _logger.LogError("Bad request: 'FrontEnd'.");
+                return Content(registrationResponseError.Replace("%MESSAGE%", "Bad request: 'FrontEnd'."));
+            }
+
+            var viewersDir = _configuration["FileStorage:ViewersDir"];
+            if (string.IsNullOrEmpty(viewersDir))
+            {
+                _logger.LogError("Viewers path is not configured.");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewers path is not configured."), "application/xml");
+            }
+
+            if (!Directory.Exists(viewersDir))
+            {
+                _logger.LogError($"Viewers directory does not exist: {viewersDir}");
+                return Content(HTTPResponse.ServerError.Replace("%MESSAGE%", "Viewers directory does not exist."), "application/xml");
+            }
+
+            var viewerId = Guid.NewGuid().ToString();
+            _logger.LogInformation($"Viewer registered with ID: {viewerId}");
+
+            StringBuilder xml = new();
+            xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            xml.AppendLine("<Viewer>");
+            xml.AppendLine($"\t<Id>{viewerId}</Id>");
+            xml.AppendLine($"\t<EndPoint>{endPoint}</EndPoint>");
+            xml.AppendLine($"\t<BackEnd>{backEnd}</BackEnd>");
+            xml.AppendLine($"\t<FrontEnd>{frontEnd}</FrontEnd>");
+            xml.AppendLine($"\t<TimeStamp>{DateTime.Now:yyyy-MM-dd HH:mm:ss}</TimeStamp>");
+            xml.AppendLine("</Viewer>");
+            System.IO.File.WriteAllText(Path.Combine(viewersDir, $"{viewerId}.xml"), xml.ToString());
 
             return Content(registrationResponse.Replace("%SESSION_TOKEN%", sessionToken));
         }

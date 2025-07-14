@@ -25,6 +25,32 @@ namespace XRCultureRegisterViewerTool
 
         async private void _buttonAuthorize_Click(object sender, EventArgs e)
         {
+            // Reset the session token and button state
+            SessionToken = null;
+            _buttonRegister.Enabled = false;
+            _textBoxLog.Text = string.Empty;
+
+            // Validate the middleware URL input
+            if (string.IsNullOrWhiteSpace(_textBoxMiddleware.Text))
+            {
+                MessageBox.Show("Please enter the middleware URL.");
+                return;
+            }
+
+            // Validate the middleware URL
+            if (!Uri.TryCreate(_textBoxMiddleware.Text, UriKind.Absolute, out Uri? middlewareUri) || !middlewareUri.IsWellFormedOriginalString())
+            {
+                MessageBox.Show("Please enter a valid middleware URL.");
+                return;
+            }
+            // Check if the scheme is either http or https
+            if (!middlewareUri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase) &&
+                !middlewareUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Please enter a valid middleware URL with http or https scheme.");
+                return;
+            }
+
             var openFileDialog = new OpenFileDialog()
             {
                 FileName = "XML file",
@@ -41,7 +67,7 @@ namespace XRCultureRegisterViewerTool
 
                     using (HttpClient client = new HttpClient())
                     {
-                        var url = _textBoxMiddleware.Text + "Registry?handler=Authorize";
+                        var url = _textBoxMiddleware.Text + "Registry";
                         var content = new StringContent(JsonConvert.SerializeObject($"{authorizeRequest}"), Encoding.UTF8, "application/json");
 
                         HttpResponseMessage response = await client.PostAsync(url, content);
@@ -61,31 +87,6 @@ namespace XRCultureRegisterViewerTool
                             _buttonRegister.Enabled = !string.IsNullOrEmpty(SessionToken);
                         }
                     }
-
-                    //var streamReader = new StreamReader(openFileDialog.FileName);
-                    //var authorizeRequest = streamReader.ReadToEnd().Replace("%SESSION_TOKEN%", SessionToken);
-
-                    //using (HttpClient client = new HttpClient())
-                    //{
-                    //    var url = _textBoxMiddleware.Text + "Registry?handler=Authorize";
-                    //    var content = new StringContent(JsonConvert.SerializeObject($"{authorizeRequest}"), Encoding.UTF8, "application/json");
-
-                    //    HttpResponseMessage response = await client.PostAsync(url, content);
-
-                    //    string responseString = await response.Content.ReadAsStringAsync();
-                    //    Console.WriteLine(responseString);
-
-                    //    _textBoxLog.Text = responseString;
-
-                    //    XmlDocument xmlDoc = new XmlDocument();
-                    //    xmlDoc.LoadXml(responseString);
-
-                    //    var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
-                    //    if (status?.Trim() == "200")
-                    //    {
-                    //        MessageBox.Show($"Status:\n\n{status}");
-                    //    }
-                    //}
                 }
                 catch (Exception ex)
                 {
@@ -97,11 +98,6 @@ namespace XRCultureRegisterViewerTool
 
         async private void _buttonRegister_Click(object sender, EventArgs e)
         {
-            // Reset the session token and button state
-            SessionToken = null;
-            _buttonRegister.Enabled = false;
-            _textBoxLog.Text = string.Empty;
-
             // Validate the middleware URL input
             if (string.IsNullOrWhiteSpace(_textBoxMiddleware.Text))
             {
@@ -149,15 +145,8 @@ namespace XRCultureRegisterViewerTool
 
                         _textBoxLog.Text = responseString;
 
-                        XmlDocument xmlDoc = new XmlDocument();
+                        XmlDocument xmlDoc = new();
                         xmlDoc.LoadXml(responseString);
-
-                        var status = xmlDoc.SelectSingleNode("//Status")?.InnerText;
-                        if (status?.Trim() == "202")
-                        {
-                            SessionToken = xmlDoc.SelectSingleNode("//SessionToken")?.InnerText;
-                            _buttonRegister.Enabled = !string.IsNullOrEmpty(SessionToken);
-                        }
                     }
                 }
                 catch (Exception ex)
