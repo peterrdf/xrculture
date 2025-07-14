@@ -55,7 +55,8 @@
             // 
             // _buttonRegister
             // 
-            _buttonRegister.Location = new Point(348, 13);
+            _buttonRegister.Enabled = false;
+            _buttonRegister.Location = new Point(483, 17);
             _buttonRegister.Name = "_buttonRegister";
             _buttonRegister.Size = new Size(120, 23);
             _buttonRegister.TabIndex = 2;
@@ -65,8 +66,7 @@
             // 
             // _buttonAuthorize
             // 
-            _buttonAuthorize.Enabled = false;
-            _buttonAuthorize.Location = new Point(475, 13);
+            _buttonAuthorize.Location = new Point(348, 17);
             _buttonAuthorize.Name = "_buttonAuthorize";
             _buttonAuthorize.Size = new Size(128, 23);
             _buttonAuthorize.TabIndex = 3;
@@ -112,11 +112,11 @@
             ControlBox = false;
             Controls.Add(_buttonViewModel);
             Controls.Add(_buttonClose);
-            Controls.Add(_textBoxLog);
             Controls.Add(_buttonAuthorize);
             Controls.Add(_buttonRegister);
             Controls.Add(label1);
             Controls.Add(_textBoxMiddleware);
+            Controls.Add(_textBoxLog);
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
             Name = "RegisterViewerForm";
             StartPosition = FormStartPosition.CenterScreen;
