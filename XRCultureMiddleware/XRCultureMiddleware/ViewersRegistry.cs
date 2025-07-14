@@ -53,6 +53,7 @@ namespace XRCultureMiddleware
 
                 lsViewerDescriptors.Add(new()
                 {
+                    ProviderId = xmlDoc.SelectSingleNode("//Viewer/ProviderId")?.InnerText ?? "NA",
                     Id = xmlDoc.SelectSingleNode("//Viewer/Id")?.InnerText ?? "NA",
                     EndPoint = xmlDoc.SelectSingleNode("//Viewer/EndPoint")?.InnerText ?? "NA",
                     BackEnd = xmlDoc.SelectSingleNode("//Viewer/BackEnd")?.InnerText ?? "NA",
@@ -80,10 +81,11 @@ namespace XRCultureMiddleware
 
     public class ViewerDescriptor
     {
-        public string? Id { get; set; } = string.Empty;
-        public string? EndPoint { get; set; }
-        public string? BackEnd { get; set; } = string.Empty;
-        public string? FrontEnd { get; set; } = string.Empty;
-        public string? TimeStamp { get; set; } = string.Empty;
+        public string ProviderId { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
+        public string EndPoint { get; set; } = string.Empty;
+        public string BackEnd { get; set; } = string.Empty;
+        public string FrontEnd { get; set; } = string.Empty;
+        public string TimeStamp { get; set; } = DateTime.Now.ToString();
     }
 }

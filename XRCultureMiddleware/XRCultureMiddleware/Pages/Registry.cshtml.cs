@@ -281,6 +281,7 @@ namespace XRCultureMiddleware.Pages
             StringBuilder xml = new();
             xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             xml.AppendLine("<Viewer>");
+            xml.AppendLine($"\t<ProviderId>{providerId}</ProviderId>");
             xml.AppendLine($"\t<Id>{viewerId}</Id>");
             xml.AppendLine($"\t<EndPoint>{endPoint}</EndPoint>");
             xml.AppendLine($"\t<BackEnd>{backEnd}</BackEnd>");
