@@ -50,7 +50,7 @@ namespace XRCultureMiddleware.Pages.Account
                 {
                     // Generate token with user ID, name, and roles
                     var token = _tokenService.GenerateToken(
-                        "user123", //#todo
+                        "user123", // #todo: user's ID?
                         LoginInput.Username,
                         ["User"]
                     );
@@ -59,7 +59,7 @@ namespace XRCultureMiddleware.Pages.Account
                     var jwtToken = handler.ReadJwtToken(token);
                     var jwtId = jwtToken.Id;
 
-                    var refreshToken = _tokenService.GenerateRefreshToken("user123", jwtId);
+                    var refreshToken = _tokenService.GenerateRefreshToken("user123", jwtId);// #todo: user's ID?
 
                     // Store both tokens
                     Response.Cookies.Append("jwt_token", token, new CookieOptions
