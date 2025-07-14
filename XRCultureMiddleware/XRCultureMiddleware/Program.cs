@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Serilog;
+using XRCultureMiddleware.Models;
+using XRCultureMiddleware.Services;
 
 namespace XRCultureMiddleware
 {
@@ -39,11 +42,18 @@ namespace XRCultureMiddleware
             builder.Services.AddSingleton<IOperationSingleton, Operation>();
             builder.Services.AddSingleton<IOperationSingletonInstance>(new Operation(Guid.Empty));
             builder.Services.AddTransient<OperationService, OperationService>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
+
+            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
             builder.Services.AddAuthentication(options =>
             {
+                // Set cookie auth as default for browser flows
                 options.DefaultScheme = "XRCultureMiddlewareCookieAuth";
+                options.DefaultSignInScheme = "XRCultureMiddlewareCookieAuth";
                 options.DefaultChallengeScheme = "XRCultureMiddlewareCookieAuth";
+
+                // JWT will be used for API authentication
             })
             .AddCookie("XRCultureMiddlewareCookieAuth", options =>
             {
@@ -54,6 +64,21 @@ namespace XRCultureMiddleware
                 options.ExpireTimeSpan = TimeSpan.FromDays(14);
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+            })
+            .AddJwtBearer(options =>
+            {
+                // JWT configuration for API authentication
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+                    ValidAudience = builder.Configuration["JwtSettings:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]))
+                };
             }).AddNegotiate();
 
             builder.Services.AddAuthorization(options =>

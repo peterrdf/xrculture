@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using XRCultureMiddleware.Services;
 
 namespace XRCultureMiddleware.Pages.Account
 {
@@ -12,11 +13,13 @@ namespace XRCultureMiddleware.Pages.Account
     {
         private readonly ILogger<LoginModel> _logger;
         private readonly IConfiguration _configuration;
+        private readonly ITokenService _tokenService;
 
-        public LoginModel(ILogger<LoginModel> logger, IConfiguration configuration)
+        public LoginModel(ILogger<LoginModel> logger, IConfiguration configuration, ITokenService tokenService)
         {
             _logger = logger;
             _configuration = configuration;
+            _tokenService = tokenService;
         }
 
         [BindProperty]
@@ -44,6 +47,22 @@ namespace XRCultureMiddleware.Pages.Account
                 // Replace this with your actual authentication logic
                 if (IsValidUser(LoginInput.Username, LoginInput.Password))
                 {
+                    // Generate token with user ID, name, and roles
+                    var token = _tokenService.GenerateToken(
+                        "user123", //#todo
+                        LoginInput.Username,
+                        ["User"]
+                    );
+
+                    // Store the JWT token in a cookie for API calls
+                    Response.Cookies.Append("jwt_token", token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddMinutes(60) // Match your token expiry
+                    });
+
                     var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, LoginInput.Username),
