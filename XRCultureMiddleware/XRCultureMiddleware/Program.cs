@@ -49,12 +49,12 @@ namespace XRCultureMiddleware
 
             builder.Services.AddAuthentication(options =>
             {
-                // Set cookie auth as default for browser flows
+                // Cookie authentication as default for browser flows
                 options.DefaultScheme = "XRCultureMiddlewareCookieAuth";
                 options.DefaultSignInScheme = "XRCultureMiddlewareCookieAuth";
                 options.DefaultChallengeScheme = "XRCultureMiddlewareCookieAuth";
 
-                // JWT will be used for API authentication
+                // JWT for API authentication
             })
             .AddCookie("XRCultureMiddlewareCookieAuth", options =>
             {
@@ -90,6 +90,11 @@ namespace XRCultureMiddleware
 
             builder.Services.AddRazorPages(options =>
             {
+                //#todo Remove when Authentication is fully implemented
+                options.Conventions.AllowAnonymousToPage("/Index");
+                options.Conventions.AllowAnonymousToPage("/Registry");
+                options.Conventions.AllowAnonymousToPage("/Storage");
+
                 options.Conventions.AllowAnonymousToPage("/Account/Login");
                 options.Conventions.AllowAnonymousToPage("/Account/Logout");
                 options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
